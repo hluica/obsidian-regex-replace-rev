@@ -1,0 +1,579 @@
+/* ---------------------------------------------------------------------------
+ * Modal shell
+ * ------------------------------------------------------------------------ */
+
+.modal.rr-modal {
+	width: min(900px, 94vw);
+	max-width: 94vw;
+}
+
+.modal.rr-modal .modal-title {
+	flex: 1;
+	margin-inline: 0;
+	text-align: start;
+}
+
+.modal.rr-modal .modal-content.rr-content {
+	padding: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Shared panel
+ * ------------------------------------------------------------------------ */
+
+.rr-panel {
+	--rr-label-width: 52px;
+	--rr-actions-width: 252px;
+	--rr-select-width: 160px;
+	--rr-btn-height: 28px;
+	--rr-gap: var(--size-4-2);
+
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+}
+
+.rr-grid {
+	display: grid;
+	grid-template-columns: var(--rr-label-width) minmax(0, 1fr) var(--rr-actions-width);
+	grid-auto-rows: min-content;
+	gap: var(--rr-gap);
+	align-items: center;
+}
+
+.rr-label {
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+	line-height: var(--input-height);
+	text-align: start;
+	white-space: nowrap;
+}
+
+.rr-field {
+	position: relative;
+	min-width: 0;
+}
+
+.rr-panel .rr-input {
+	width: 100%;
+	padding-inline-end: 30px;
+}
+
+.rr-panel .rr-history {
+	position: absolute;
+	top: 2px;
+	inset-inline-end: 2px;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	color: var(--text-faint);
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-s);
+	box-shadow: none;
+	cursor: pointer;
+}
+
+.rr-panel .rr-history:hover {
+	color: var(--text-muted);
+	background: var(--background-modifier-hover);
+}
+
+.rr-panel .rr-history:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
+
+.rr-actions {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--rr-gap);
+	width: var(--rr-actions-width);
+}
+
+.rr-panel .rr-btn {
+	width: 100%;
+	min-width: 0;
+	height: var(--rr-btn-height);
+	padding: 0 var(--size-4-2);
+	overflow: hidden;
+	color: var(--text-normal);
+	background-color: var(--interactive-normal);
+	border: 1px solid transparent;
+	border-radius: var(--radius-s);
+	box-shadow: none;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	transition:
+		background-color 120ms ease,
+		color 120ms ease,
+		box-shadow 120ms ease,
+		transform 60ms ease;
+}
+
+.rr-panel .rr-btn:hover {
+	background-color: var(--interactive-hover);
+}
+
+.rr-panel .rr-btn:active {
+	color: var(--text-on-accent);
+	background-color: var(--interactive-accent);
+	box-shadow: inset 0 1px 3px rgb(0 0 0 / 18%);
+	transform: translateY(1px);
+}
+
+.rr-panel .rr-btn:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
+
+.rr-mode-row {
+	grid-column: 2 / -1;
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+	min-width: 0;
+}
+
+.rr-select-wrap {
+	position: relative;
+	display: inline-flex;
+	flex: 0 0 var(--rr-select-width);
+	width: var(--rr-select-width);
+	min-width: 0;
+}
+
+.rr-select-wrap::after {
+	position: absolute;
+	top: 50%;
+	inset-inline-end: 11px;
+	width: 7px;
+	height: 7px;
+	border-right: 1.5px solid var(--text-muted);
+	border-bottom: 1.5px solid var(--text-muted);
+	transform: translateY(-70%) rotate(45deg);
+	pointer-events: none;
+	content: "";
+}
+
+.rr-panel .rr-select {
+	width: 100%;
+	height: var(--input-height);
+	padding: 0 30px 0 10px;
+	color: var(--text-normal);
+	font-family: inherit;
+	font-size: var(--font-ui-small);
+	background-color: var(--background-modifier-form-field);
+	background-image: none;
+	border: var(--input-border-width) solid var(--background-modifier-border);
+	border-radius: var(--input-radius);
+	cursor: pointer;
+	appearance: none;
+	-webkit-appearance: none;
+}
+
+.rr-panel .rr-select:focus-visible {
+	outline: none;
+	border-color: var(--background-modifier-border-focus);
+	box-shadow: 0 0 0 2px var(--background-modifier-border-focus);
+}
+
+.rr-select-mode,
+.rr-select-scope,
+.rr-select-dir {
+	width: 100%;
+}
+
+.rr-options {
+	grid-column: 2 / -1;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	column-gap: 28px;
+	row-gap: 10px;
+}
+
+.rr-option {
+	display: inline-flex;
+	gap: 8px;
+	align-items: center;
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.rr-option .checkbox-container {
+	flex-shrink: 0;
+	margin: 0;
+}
+
+.rr-option[hidden] {
+	display: none;
+}
+
+.rr-status {
+	grid-column: 1 / -1;
+	display: flex;
+	gap: var(--size-4-2);
+	align-items: baseline;
+	justify-content: space-between;
+	min-height: 18px;
+	padding-inline-start: 0;
+	color: var(--text-muted);
+	font-size: 12px;
+}
+
+.rr-count {
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+
+.rr-message {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-align: end;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.rr-message.is-error {
+	color: var(--text-error);
+}
+
+.rr-spacer {
+	min-height: 1px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Inline CM6 panel (bottom of the note area)
+ * ------------------------------------------------------------------------ */
+
+.rr-inline-panel {
+	max-height: 70vh;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	background: var(--background-primary);
+	border-top: 1px solid var(--background-modifier-border-focus);
+	font-family: var(--font-interface);
+}
+
+.rr-inline-frame {
+	padding: var(--size-4-2) var(--size-4-4)
+		calc(var(--size-4-3) + 28px);
+	background: transparent;
+}
+
+.rr-match-highlight {
+	color: inherit;
+	background-color: var(--text-selection);
+	border-radius: 2px;
+	box-shadow: 0 0 0 1px var(--interactive-accent);
+}
+
+.rr-inline-container {
+	width: 100%;
+}
+
+.rr-panel--inline {
+	width: 100%;
+}
+
+.rr-panel-header {
+	display: flex;
+	gap: var(--size-4-2);
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: var(--size-4-2);
+}
+
+.rr-panel-title {
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-semibold);
+}
+
+.rr-panel .rr-panel-close {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	color: var(--text-faint);
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-s);
+	box-shadow: none;
+	cursor: pointer;
+}
+
+.rr-panel .rr-panel-close:hover {
+	color: var(--text-muted);
+	background: var(--background-modifier-hover);
+}
+
+.rr-panel .rr-panel-close:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
+
+/* Compact inline layout for narrow note panes. */
+.rr-panel.rr-compact .rr-actions {
+	order: 1;
+}
+
+.rr-panel.rr-compact .rr-label:not([for]) {
+	order: 2;
+}
+
+.rr-panel.rr-compact .rr-mode-row {
+	order: 3;
+}
+
+.rr-panel.rr-compact .rr-options {
+	order: 4;
+}
+
+.rr-panel.rr-compact .rr-status {
+	order: 5;
+}
+
+.rr-panel.rr-compact .rr-grid {
+	grid-template-columns: 1fr;
+	gap: 8px;
+}
+
+.rr-panel.rr-compact .rr-label {
+	line-height: 1.4;
+	text-align: start;
+}
+
+.rr-panel.rr-compact .rr-actions {
+	grid-template-columns: 1fr 1fr;
+	width: 100%;
+}
+
+.rr-panel.rr-compact .rr-mode-row {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 6px;
+}
+
+.rr-panel.rr-compact .rr-select-wrap,
+.rr-panel.rr-compact .rr-select {
+	flex: 1 1 auto;
+	width: 100%;
+}
+
+.rr-panel.rr-compact .rr-options,
+.rr-panel.rr-compact .rr-status {
+	grid-column: 1 / -1;
+}
+
+.rr-panel.rr-compact .rr-options {
+	column-gap: 16px;
+	row-gap: 8px;
+}
+
+.rr-panel.rr-compact .rr-status {
+	flex-wrap: wrap;
+	padding-inline-start: 0;
+}
+
+.rr-panel.rr-compact .rr-spacer {
+	display: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * Mobile / narrow windows
+ * ------------------------------------------------------------------------ */
+
+@media (max-width: 760px) {
+	.modal.rr-modal {
+		width: 94vw;
+		max-width: 94vw;
+	}
+
+	.rr-panel {
+		--rr-gap: 6px;
+	}
+
+	.rr-grid {
+		grid-template-columns: 1fr;
+		gap: 8px;
+	}
+
+	.rr-label {
+		line-height: 1.4;
+		text-align: start;
+	}
+
+	.rr-actions {
+		grid-template-columns: 1fr 1fr;
+		width: 100%;
+		order: 1;
+	}
+
+	.rr-label:not([for]) {
+		order: 2;
+	}
+
+	.rr-mode-row {
+		order: 3;
+	}
+
+	.rr-options {
+		order: 4;
+	}
+
+	.rr-status {
+		order: 5;
+	}
+
+	.rr-mode-row {
+		grid-column: 1 / -1;
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 6px;
+	}
+
+	.rr-select-wrap,
+	.rr-select {
+		flex: 1 1 auto;
+		width: 100%;
+	}
+
+	.rr-options {
+		grid-column: 1 / -1;
+		column-gap: 16px;
+		row-gap: 8px;
+	}
+
+	.rr-status {
+		grid-column: 1 / -1;
+		flex-wrap: wrap;
+		padding-inline-start: 0;
+	}
+
+	.rr-spacer {
+		display: none;
+	}
+
+	.rr-panel .rr-input,
+	.rr-panel .rr-select,
+	.rr-panel .rr-btn {
+		height: 44px;
+	}
+
+	.rr-panel .rr-history {
+		top: 0;
+		width: 44px;
+		height: 44px;
+	}
+
+	.rr-panel .rr-input {
+		padding-inline-end: 48px;
+	}
+
+	.rr-option {
+		min-height: 44px;
+	}
+}
+
+/* Mobile mode also applies when the desktop app emulates a phone, where the
+ * viewport can still be wide. */
+body.is-mobile .modal.rr-modal {
+	width: 94vw;
+	max-width: 94vw;
+}
+
+body.is-mobile .rr-panel {
+	--rr-gap: 6px;
+}
+
+body.is-mobile .rr-grid {
+	grid-template-columns: 1fr;
+	gap: 8px;
+}
+
+body.is-mobile .rr-label {
+	line-height: 1.4;
+	text-align: start;
+}
+
+body.is-mobile .rr-actions {
+	grid-template-columns: 1fr 1fr;
+	width: 100%;
+	order: 1;
+}
+
+body.is-mobile .rr-label:not([for]) {
+	order: 2;
+}
+
+body.is-mobile .rr-mode-row {
+	order: 3;
+}
+
+body.is-mobile .rr-options {
+	order: 4;
+}
+
+body.is-mobile .rr-status {
+	order: 5;
+}
+
+body.is-mobile .rr-mode-row {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 6px;
+}
+
+body.is-mobile .rr-select-wrap,
+body.is-mobile .rr-select {
+	flex: 1 1 auto;
+	width: 100%;
+}
+
+body.is-mobile .rr-options {
+	grid-column: 1 / -1;
+	column-gap: 16px;
+	row-gap: 8px;
+}
+
+body.is-mobile .rr-status {
+	grid-column: 1 / -1;
+	flex-wrap: wrap;
+	padding-inline-start: 0;
+}
+
+body.is-mobile .rr-spacer {
+	display: none;
+}
+
+body.is-mobile .rr-panel .rr-input,
+body.is-mobile .rr-panel .rr-select,
+body.is-mobile .rr-panel .rr-btn {
+	height: 44px;
+}
+
+body.is-mobile .rr-panel .rr-history {
+	top: 0;
+	width: 44px;
+	height: 44px;
+}
+
+body.is-mobile .rr-panel .rr-input {
+	padding-inline-end: 48px;
+}
+
+body.is-mobile .rr-option {
+	min-height: 44px;
+}

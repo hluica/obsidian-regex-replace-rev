@@ -1,0 +1,38 @@
+{
+	"name": "obsidian-regex-replace-rev",
+	"version": "0.2.4",
+	"description": "Find and replace with exact, wildcard, and regular expression matching in Obsidian.",
+	"main": "main.js",
+	"type": "module",
+	"scripts": {
+		"dev": "node esbuild.config.mjs",
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"lint": "eslint .",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"version": "node version-bump.mjs"
+	},
+	"keywords": [
+		"obsidian",
+		"find",
+		"replace",
+		"regex",
+		"wildcard"
+	],
+	"license": "MIT",
+	"engines": {
+		"node": ">=20"
+	},
+	"devDependencies": {
+		"@codemirror/state": "^6.7.6",
+		"@codemirror/view": "^6.43.13",
+		"@types/node": "^24.0.0",
+		"esbuild": "^0.28.2",
+		"eslint": "^9.39.5",
+		"eslint-plugin-obsidianmd": "^0.5.1",
+		"obsidian": "^1.14.4",
+		"typescript": "^5.9.3",
+		"typescript-eslint": "^8.72.2",
+		"vitest": "^3.2.7"
+	}
+}
