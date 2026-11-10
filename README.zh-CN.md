@@ -11,7 +11,7 @@
 - **三种匹配模式**：完全匹配、通配符（`*`、`?`）、JavaScript 正则表达式。
 - **四个动作**：查找、替换（仅一次）、替换并查找、替换所有。
 - **随模式变化的查找选项**：区分大小写、全字匹配、循环查找、**匹配换行符**、**替换转义**，全部使用 Obsidian 原生 toggle 开关。完全匹配显示 4 项；通配符增加「匹配换行符」共 5 项；正则再增加「多行锚点」共 6 项。「匹配换行符」使用 `s` 标志：通配符模式下让 `*`/`?` 跨行，正则模式下让 `.` 跨行；「多行锚点」仅正则可用。选项间距更宽松（桌面 28px，紧凑/移动端 16px），放不下时自然换行，面板高度随行数调整。
-- **桌面内嵌面板**：固定在笔记显示区域底端，用一条对比度较高的 1px 实线与笔记内容分隔（不再使用厚重卡片边框），并带标题与关闭按钮；占据布局空间而非覆盖笔记，编辑器仍可见可交互。
+- **桌面内嵌面板**：固定在笔记显示区域底端，用一条对比度较高的 1px 实线与笔记内容分隔，并带标题与关闭按钮；占据布局空间而非覆盖笔记，编辑器仍可见可交互。
 - **多窗口**：每个 Obsidian 窗口拥有独立面板；命令作用于触发它的窗口中的编辑器，关闭一个窗口的面板不影响其它窗口。
 - **当前匹配可见**：查找框保持焦点时，笔记中的当前匹配也会高亮，点击「查找」或按 Enter 都能看到落点。
 - **紧凑按钮**：四个动作按钮采用接近设置页控件的大小，并带 hover 与按下（强调色）反馈。
@@ -25,24 +25,33 @@
 
 ## 状态
 
-当前版本 **0.2.4**，仅支持手动安装，尚未提交社区插件目录。源代码、构建产物与附属文档的审计见 [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)。
+当前版本 **0.2.4**。`0.2.4` 标签已推送到 GitHub。可从 [最新 Release](https://github.com/hluica/obsidian-regex-replace-rev/releases/latest) 下载发布文件；插件尚未列入 Obsidian 社区插件目录。发布审计见 [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)。
 
 ## 安装
 
-当前未发布到社区插件商店，请手动安装：
+### 从 GitHub Release 安装
 
-1. 创建 `<你的库>/.obsidian/plugins/regex-replace-rev/`。
-2. 把 `main.js`、`manifest.json`、`styles.css` 复制进去。
-3. 在 Obsidian 的 **设置 → 第三方插件** 中关闭安全模式（如需要），启用 **Regex & Wildcard Find/Replace**。
-4. 可在 **设置 → 快捷键** 中给「在当前文件中查找与替换」绑定快捷键。
+1. 打开 [最新 Release](https://github.com/hluica/obsidian-regex-replace-rev/releases/latest)。
+2. 下载 `main.js`、`manifest.json` 和 `styles.css`。
+3. 创建 `<你的库>/.obsidian/plugins/regex-replace-rev/`，把三个文件放进去。
+4. 在 Obsidian 的 **设置 → 第三方插件** 中关闭安全模式（如需要），启用 **Regex & Wildcard Find/Replace**。
+5. 可在 **设置 → 快捷键** 中给「在当前文件中查找与替换」绑定快捷键。
 
 插件 id 为 `regex-replace-rev`，插件目录名应与之一致。
+
+### 从源码安装
+
+参见下方「开发」章节：执行 `npm install && npm run build`，再把三个构建文件复制到库插件目录。
+
+### 从社区插件目录安装
+
+插件被收录后，可在 **设置 → 第三方插件** 中直接安装；在收录前请使用上面的 GitHub Release 或源码安装方式。
 
 ## 使用
 
 在命令面板执行 **在当前文件中查找与替换**（命令 id `regex-replace-rev:open-find-replace`）。
 
-桌面端会在当前笔记显示区域底端打开面板；再次执行命令会聚焦已有面板。可用面板右上角 ✕、Escape 关闭，或在另一篇笔记执行命令时关闭旧面板。面板属于打开它的笔记视图。
+桌面端会在当前笔记显示区域底端打开面板；再次执行命令会聚焦已有面板。可用面板右上角 ✕ 或 Escape 关闭。面板属于打开它的笔记视图。
 
 ### 快捷键
 
@@ -115,7 +124,7 @@ Mod 在 macOS 上是 Cmd，其它平台是 Ctrl。按钮均可 Tab 聚焦、Ente
 - 只处理当前文件或捕获选区，不做全库替换。
 - 输入框单行；多行替换依赖正则 `\n` 或面板中的「替换转义」开关。
 - 不提供全部匹配高亮；当前匹配会被选中并滚动到可视区，匹配数/状态栏给出反馈。
-- 不暴露 `u` 正则标志；依赖 `u` 的 Unicode property escape 在 v1 不可用。
+- 不暴露 `u` 正则标志；依赖 `u` 的 Unicode property escape 在当前版本不可用。
 - 正则交替分支的整词匹配有上述边界限制。
 - 内嵌面板位于编辑器内容区域底端；在很窄的分栏中会自动切换为紧凑堆叠布局，极窄窗口以 70vh 封顶并内部滚动。
 - 移动端使用对话框而不是内嵌面板。
@@ -131,6 +140,12 @@ npm run build
 ```
 
 构建产物为根目录的 `main.js`；与 `manifest.json`、`styles.css` 一起复制到库插件目录即可。内嵌面板基于 CodeMirror 6 `showPanel`（`top: false`，即底部）。项目使用 TypeScript、esbuild、Vitest、`eslint-plugin-obsidianmd`，CodeMirror 6 包由 Obsidian 运行时提供。
+
+## 致谢
+
+- 本插件由 DeepSeek-V4.1-flash-1017 生成。
+- 受 [obsidian-regex-replace](https://github.com/Gru80/obsidian-regex-replace) 启发。
+- UI 受 Calibre Ebook-Editor 启发。
 
 ## 许可证
 

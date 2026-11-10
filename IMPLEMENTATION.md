@@ -1,6 +1,6 @@
 # Implementation Record — v0.2.4 (inline panel refinements)
 
-Status: **implemented and verified in the local dev vault** (Obsidian 1.15.0, macOS, dark theme, English UI). Not published to the community store. Source/build/docs audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
+Status: **implemented and verified in the local dev vault** (Obsidian 1.15.0, macOS, dark theme, English UI). Tag `0.2.4` pushed; GitHub release pending. Not published to the community store. Source/build/docs audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
 
 v0.2.4 is the current implementation. The desktop panel is embedded at the bottom of the note display area with a thin separator, fixed-width mode selects, compact action buttons, a visible current-match highlight, native Obsidian toggle switches, auto-height option rows, wildcard/regex newline support, status lines aligned with form labels, and independent panels in multiple Obsidian windows.
 

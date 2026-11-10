@@ -1,7 +1,7 @@
 # Regex & Wildcard Find/Replace — Plan and Status
 
 - **Version:** 0.2.4
-- **Status:** implemented and verified in the local dev vault (Obsidian 1.15.0, macOS, dark theme, English UI); **not published to the community directory**
+- **Status:** implemented and verified in the local dev vault (Obsidian 1.15.0, macOS, dark theme, English UI); tag `0.2.4` pushed; GitHub release pending; **not yet listed in the community directory**
 - **Current implementation:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **UI specification:** [UI-SPEC.md](UI-SPEC.md)
 - **Community readiness audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
@@ -105,7 +105,7 @@ Main files:
 | Mobile | Obsidian mobile emulation tested; real iOS/Android not tested |
 | Windows/Linux | not tested |
 | Performance | **No 1MB/10k-match benchmark recorded**; debounce is 180ms, replace-all is one transaction |
-| Community directory | Source/build/docs audited in [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md); no GitHub release/tag or submission yet |
+| Community directory | Source/build/docs audited in [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md); tag `0.2.4` pushed; GitHub release pending; no directory submission yet |
 
 ## 5. Acceptance status (v0.2.4)
 

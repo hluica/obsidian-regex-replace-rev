@@ -3,8 +3,9 @@
 - **Plugin:** Regex & Wildcard Find/Replace (`regex-replace-rev`)
 - **Version:** 0.2.4
 - **Audit date:** 2026-11-11
+- **Tag:** `0.2.4` (pushed); GitHub release pending
 - **Repository:** `git@github.com:hluica/obsidian-regex-replace-rev.git`
-- **Overall:** source, local build artifacts, and auxiliary documentation are **locally ready**; **community submission has not been made**, and release packaging/tagging is not complete.
+- **Overall:** source, local build artifacts, and auxiliary documentation are **locally ready**; **community submission has not been made**, and GitHub release/assets are not complete.
 
 Official references used:
 
@@ -20,7 +21,7 @@ Official references used:
 | Source code | **Pass with documented limitations** | TS strict, ESLint clean, 41 tests, no disallowed APIs found |
 | Compiled artifacts | **Pass locally; release packaging pending** | `main.js`, `styles.css`, `manifest.json`, `versions.json` present; `main.js` intentionally gitignored and must be a release asset |
 | Auxiliary docs | **Pass; optional release docs missing** | README EN/ZH, LICENSE, current screenshots, current PLAN/UI-SPEC/IMPLEMENTATION; no CHANGELOG/release workflow |
-| Community submission | **Not started** | Repository synced; no tag/release, no directory submission |
+| Community submission | **Not started** | Repository and tag synced; GitHub release pending; no directory submission |
 
 ## 2. Source code
 
@@ -79,7 +80,7 @@ dev:errors        # no errors
 | `main.js` tracked by git? | No | intentionally gitignored; attach to GitHub release |
 | `node_modules` in release? | No | ignored; not shipped |
 
-**Release packaging remaining:** tag `0.2.4`, build, and attach `main.js`, `manifest.json`, `styles.css` to a GitHub release. `versions.json` belongs in the repository (not necessarily the release asset).
+**Release packaging remaining:** create the GitHub release for tag `0.2.4` and attach `main.js`, `manifest.json`, `styles.css`. `versions.json` belongs in the repository (not necessarily the release asset).
 
 ## 4. Auxiliary documentation
 
@@ -100,7 +101,7 @@ dev:errors        # no errors
 
 ## 5. Submission blockers / next steps
 
-1. **Tag/release 0.2.4** and attach `main.js`, `manifest.json`, `styles.css`; verify the artifact loads from a clean vault.
+1. **Create the GitHub release for tag `0.2.4`** and attach `main.js`, `manifest.json`, `styles.css`; verify the artifact loads from a clean vault.
 2. **Update README install section** for Community plugins once the release exists.
 3. **Verify plugin ID uniqueness** and author metadata against the community directory at submission time.
 4. Optional: add `CHANGELOG.md`, release workflow/attestation.
