@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-regex-replace-rev",
-	"version": "0.2.5",
+	"version": "0.2.6",
 	"description": "Find and replace with exact, wildcard, and regular expression matching in Obsidian.",
 	"main": "main.js",
 	"type": "module",

@@ -1,4 +1,4 @@
-# Regex & Wildcard Find/Replace
+# Refined Regex Replace and More
 
 A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular expression** matching. On desktop it is embedded at the bottom of the note area, separated by a thin line with a title and close button; on mobile it falls back to a dialog.
 
