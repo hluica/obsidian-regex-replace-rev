@@ -1,9 +1,9 @@
-# Community Readiness Audit — v0.2.4
+# Community Readiness Audit — v0.2.6
 
-- **Plugin:** Regex & Wildcard Find/Replace (`regex-replace-rev`)
-- **Version:** 0.2.4
+- **Plugin:** Refined Regex Replace and More (`regex-replace-rev`)
+- **Version:** 0.2.6
 - **Audit date:** 2026-11-11
-- **Tag:** `0.2.4` (pushed); GitHub release pending
+- **Tag:** `0.2.6` pending; source on `main`
 - **Repository:** `git@github.com:hluica/obsidian-regex-replace-rev.git`
 - **Overall:** source, local build artifacts, and auxiliary documentation are **locally ready**; **community submission has not been made**, and GitHub release/assets are not complete.
 
@@ -21,7 +21,7 @@ Official references used:
 | Source code | **Pass with documented limitations** | TS strict, ESLint clean, 41 tests, no disallowed APIs found |
 | Compiled artifacts | **Pass locally; release packaging pending** | `main.js`, `styles.css`, `manifest.json`, `versions.json` present; `main.js` intentionally gitignored and must be a release asset |
 | Auxiliary docs | **Pass; optional release docs missing** | README EN/ZH, LICENSE, current screenshots, current PLAN/UI-SPEC/IMPLEMENTATION; no CHANGELOG/release workflow |
-| Community submission | **Not started** | Repository and tag synced; GitHub release pending; no directory submission |
+| Community submission | **Not started** | Repository synced; 0.2.6 tag/release pending; no directory submission |
 
 ## 2. Source code
 
@@ -31,11 +31,11 @@ Official references used:
 |---|---|---|
 | `id` is lowercase/hyphenated and matches folder | PASS | `regex-replace-rev` |
 | `name`/`description` do not include “Obsidian” | PASS | manifest |
-| `version` matches `versions.json` and package | PASS | `0.2.4` |
+| `version` matches `versions.json` and package | PASS | `0.2.6` |
 | `minAppVersion` matches APIs used | PASS | `1.13.0` (declarative settings) |
 | `isDesktopOnly` accurate | PASS | `false`; mobile modal fallback exists |
 | `author` present | PASS | `hanluica` |
-| `versions.json` has current entry | PASS | `0.2.4: 1.13.0` |
+| `versions.json` has current entry | PASS | `0.2.6: 1.13.0` |
 
 ### 2.2 Developer-policy checks
 
@@ -73,14 +73,14 @@ dev:errors        # no errors
 
 | Artifact | Status | Details |
 |---|---|---|
-| `main.js` | Present, local only | 37 KB, production bundle, no source map, external `obsidian`/CM6 modules |
+| `main.js` | Present, local only | 38 KB, production bundle, no source map, external `obsidian`/CM6 modules |
 | `styles.css` | Present | static CSS; no dynamic styles |
-| `manifest.json` | Present | version 0.2.4 |
+| `manifest.json` | Present | version 0.2.6 |
 | `versions.json` | Present | current entry |
 | `main.js` tracked by git? | No | intentionally gitignored; attach to GitHub release |
 | `node_modules` in release? | No | ignored; not shipped |
 
-**Release packaging remaining:** create the GitHub release for tag `0.2.4` and attach `main.js`, `manifest.json`, `styles.css`. `versions.json` belongs in the repository (not necessarily the release asset).
+**Release packaging remaining:** create tag `0.2.6`, create the GitHub release, and attach `main.js`, `manifest.json`, `styles.css`. `versions.json` belongs in the repository (not necessarily the release asset).
 
 ## 4. Auxiliary documentation
 
@@ -90,9 +90,9 @@ dev:errors        # no errors
 | `LICENSE` | Current | MIT, non-template |
 | `docs/screenshots/panel-inline.png` | Current | dark/English inline panel |
 | `docs/screenshots/modal-fallback.png` | Current | dark/English modal |
-| `PLAN.md` | Current | v0.2.4 plan/status |
-| `UI-SPEC.md` | Current | v0.2.4 inline/toggle/multi-window spec |
-| `IMPLEMENTATION.md` | Current | v0.2.4 implementation and verification record |
+| `PLAN.md` | Current | v0.2.6 plan/status |
+| `UI-SPEC.md` | Current | v0.2.6 inline/toggle/multi-window spec |
+| `IMPLEMENTATION.md` | Current | v0.2.6 implementation and verification record |
 | `COMMUNITY-READINESS.md` | Current | this audit |
 | `CHANGELOG.md` | Missing | optional but recommended before community release |
 | GitHub release workflow | Missing | optional; release assets can be manual |
@@ -101,7 +101,7 @@ dev:errors        # no errors
 
 ## 5. Submission blockers / next steps
 
-1. **Create the GitHub release for tag `0.2.4`** and attach `main.js`, `manifest.json`, `styles.css`; verify the artifact loads from a clean vault.
+1. **Create tag `0.2.6` and its GitHub release**, attach `main.js`, `manifest.json`, `styles.css`; verify the artifact loads from a clean vault.
 2. **Update README install section** for Community plugins once the release exists.
 3. **Verify plugin ID uniqueness** and author metadata against the community directory at submission time.
 4. Optional: add `CHANGELOG.md`, release workflow/attestation.

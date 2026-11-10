@@ -1,8 +1,8 @@
-# Implementation Record — v0.2.4 (inline panel refinements)
+# Implementation Record — v0.2.6 (inline panel refinements)
 
-Status: **implemented and verified in the local dev vault** (Obsidian 1.15.0, macOS, dark theme, English UI). Tag `0.2.4` pushed; GitHub release pending. Not published to the community store. Source/build/docs audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
+Status: **implemented and verified in the local dev vault** (Obsidian 1.15.0, macOS, dark theme, English UI). Source on `main`; tag/release `0.2.6` pending. Not published to the community store. Source/build/docs audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
 
-v0.2.4 is the current implementation. The desktop panel is embedded at the bottom of the note display area with a thin separator, fixed-width mode selects, compact action buttons, a visible current-match highlight, native Obsidian toggle switches, auto-height option rows, wildcard/regex newline support, status lines aligned with form labels, and independent panels in multiple Obsidian windows.
+v0.2.6 is the current implementation. The desktop panel is embedded at the bottom of the note display area with a thin separator, fixed-width mode selects, compact action buttons, a visible current-match highlight, native Obsidian toggle switches, auto-height option rows, wildcard/regex newline support, status lines aligned with form labels, and independent panels in multiple Obsidian windows.
 
 ## Screenshots (real Obsidian windows, dark + English)
 
@@ -22,6 +22,7 @@ Mobile / fallback dialog:
   - Panel DOM: `.rr-inline-panel` → `.rr-inline-frame` → `.rr-inline-container` → shared `FindReplacePanel`.
   - `editorInfoField` supplies the Obsidian `Editor`; `EditorView.findFromDOM()` maps a MarkdownView container to its CM6 view.
   - A second `StateField<DecorationSet>` + `setInlineMatchHighlight` effect draws `.rr-match-highlight` over the current match **even while the find input has focus**. Zero-width matches intentionally fall back to no mark (the caret/position is still selected; no visual marker).
+  - Highlight/clear effects are coalesced into a `setTimeout(0)` task and cancelled on close/destroy. This avoids dispatching `EditorView.update` while CM6 is mounting the panel inside an update (the previous `Calls to EditorView.update are not allowed while an update is in progress` error on an empty find pattern).
   - `Panel.update()` refreshes the count on document changes; `WeakMap` of panel controllers focuses an already-open panel.
   - Escape and the header ✕ hide the panel and clear the highlight; the editor regains focus.
   - A `ResizeObserver` adds `rr-compact` below 620px so narrow split panes stack the controls. `.rr-inline-panel` caps at `max-height: 70vh` with `overflow-y: auto` so an English regex panel in a very narrow window does not exceed the viewport.
@@ -85,12 +86,12 @@ Mobile / fallback dialog:
 npm test          # 4 files, 41 tests passed
 npx tsc -noEmit   # passed
 npx eslint .      # 0 errors, 0 warnings
-npm run build     # main.js produced (v0.2.4)
+npm run build     # main.js produced (v0.2.6)
 ```
 
 ### Obsidian end-to-end (dev vault, dark + English)
 
-- Plugin loads with no `dev:errors`; manifest version 0.2.4.
+- Plugin loads with no `dev:errors`; manifest version 0.2.6.
 - Command opens `.rr-inline-panel` inside `.cm-panels-bottom` at the bottom of the note area.
 - Separator computed as 1px `--background-modifier-border-focus`; no frame border/card radius.
 - English/dark labels and status measured at left **360px** (`Find:`, `Replace:`, `Mode:`, and the match count); status message right-aligned.
@@ -101,6 +102,7 @@ npm run build     # main.js produced (v0.2.4)
 - Find via Enter selected the match and drew `.rr-match-highlight` while the find input remained focused; dark-theme highlight visible.
 - Replace all via the inline panel changed the note; undo restored it. Replace escapes (`A\nB` with toggle on) inserted a newline.
 - Header ✕ and Escape both close the panel, clear the highlight and return focus to the editor.
+- Empty find pattern on panel mount no longer throws; the panel opens with “Enter something to find”. Find then clear restores highlight 1 → 0 without errors; close/reopen with a pending highlight is clean.
 - Toggle labels, switches and Space key were exercised; state updates correctly.
 - Dark modal: `.modal.rr-modal` opens single-column with actions after replace, 44px controls, four exact-mode toggles.
 - English button/label overflow checked; no truncation after widening the action column.

@@ -25,7 +25,7 @@
 
 ## 状态
 
-当前版本 **0.2.4**。`0.2.4` 标签已推送到 GitHub。可从 [最新 Release](https://github.com/hluica/obsidian-regex-replace-rev/releases/latest) 下载发布文件；插件尚未列入 Obsidian 社区插件目录。发布审计见 [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)。
+当前版本 **0.2.6**。源码已推送到 GitHub，`0.2.6` 标签/Release 待发布。发布后可从 [最新 Release](https://github.com/hluica/obsidian-regex-replace-rev/releases/latest) 下载发布文件；插件尚未列入 Obsidian 社区插件目录。发布审计见 [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)。
 
 ## 安装
 
@@ -34,7 +34,7 @@
 1. 打开 [最新 Release](https://github.com/hluica/obsidian-regex-replace-rev/releases/latest)。
 2. 下载 `main.js`、`manifest.json` 和 `styles.css`。
 3. 创建 `<你的库>/.obsidian/plugins/regex-replace-rev/`，把三个文件放进去。
-4. 在 Obsidian 的 **设置 → 第三方插件** 中关闭安全模式（如需要），启用 **Regex & Wildcard Find/Replace**。
+4. 在 Obsidian 的 **设置 → 第三方插件** 中关闭安全模式（如需要），启用 **Refined Regex Replace and More**。
 5. 可在 **设置 → 快捷键** 中给「在当前文件中查找与替换」绑定快捷键。
 
 插件 id 为 `regex-replace-rev`，插件目录名应与之一致。

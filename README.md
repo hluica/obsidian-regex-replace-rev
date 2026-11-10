@@ -25,7 +25,7 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 
 ## Status
 
-Current version: **0.2.4**. The `0.2.4` tag is published on GitHub. Download the release assets from the [latest release](https://github.com/hluica/obsidian-regex-replace-rev/releases/latest); the plugin is not yet listed in Obsidian's community directory. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
+Current version: **0.2.6**. The source is on GitHub; the `0.2.6` tag/release is pending. Once published, download the release assets from the [latest release](https://github.com/hluica/obsidian-regex-replace-rev/releases/latest); the plugin is not yet listed in Obsidian's community directory. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
 
 ## Installation
 
@@ -34,7 +34,7 @@ Current version: **0.2.4**. The `0.2.4` tag is published on GitHub. Download the
 1. Open the [latest release](https://github.com/hluica/obsidian-regex-replace-rev/releases/latest).
 2. Download `main.js`, `manifest.json`, and `styles.css`.
 3. Create `<your-vault>/.obsidian/plugins/regex-replace-rev/` and place the three files there.
-4. In Obsidian, open **Settings → Community plugins**, turn off Restricted mode if needed, and enable **Regex & Wildcard Find/Replace**.
+4. In Obsidian, open **Settings → Community plugins**, turn off Restricted mode if needed, and enable **Refined Regex Replace and More**.
 5. Optionally assign a hotkey to **Find and replace in current file** in **Settings → Hotkeys**.
 
 The plugin id is `regex-replace-rev`; the folder name should match it.

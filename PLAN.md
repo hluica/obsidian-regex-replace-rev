@@ -1,7 +1,7 @@
-# Regex & Wildcard Find/Replace — Plan and Status
+# Refined Regex Replace and More — Plan and Status
 
-- **Version:** 0.2.4
-- **Status:** implemented and verified in the local dev vault (Obsidian 1.15.0, macOS, dark theme, English UI); tag `0.2.4` pushed; GitHub release pending; **not yet listed in the community directory**
+- **Version:** 0.2.6
+- **Status:** implemented and verified in the local dev vault (Obsidian 1.15.0, macOS, dark theme, English UI); source on `main`; tag/release `0.2.6` pending; **not yet listed in the community directory**
 - **Current implementation:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **UI specification:** [UI-SPEC.md](UI-SPEC.md)
 - **Community readiness audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
@@ -21,7 +21,7 @@ Build a find/replace panel for the **current Markdown note** with:
 - desktop inline panel at the bottom of the note area; mobile modal fallback;
 - independent panels in multiple Obsidian windows.
 
-Out of scope for v0.2.4: vault-wide replace, all-match highlighting, diff preview, preserve case, multiline literal input, `u`/`y`/`d`/`v` flags, default hotkeys, and community-directory publication.
+Out of scope for v0.2.6: vault-wide replace, all-match highlighting, diff preview, preserve case, multiline literal input, `u`/`y`/`d`/`v` flags, default hotkeys, and community-directory publication.
 
 ## 2. Current architecture
 
@@ -105,9 +105,9 @@ Main files:
 | Mobile | Obsidian mobile emulation tested; real iOS/Android not tested |
 | Windows/Linux | not tested |
 | Performance | **No 1MB/10k-match benchmark recorded**; debounce is 180ms, replace-all is one transaction |
-| Community directory | Source/build/docs audited in [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md); tag `0.2.4` pushed; GitHub release pending; no directory submission yet |
+| Community directory | Source/build/docs audited in [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md); source on `main`; tag/release `0.2.6` pending; no directory submission yet |
 
-## 5. Acceptance status (v0.2.4)
+## 5. Acceptance status (v0.2.6)
 
 - [x] Three modes × four actions
 - [x] Exact 4 / wildcard 5 / regex 6 options

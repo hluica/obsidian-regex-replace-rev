@@ -84,6 +84,10 @@ class InlineFindReplacePanel implements Panel {
 	private readonly view: EditorView;
 	private readonly panel: FindReplacePanel;
 	private readonly closePanel: () => void;
+	private highlightTimer: number | null = null;
+	private pendingHighlight: { from: number; to: number } | null = null;
+	private hasPendingHighlight = false;
+	private destroyed = false;
 
 	constructor(view: EditorView, plugin: PanelPlugin) {
 		this.view = view;
@@ -99,6 +103,7 @@ class InlineFindReplacePanel implements Panel {
 		};
 
 		this.closePanel = () => {
+			this.cancelPendingHighlight();
 			closeInlinePanel(view);
 			getEditor()?.focus();
 		};
@@ -116,14 +121,10 @@ class InlineFindReplacePanel implements Panel {
 			getDocumentKey,
 			requestClose: this.closePanel,
 			highlightMatch: (from, to) => {
-				view.dispatch({
-					effects: setInlineMatchHighlight.of({ from, to }),
-				});
+				this.queueHighlight({ from, to });
 			},
 			clearHighlight: () => {
-				view.dispatch({
-					effects: setInlineMatchHighlight.of(null),
-				});
+				this.queueHighlight(null);
 			},
 		});
 	}
@@ -149,9 +150,50 @@ class InlineFindReplacePanel implements Panel {
 	}
 
 	destroy(): void {
+		this.destroyed = true;
+		this.cancelPendingHighlight();
 		panelControllers.delete(this.view);
 		this.panel.destroy();
 		this.dom.remove();
+	}
+
+	/**
+	 * Highlight effects can be requested while CodeMirror is mounting the
+	 * panel, which is itself inside an EditorView update. Dispatching there
+	 * throws "Calls to EditorView.update are not allowed while an update is
+	 * in progress", so coalesce the latest request into a task after the
+	 * current update completes.
+	 */
+	private queueHighlight(value: { from: number; to: number } | null): void {
+		this.pendingHighlight = value;
+		this.hasPendingHighlight = true;
+		if (this.highlightTimer !== null) {
+			return;
+		}
+		this.highlightTimer = window.setTimeout(() => {
+			this.highlightTimer = null;
+			if (this.destroyed || !this.hasPendingHighlight) {
+				return;
+			}
+			const pending = this.pendingHighlight;
+			this.hasPendingHighlight = false;
+			this.pendingHighlight = null;
+			if (!this.view.dom.isConnected) {
+				return;
+			}
+			this.view.dispatch({
+				effects: setInlineMatchHighlight.of(pending),
+			});
+		}, 0);
+	}
+
+	private cancelPendingHighlight(): void {
+		if (this.highlightTimer !== null) {
+			window.clearTimeout(this.highlightTimer);
+			this.highlightTimer = null;
+		}
+		this.hasPendingHighlight = false;
+		this.pendingHighlight = null;
 	}
 }
 

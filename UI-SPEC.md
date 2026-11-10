@@ -1,4 +1,4 @@
-# UI Specification — v0.2.4
+# UI Specification — v0.2.6
 
 - **Status:** implemented and verified (Obsidian 1.15.0, macOS, dark theme, English UI)
 - **Implementation record:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
