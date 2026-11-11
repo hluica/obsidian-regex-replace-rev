@@ -1,7 +1,7 @@
 # Refined Regex Replace and More — Plan and Status
 
 - **Version:** 0.3.1 (branch `v0.3.0`, pending acceptance)
-- **Status:** implemented on `v0.3.0`; E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI); 0.3.1 tag/release pending; 0.2.6 baseline is in the community directory
+- **Status:** implemented and verification-complete on `v0.3.0`; E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI); pending user acceptance; 0.3.1 is transitional and will not be released; 0.2.6 baseline is in the community directory
 - **Current implementation:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **UI specification:** [UI-SPEC.md](UI-SPEC.md)
 - **Community readiness audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
@@ -128,12 +128,12 @@ Main files:
 | Dark/light theme | Light and dark verified in Obsidian 1.15 for 0.3.1; active match uses an outline in addition to color |
 | English/Chinese UI | Verified; new strings in both languages |
 | Accessibility | Labels, ARIA on selects/status, focus-visible, native toggle Space support, 44px mobile targets; highlight has outline + color; full screen-reader audit not performed |
-| Multi-window | Two Obsidian windows tested in 0.2.6; the v0.3.1 panel/keymap changes are per-editor |
+| Multi-window | Two Obsidian windows tested in 0.2.6; v0.3.1 popout panel/F3/Escape and normal close verified |
 | Mobile | Obsidian mobile emulation tested; real iOS/Android not tested |
 | Windows/Linux | not re-tested for 0.3.1 |
-| Performance | 1 MB / 10,000+ matches: count refresh ≈185 ms including 180 ms debounce; engine scan itself milliseconds; highlight caps prevent unbounded decoration sets |
+| Performance | 1 MB / 10,000+ matches and 1 MB / 10,500 lines: count refresh ≈185–189 ms including 180 ms debounce; dotAll and zero-width caps hold; engine scan itself milliseconds |
 | Bounded actions | 100,000 match cap; 5,000 replace-all confirmation; 150,000-match note tested |
-| Community directory | 0.2.6 baseline listed; 0.3.1 submission/release pending acceptance |
+| Community directory | 0.2.6 baseline listed; 0.3.1 internal only; 0.3.2 external release pending |
 
 ## 5. Acceptance status (v0.3.1)
 
@@ -153,18 +153,23 @@ Main files:
 - [x] **Line-break markers for `\n` / `。\n` matches**
 - [x] **F3/Shift+F3/Escape from the editor**
 - [x] **Replace-all confirmation and 100,000 match cap**
+- [x] **Compact/narrow layout regression (700px / 500px viewport)**
+- [x] **Selection scope with newline markers**
+- [x] **1 MB newline/dotAll/zero-width performance regression**
+- [x] **Popout multi-window and F3/Escape regression**
+- [x] **ResizeObserver loop fix**
 - [x] Multi-window independent panels
 - [x] Mobile modal fallback
 - [x] Settings tab (4 items)
 - [ ] Real iOS/Android and Windows/Linux verification
 - [x] Dark-theme 0.3.1 visual audit and screenshot
-- [ ] 0.3.1 tag/release and community-directory update
+- [x] 0.3.1 internal acceptance (not released)
 
 ## 6. Next steps
 
 1. **v0.3.2:** real-device/platform checks, third-party theme pass, selection-refresh button, history icon, settings-save debounce.
 2. **v0.3.2:** optional multi-line find/replace fields and a `u` flag toggle, only after user feedback.
-3. **Release:** create tag/release `0.3.1`, attach `main.js`, `manifest.json`, `styles.css`, update the community directory entry.
+3. **Release:** when 0.3.2 is stable, create tag/release `0.3.2`, attach `main.js`, `manifest.json`, `styles.css`, update the community directory entry. 0.3.1 remains internal.
 4. Keep the 0.2.6 baseline changelog; do not reconstruct older versions.
 
 ## 7. Development

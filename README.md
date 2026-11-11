@@ -33,7 +33,7 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 
 ## Status
 
-Current version: **0.3.1** on branch `v0.3.0` (pending acceptance and merge). The previous **0.2.6** baseline is listed in Obsidian's community directory and has a GitHub release. The 0.3.1 release will follow acceptance. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md) · Changes: [CHANGELOG.md](CHANGELOG.md).
+Current version: **0.3.1** on branch `v0.3.0`. 0.3.1 is an internal, non-released transitional version; the next external release will be 0.3.2 after stabilization. The **0.2.6** baseline is listed in Obsidian's community directory and has a GitHub release. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md) · Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
@@ -137,7 +137,7 @@ All data is stored in the plugin's `data.json` under `plugin.settings`.
 - Replace all asks for confirmation above 5,000 matches and is blocked above the 100,000-match action cap; this keeps the single undoable transaction bounded.
 - The `u` regex flag is not exposed. Unicode property escapes that require `u` are not available in current version.
 - Word-level regex alternation has the boundary caveat described above.
-- The inline panel sits at the bottom of the editor content column; in a narrow split pane it switches to a compact stacked layout. Very narrow windows cap it at 70vh and scroll internally.
+- The inline panel sits at the bottom of the editor content column; in a narrow split pane it switches to a compact stacked layout. Below 260px panel width the four action buttons stack one per row. Very narrow windows cap it at 70vh and scroll internally, so the status row can be below the fold.
 - On mobile the panel is presented as a dialog rather than embedded; the modal does not draw custom highlights, but the position indicator and native selection work.
 - Real iOS/Android devices and Windows/Linux were not re-tested for 0.3.1; mobile emulation was used.
 

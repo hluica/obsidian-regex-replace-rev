@@ -5,7 +5,7 @@ versions are intentionally not reconstructed.
 
 ## 0.3.1 — 2026-11-11 (branch `v0.3.0`, pending acceptance)
 
-0.3.0 was never released; 0.3.1 supersedes it on the same branch.
+0.3.0 was never released; 0.3.1 supersedes it on the same branch. **0.3.1 is an internal transitional version and will not be released; 0.3.2 is the next external release.**
 
 ### Changed
 
@@ -14,6 +14,12 @@ versions are intentionally not reconstructed.
   background-colored halo for the active match. The dots use a pseudo-element
   with zero layout width and sit just above the insertion point, so they do
   not shift text, collide with a blockquote border, or get confused with one.
+- Compact panels below 260px now stack the four action buttons one per row and
+  allow the count/position group to wrap; 700px/500px viewport checks show no
+  horizontal overflow.
+- Panel resize handling defers compact-class updates to
+  `requestAnimationFrame` and ignores unchanged widths, avoiding
+  ResizeObserver loop warnings while a popout or window is being resized.
 - Added **line-break markers** for matches that contain `\n` (for example
   `\n`, `。\n`, or a dotAll match crossing lines). Each covered newline shows
   a small `↵` pill at the end of the affected line; the active match's pill is
@@ -32,6 +38,13 @@ versions are intentionally not reconstructed.
 - 56 unit tests across 6 files; TypeScript, ESLint, and production build pass.
 - Obsidian 1.15.0 light/dark: zero-width active dot, newline-only match `↵`,
   and combined `。\n` match with both the character highlight and the mark.
+- Compact checks: 700px viewport → 324px panel, 500px → 124px panel; action
+  buttons one per row at 124px, status wraps to 44px, no horizontal overflow.
+- 1 MB / 10,500 lines: `\n` count 10,000+ in 185.4 ms (including the 180 ms
+  debounce); dotAll `.*` 185.3 ms; zero-width `^` 188.5 ms; no freeze.
+- Selection scope with `\n` and `。\n`: count/offset/marker positions correct.
+- Popout window: independent panels; F3/Escape in the popout; closing it via
+  the normal window command leaves the main panel intact and logs no errors.
 
 ## 0.3.0 — 2026-11-11 (branch `v0.3.0`, not released)
 

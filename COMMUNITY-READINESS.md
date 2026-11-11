@@ -1,10 +1,10 @@
 # Community Readiness Audit — v0.3.1
 
 - **Plugin:** Refined Regex Replace and More (`regex-replace-rev`)
-- **Version:** 0.3.1 (branch `v0.3.0`, pending acceptance; 0.3.0 was not released)
+- **Version:** 0.3.1 (branch `v0.3.0`, internal transitional version; 0.3.0 and 0.3.1 are not released)
 - **Audit date:** 2026-11-11
 - **Repository:** `git@github.com:hluica/obsidian-regex-replace-rev.git`
-- **Overall:** 0.2.6 is listed in the Obsidian community directory; 0.3.1 source/build/docs are locally ready, with tag/release and directory update pending acceptance.
+- **Overall:** 0.2.6 is listed in the Obsidian community directory; 0.3.1 is an internal, non-released transitional version; 0.3.2 will be the next external release after stabilization.
 
 Official references used:
 
@@ -20,7 +20,7 @@ Official references used:
 | Source code | **Pass with documented limitations** | TS strict, ESLint clean, 56 tests, no disallowed APIs found |
 | Compiled artifacts | **Pass locally; release packaging pending** | `main.js`, `styles.css`, `manifest.json`, `versions.json` present; `main.js` intentionally gitignored and must be a release asset |
 | Auxiliary docs | **Pass** | README EN/ZH, LICENSE, CHANGELOG (0.2.6 baseline), current screenshots, PLAN/UI-SPEC/IMPLEMENTATION |
-| Community listing | **0.2.6 listed; 0.3.1 update pending** | Release 0.3.1 first, then update the directory entry |
+| Community listing | **0.2.6 listed; 0.3.2 update pending** | 0.3.1 is internal; update the directory entry when 0.3.2 is stable |
 
 ## 2. Source code
 
@@ -79,7 +79,7 @@ dev:errors        # no errors
 | `main.js` tracked by git? | No | intentionally gitignored; attach to GitHub release |
 | `node_modules` in release? | No | ignored; not shipped |
 
-**Release packaging remaining:** after acceptance, merge `v0.3.0`, create tag `0.3.1`, create the GitHub release, and attach `main.js`, `manifest.json`, `styles.css`; then update the community directory entry.
+**Release packaging remaining:** 0.3.1 stays internal and is not tagged; after acceptance, continue on `v0.3.0` toward 0.3.2. When 0.3.2 is stable, create tag/release `0.3.2` and attach `main.js`, `manifest.json`, `styles.css`; then update the community directory entry.
 
 ## 4. Auxiliary documentation
 
@@ -102,11 +102,12 @@ dev:errors        # no errors
 
 ## 5. Submission / release next steps
 
-1. Accept and merge `v0.3.0`.
-2. Create tag `0.3.1` and its GitHub release; attach `main.js`, `manifest.json`, `styles.css`; verify the artifact loads from a clean vault.
-3. Update the existing community-directory entry to 0.3.1.
-4. Optional: add a release workflow/attestation; add a `npm run deploy` script for the dev vault.
-5. Known non-blocking limitations: real iOS/Android and Windows/Linux not re-tested; highlight ranges capped; no full screen-reader audit; YAML property decorations not independently verified.
+1. Keep 0.3.1 internal on `v0.3.0`; do not tag or release it.
+2. Continue 0.3.2 development on the same branch until stable.
+3. When 0.3.2 is stable, decide whether to merge and create tag/release `0.3.2`; attach `main.js`, `manifest.json`, `styles.css`; verify from a clean vault.
+4. Update the existing community-directory entry to 0.3.2.
+5. Optional: add a release workflow/attestation; add a `npm run deploy` script for the dev vault.
+6. Known non-blocking limitations: real iOS/Android and Windows/Linux not re-tested; highlight ranges capped; no full screen-reader audit; YAML property decorations not independently verified.
 
 ## 6. Verification highlights
 
@@ -116,5 +117,8 @@ dev:errors        # no errors
 - Newline `\n`: 228 matches, 24 `↵` markers; active break filled; mixed `。\n` shows `。` mark + `↵`.
 - Replace-all confirmation at 19,588 matches (Cancel focused); 6,000-match confirm + undo; 150,000-match cap message.
 - 1 MB / 10,500 matches: count update 184.9 ms including the 180 ms debounce; no errors.
+- 1 MB / 10,500 lines: `\n` 185.4 ms, dotAll `.*` 185.3 ms, zero-width `^` 188.5 ms (all including debounce); caps hold; no freeze.
+- Compact 700px → 324px panel and 500px → 124px panel: no horizontal overflow; 124px uses one action per row and wraps status; documented 70vh internal scroll.
+- Popout window: independent panel, F3/Escape verified; normal `workspace:close-window` leaves the main panel open with no errors.
 - Dark theme: zero dots and `↵` markers use theme variables; active states remain distinct.
 - Mobile modal: 44px controls, position `2 / 164`, no errors.

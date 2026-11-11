@@ -1,6 +1,6 @@
 # UI Specification — v0.3.1
 
-- **Status:** implemented on branch `v0.3.0` (pending acceptance); E2E-verified in Obsidian 1.15.0, macOS, Chinese/light and dark UI; 0.3.1 supersedes the unreleased 0.3.0
+- **Status:** implemented on branch `v0.3.0` (pending acceptance); E2E-verified in Obsidian 1.15.0, macOS, Chinese/light and dark UI; 0.3.1 is an internal transitional version and supersedes the unreleased 0.3.0
 - **Implementation record:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **Plan/status:** [PLAN.md](PLAN.md)
 - **Community audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
@@ -233,7 +233,9 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 ## 10. Responsive, themes, multi-window
 
 - `rr-compact` at panel content width <620px: single column, stacked actions/modes/options/status, no spacer.
-- `max-height: 70vh` with internal scroll prevents the English regex panel from exceeding a 600px-wide window.
+- `rr-narrow` at panel content width <260px: action buttons become one per row and `.rr-status-left` may wrap; this prevents clipped English action labels in very narrow panes.
+- `max-height: 70vh` with internal scroll prevents the English regex panel from exceeding a 600px-wide window. At very small panel widths the status row may be below the internal scroll fold.
+- Compact class updates are coalesced with `requestAnimationFrame` and skipped when the width is unchanged, preventing ResizeObserver loops during viewport/popout resizes.
 - Only Obsidian CSS variables; no `.theme-dark` branches, no `!important`, no `:has`.
 - Multi-window: command targets `editor` identity; panels are closed only within the same `ownerDocument`; one panel per window.
 - Chinese/light and dark verified for 0.3.1; English strings use the same layout and were verified in 0.2.6.
@@ -254,7 +256,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 
 ## 12. Known UI gaps
 
-- Very narrow windows require internal scrolling at the 70vh cap.
+- Very narrow windows require internal scrolling at the 70vh cap; below 260px the four actions stack one per row and the status row may sit below the fold.
 - The mobile modal has no custom all-match decorations; it relies on native selection.
 - No full screen-reader or third-party-theme audit yet.
 - Highlight ranges/zero-width dots/line-break markers are capped; extremely large result sets show `10000+` and only the first 5,000 highlighted ranges.

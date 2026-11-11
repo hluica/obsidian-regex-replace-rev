@@ -437,6 +437,16 @@
 	width: 100%;
 }
 
+/* A note pane this narrow cannot fit two action labels side by side. */
+.rr-panel.rr-narrow .rr-actions {
+	grid-template-columns: 1fr;
+}
+
+.rr-panel.rr-narrow .rr-status-left {
+	flex-wrap: wrap;
+	row-gap: 2px;
+}
+
 .rr-panel.rr-compact .rr-mode-row {
 	grid-column: 1 / -1;
 	display: grid;

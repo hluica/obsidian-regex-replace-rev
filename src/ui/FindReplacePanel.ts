@@ -89,6 +89,8 @@ export class FindReplacePanel {
 	private historyMenu: Menu | null = null;
 	private suppressEditorChangeUntil = 0;
 	private resizeObserver: ResizeObserver | null = null;
+	private compactFrame: number | null = null;
+	private compactWidth = -1;
 	private activeIndex: number | null = null;
 	private matchCount = 0;
 	private truncated = false;
@@ -135,11 +137,11 @@ export class FindReplacePanel {
 		}
 		this.refresh();
 		if (this.host.variant === "inline") {
+			this.updateCompact();
 			this.resizeObserver = new ResizeObserver(() => {
-				this.updateCompact();
+				this.scheduleCompactUpdate();
 			});
 			this.resizeObserver.observe(this.rootEl);
-			this.updateCompact();
 		}
 	}
 
@@ -161,6 +163,12 @@ export class FindReplacePanel {
 		this.hideHistoryMenu();
 		this.resizeObserver?.disconnect();
 		this.resizeObserver = null;
+		if (this.compactFrame !== null) {
+			this.rootEl.ownerDocument.defaultView?.cancelAnimationFrame(
+				this.compactFrame,
+			);
+			this.compactFrame = null;
+		}
 		this.persist();
 		this.rootEl.remove();
 	}
@@ -929,11 +937,34 @@ export class FindReplacePanel {
 		this.setButtonsDisabled(true);
 	}
 
+	private scheduleCompactUpdate(): void {
+		if (this.compactFrame !== null) {
+			return;
+		}
+		const win = this.rootEl.ownerDocument.defaultView;
+		if (win === null) {
+			this.updateCompact();
+			return;
+		}
+		this.compactFrame = win.requestAnimationFrame(() => {
+			this.compactFrame = null;
+			this.updateCompact();
+		});
+	}
+
 	private updateCompact(): void {
 		const width = this.rootEl.clientWidth;
+		if (width === this.compactWidth) {
+			return;
+		}
+		this.compactWidth = width;
 		this.rootEl.toggleClass(
 			"rr-compact",
 			width > 0 && width < 620,
+		);
+		this.rootEl.toggleClass(
+			"rr-narrow",
+			width > 0 && width < 260,
 		);
 	}
 

@@ -1,6 +1,6 @@
 # Implementation Record — v0.3.1 (match markers and visibility)
 
-Status: **implemented on branch `v0.3.0`, pending acceptance and merge**. E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI). The 0.2.6 baseline is listed in the community directory; the 0.3.1 tag/release is pending (0.3.0 was not released). See [CHANGELOG.md](CHANGELOG.md) and [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
+Status: **implemented on branch `v0.3.0`, pending acceptance; development continues on the branch until the next stable version**. E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI). The 0.2.6 baseline is listed in the community directory; 0.3.1 is an internal transitional version and will not be tagged/released (0.3.0 was also not released). 0.3.2 is the next external release candidate. See [CHANGELOG.md](CHANGELOG.md) and [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
 
 v0.3.1 adds all-match highlighting, a persistent current-match position, redesigned zero-width dots, visible line-break markers for `\n` matches, editor-focus keyboard navigation, and bounded replace-all behavior.
 
@@ -75,7 +75,8 @@ Mobile / fallback dialog:
 - `.rr-match-highlight` uses `var(--text-highlight-bg, color-mix(... --text-selection ...))`; the active class uses `var(--text-selection)` plus an accent outline so the distinction is not color-only.
 - `.rr-zero-width` is a 6px translucent-gray filled circular dot above the insertion point for inactive matches; `.rr-zero-width-active` is filled accent with a background-colored halo. Both use a zero-layout-width pseudo-element, so text does not shift.
 - `.rr-line-break` is an absolutely positioned `↵` pill at the line end; `.rr-line-break-active` is accent-filled with `--text-on-accent` text. It does not change line width.
-- Existing desktop/compact/mobile layout rules are unchanged.
+- Below 260px, `.rr-narrow` stacks the four action buttons one per row and lets `.rr-status-left` wrap; this avoids clipped action labels in very narrow panes.
+- `ResizeObserver` compact updates are coalesced through `requestAnimationFrame` and skipped when the width is unchanged; the initial update happens before observing. This avoids ResizeObserver loop warnings during viewport/popout resizes.
 
 ## What was built
 
@@ -95,7 +96,7 @@ Mobile / fallback dialog:
 | Current-file / captured selection scope | done |
 | Live count + status/error messages | done |
 | History (20, clear, persist) | done |
-| Desktop inline panel, compact layout, multi-window | done (0.2.6 regression baseline) |
+| Desktop inline panel, compact/narrow layout, multi-window | done (0.2.6 regression baseline; 0.3.1 narrow fix) |
 | Mobile modal fallback | done |
 | Declarative settings | done |
 | Unit tests, lint, type-check, build | done |
@@ -127,6 +128,12 @@ npm run build     # main.js produced (v0.3.1, ~44 KB)
 - Replace all on a 6,000-match scratch note: confirmation → replace → `已替换 6000 处，可撤销`; undo restored all 6,000 characters.
 - Safety cap: a 150,000-match scratch note shows `10000+` and Replace all reports “结果超过 100000 条，请缩小查找范围” without opening a modal.
 - 1 MB scratch note (10,500 matches): input-to-count update 184.9 ms including the 180 ms debounce; `10000+` count and 10 visible highlights; `dev:errors` empty.
+- 1 MB / 10,500-line note: `\n` count `10000+` in 185.4 ms including debounce; dotAll `.*` 185.3 ms; zero-width `^` 188.5 ms; visible markers capped and no freeze.
+- Selection scope (`第一段。\n第二段\n第三段。`): `\n` → 1 match/1 marker; `。\n` → 1 match, 1 character mark, 1 active `↵`; offsets are absolute and correct.
+- Compact widths: 700px viewport → 324px panel (compact), 500px → 124px panel (compact + narrow). At 124px, actions are one per row, labels fit, status-left wraps, status height 44px, no horizontal overflow; the panel uses the documented 70vh internal scroll.
+- Document edit with `\n` search: inserting a real newline updates 2 → 3 matches/markers; undo returns to 2. Replace all of `\n` with `|` gives `a|b|c`, `无匹配`, and undo restores `a\nb\nc`.
+- Popout window: main and popout panels are independent; F3 in the popout changes `1 / 2 → 2 / 2`; Escape closes only the popout panel. Closing the popout through `workspace:close-window` leaves the main panel open and logs no errors.
+- ResizeObserver regression: manual width changes and CDP viewport changes (700px, 500px) produce no `ResizeObserver loop` errors after the rAF/width guard. Forcing `leaf.detach()` on a popout can still produce browser resize warnings; normal window close does not.
 - Mobile emulation: `.modal.rr-modal` opens single-column, 44px controls, 6 options; Find updates `2 / 164`; no errors.
 - Scratch notes were deleted after testing; no content changes were left in the dev vault.
 
@@ -137,6 +144,8 @@ npm run build     # main.js produced (v0.3.1, ~44 KB)
 - The mobile modal has no custom decorations; it relies on the native selection, count, and position.
 - CM6 decorations in YAML frontmatter/properties are not independently verified; the editor's property widgets may not show marks that exist in the raw document.
 - Real iOS/Android, Windows/Linux, and third-party themes are not re-tested for 0.3.1.
+- At 124px panel width the compact panel is taller than 70vh and the status row requires internal scrolling; this is the documented narrow-window tradeoff.
+- Programmatic popout teardown with `leaf.detach()` still emits browser ResizeObserver warnings in some runs; normal `workspace:close-window` was clean.
 - The `u` regex flag, multiline literal inputs, preserve case, and vault-wide replace remain out of scope.
 
 ## Install / update
