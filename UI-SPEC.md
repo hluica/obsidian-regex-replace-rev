@@ -199,8 +199,8 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 
 - **All matches** in the current file or captured selection use `.rr-match-highlight` with `--text-highlight-bg` (fallback `--text-selection`). Visible at all times, including while the find field has focus.
 - **Active match** adds `.rr-match-highlight-active`, using `--text-selection` and an accent outline. The outline means the distinction is not color-only.
-- **Zero-width matches** use a 6px hollow circular dot (`.rr-zero-width`) for inactive matches and a filled accent dot with a `--background-primary` halo (`.rr-zero-width-active`) for the active match. The dot shape is deliberately different from a blockquote border; it is `pointer-events: none` so it does not block the caret.
-- **Newline matches** (`\n`, `。\n`, dotAll spans) use a small `↵` pill (`.rr-line-break`, active `.rr-line-break-active`) at each covered line end. A newline-only match has no text mark, but its marker is visible; a mixed match shows the character mark plus the marker.
+- **Zero-width matches** use a 6px hollow circular dot (`.rr-zero-width`) for inactive matches and a filled accent dot with a `--background-primary` halo (`.rr-zero-width-active`) for the active match. Dots are rendered just above the insertion point by a zero-layout-width pseudo-element, so they neither shift text nor resemble a blockquote border; `pointer-events: none` keeps the caret usable.
+- **Newline matches** (`\n`, `。\n`, dotAll spans) use a small `↵` pill (`.rr-line-break`, active `.rr-line-break-active`) at each covered line end; it is absolutely positioned and adds no line width. A newline-only match has no text mark, but its marker is visible; a mixed match shows the character mark plus the marker.
 - At most 5,000 ranges, 1,000 zero-width dots, and 1,000 line-break markers are rendered; the active range is always preserved. The count/position still reflect the scan total up to 10,000/100,000.
 - Highlights are cleared on close, empty/error states, and document switch.
 - Highlight effects are coalesced into a `setTimeout(0)` task; no dispatch occurs while CodeMirror is updating.

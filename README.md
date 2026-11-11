@@ -19,7 +19,7 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 - **Multi-window**: each Obsidian window has its own panel; the command targets the editor of the window it is invoked in and closing one window’s panel does not close the others.
 - **All-match highlighting**: every match in the current file or selection is highlighted; the current match has a stronger outline, so the result set is visible while you type or step through it.
 - **Current position**: a persistent `3 / 164` indicator follows Find, selection changes, replacements, and panel reopen.
-- **Zero-width matches**: `^`, `\b`, and lookahead matches get a small hollow dot; the active match gets a filled accent dot with a halo.
+- **Zero-width matches**: `^`, `\b`, and lookahead matches get a small hollow dot above the caret position; the active match gets a filled accent dot with a halo. The dots add no layout width.
 - **Newline matches**: matches containing a line break (`\n`, `。\n`, or dotAll matches crossing lines) show a small `↵` pill at the affected line end, so an otherwise invisible newline is visible and the active break is highlighted.
 - **Editor-focus navigation**: F3, Shift+F3, and Escape work while the editor has focus, not only while the find field has focus.
 - **Compact actions**: the four action buttons use a desktop size close to Obsidian settings controls, with hover and pressed (accent) feedback.

@@ -62,7 +62,6 @@ class LineBreakMarker extends WidgetType {
 		marker.className = this.active
 			? "rr-line-break rr-line-break-active"
 			: "rr-line-break";
-		marker.textContent = "\u21B5";
 		marker.setAttribute("aria-hidden", "true");
 		return marker;
 	}

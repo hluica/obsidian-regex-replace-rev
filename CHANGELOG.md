@@ -11,12 +11,14 @@ versions are intentionally not reconstructed.
 
 - Redesigned zero-width markers from theme-accent vertical bars to small
   **hollow dots** for inactive matches and **filled accent dots** with a
-  background-colored halo for the active match. The dot shape no longer reads
-  as a blockquote's left border, and active/inactive states are distinct.
+  background-colored halo for the active match. The dots use a pseudo-element
+  with zero layout width and sit just above the insertion point, so they do
+  not shift text, collide with a blockquote border, or get confused with one.
 - Added **line-break markers** for matches that contain `\n` (for example
   `\n`, `。\n`, or a dotAll match crossing lines). Each covered newline shows
   a small `↵` pill at the end of the affected line; the active match's pill is
-  filled with the accent color. A newline-only match is now visible even though
+  filled with the accent color. The pill is absolutely positioned so it does
+  not change line width. A newline-only match is now visible even though
   the newline itself has no glyph.
 
 ### Added

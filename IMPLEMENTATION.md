@@ -73,8 +73,8 @@ Mobile / fallback dialog:
 
 - `.rr-status-left` groups the count and position; `.rr-position` uses tabular numerals.
 - `.rr-match-highlight` uses `var(--text-highlight-bg, color-mix(... --text-selection ...))`; the active class uses `var(--text-selection)` plus an accent outline so the distinction is not color-only.
-- `.rr-zero-width` is a 6px hollow circular dot for inactive matches; `.rr-zero-width-active` is filled accent with a background-colored halo.
-- `.rr-line-break` is a small `↵` pill; `.rr-line-break-active` is accent-filled with `--text-on-accent` text.
+- `.rr-zero-width` is a 6px hollow circular dot above the insertion point for inactive matches; `.rr-zero-width-active` is filled accent with a background-colored halo. Both use a zero-layout-width pseudo-element, so text does not shift.
+- `.rr-line-break` is an absolutely positioned `↵` pill at the line end; `.rr-line-break-active` is accent-filled with `--text-on-accent` text. It does not change line width.
 - Existing desktop/compact/mobile layout rules are unchanged.
 
 ## What was built

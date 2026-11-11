@@ -96,7 +96,7 @@ Main files:
 - The active match adds `.rr-match-highlight-active` with the selection background and an accent outline.
 - The status row always shows `count` on the left and `position / total` next to it: `164 个匹配  11 / 164`.
 - The position follows Find, Replace, selection changes, replacement, document changes, and reopening the panel.
-- Zero-width matches render a small hollow `.rr-zero-width` dot; the active match is a filled accent dot with a background halo, so it is distinct from other matches and from a blockquote border.
+- Zero-width matches render a small hollow `.rr-zero-width` dot above the insertion point (zero layout width); the active match is a filled accent dot with a background halo, so it is distinct from other matches and from a blockquote border.
 - Matches containing `\n` render a `.rr-line-break` `↵` pill at each affected line end; the active match's pill is accent-filled. This makes newline-only matches and mixed matches such as `。\n` visible.
 - Highlight ranges are capped at 5,000, zero-width dots at 1,000, and line-break markers at 1,000; the active match is always kept.
 - F3 / Shift+F3 / Escape work from the editor while the panel is open; the panel does not need focus.
