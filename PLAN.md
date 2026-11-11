@@ -1,7 +1,7 @@
 # Refined Regex Replace and More — Plan and Status
 
-- **Version:** 0.3.3 (branch `v0.3.0`, public release candidate, pending acceptance)
-- **Status:** implemented and verification-complete on `v0.3.0`; E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI); pending user acceptance; 0.3.3 is the first public release candidate; 0.2.6 baseline is in the community directory
+- **Version:** 0.3.3 (released from tag `0.3.3`)
+- **Status:** implemented and verification-complete; released 2026-11-11 from tag `0.3.3`; 0.3.3 community-directory update pending; 0.2.6 baseline is in the community directory
 - **Current implementation:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **UI specification:** [UI-SPEC.md](UI-SPEC.md)
 - **Community readiness audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
@@ -135,7 +135,7 @@ Main files:
 | Windows/Linux | not re-tested for 0.3.3 |
 | Performance | 1 MB / 10,000+ matches and 1 MB / 10,500 lines: count refresh ≈185–189 ms including 180 ms debounce; dotAll and zero-width caps hold; engine scan itself milliseconds |
 | Bounded actions | 100,000 match cap; 5,000 replace-all confirmation; 150,000-match note tested |
-| Community directory | 0.2.6 baseline listed; 0.3.3 public release candidate pending acceptance |
+| Community directory | 0.2.6 baseline listed; 0.3.3 released, directory update pending |
 
 ## 5. Acceptance status (v0.3.3)
 
@@ -173,13 +173,14 @@ Main files:
 - [x] Settings tab (4 items)
 - [ ] Real iOS/Android and Windows/Linux verification
 - [x] Dark-theme 0.3.3 visual audit and screenshot
-- [ ] 0.3.3 public release (merge/tag/directory)
+- [x] 0.3.3 public release (merge/tag)
+- [ ] 0.3.3 community-directory update
 
 ## 6. Next steps
 
-1. **Acceptance:** verify 0.3.3 on the branch; then merge and create tag/release `0.3.3` with `main.js`, `manifest.json`, `styles.css`.
-2. **Release:** update the community directory entry to 0.3.3 and verify from a clean vault.
-3. **Post-release:** real iOS/Android/Windows/Linux checks and a full VoiceOver/Narrator session; 0.3.1/0.3.2 remain internal.
+1. **Directory:** update the community directory entry to 0.3.3 and verify from a clean vault.
+2. **Post-release:** real iOS/Android/Windows/Linux checks and a full VoiceOver/Narrator session.
+3. **Next:** keep 0.3.1/0.3.2 as internal history; 0.3.3 is the released version.
 4. Keep the 0.2.6 baseline changelog; do not reconstruct older versions.
 
 ## 7. Development

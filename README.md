@@ -36,7 +36,7 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 
 ## Status
 
-Current version: **0.3.3** release candidate on branch `v0.3.0`. 0.3.3 is the first planned public release; it is pending acceptance, merge, tag, and community-directory update. The **0.2.6** baseline is listed in Obsidian's community directory and has a GitHub release. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md) · Changes: [CHANGELOG.md](CHANGELOG.md).
+Current version: **0.3.3**, released on 2026-11-11 from tag `0.3.3`. The **0.2.6** baseline is listed in Obsidian's community directory; the 0.3.3 community-directory update is the remaining distribution step. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md) · Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 

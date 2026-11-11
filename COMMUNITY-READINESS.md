@@ -1,10 +1,10 @@
 # Community Readiness Audit — v0.3.3
 
 - **Plugin:** Refined Regex Replace and More (`regex-replace-rev`)
-- **Version:** 0.3.3 (branch `v0.3.0`, public release candidate; 0.3.0/0.3.1/0.3.2 were internal)
+- **Version:** 0.3.3 (released 2026-11-11; 0.3.0/0.3.1/0.3.2 were internal)
 - **Audit date:** 2026-11-11
 - **Repository:** `git@github.com:hluica/obsidian-regex-replace-rev.git`
-- **Overall:** 0.2.6 is listed in the Obsidian community directory; 0.3.3 is the first public release candidate, pending acceptance, merge, tag, and directory update.
+- **Overall:** 0.3.3 is released from tag `0.3.3`; 0.2.6 is listed in the Obsidian community directory and the 0.3.3 directory update is pending.
 
 Official references used:
 
@@ -20,7 +20,7 @@ Official references used:
 | Source code | **Pass with documented limitations** | TS strict, ESLint clean, 61 tests, no disallowed APIs found |
 | Compiled artifacts | **Pass locally; release packaging pending** | `main.js`, `styles.css`, `manifest.json`, `versions.json` present; `main.js` intentionally gitignored and must be a release asset |
 | Auxiliary docs | **Pass** | README EN/ZH, LICENSE, CHANGELOG (0.2.6 baseline), current screenshots, PLAN/UI-SPEC/IMPLEMENTATION |
-| Community listing | **0.2.6 listed; 0.3.3 pending** | 0.3.3 release candidate; update the directory entry after tag/release |
+| Community listing | **0.2.6 listed; 0.3.3 update pending** | 0.3.3 is released; update the directory entry |
 
 ## 2. Source code
 
@@ -79,7 +79,7 @@ dev:errors        # no errors
 | `main.js` tracked by git? | No | intentionally gitignored; attach to GitHub release |
 | `node_modules` in release? | No | ignored; not shipped |
 
-**Release packaging remaining:** accept 0.3.3 on `v0.3.0`; then merge, create tag/release `0.3.3`, attach `main.js`, `manifest.json`, `styles.css`, and update the community directory entry. Verify from a clean vault.
+**Release packaging remaining:** attach the rebuilt `main.js`, `manifest.json`, and `styles.css` to the GitHub release for tag `0.3.3` if not already uploaded, and update the community directory entry. Verify from a clean vault.
 
 ## 4. Auxiliary documentation
 
@@ -104,9 +104,9 @@ dev:errors        # no errors
 
 ## 5. Submission / release next steps
 
-1. Accept the 0.3.3 release candidate on `v0.3.0`.
-2. Merge and create tag/release `0.3.3`; attach `main.js`, `manifest.json`, `styles.css`; verify from a clean vault.
-3. Update the existing community-directory entry to 0.3.3.
+1. Attach the rebuilt release assets (`main.js`, `manifest.json`, `styles.css`) to tag `0.3.3` if the hosting release still needs them.
+2. Update the existing community-directory entry to 0.3.3.
+3. Verify from a clean vault.
 4. Run a full VoiceOver/Narrator session and real iOS/Android/Windows/Linux checks after release.
 5. Optional: add a release workflow/attestation; add a `npm run deploy` script for the dev vault.
 6. Known non-blocking limitations: real iOS/Android and Windows/Linux not re-tested; highlight ranges capped; no full screen-reader audit; YAML property decorations not independently verified.

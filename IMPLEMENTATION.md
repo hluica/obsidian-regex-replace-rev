@@ -1,6 +1,6 @@
 # Implementation Record — v0.3.3 (Unicode, accessibility, themes)
 
-Status: **implemented on branch `v0.3.0`, pending acceptance; development continues on the branch until the next stable version**. E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI). The 0.2.6 baseline is listed in the community directory; 0.3.3 is the first public release candidate, pending acceptance, merge, tag, and directory update. 0.3.0/0.3.1/0.3.2 were internal only. See [CHANGELOG.md](CHANGELOG.md) and [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
+Status: **released from tag `0.3.3` on 2026-11-11**. E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI). The 0.2.6 baseline is listed in the community directory; the 0.3.3 community-directory update is the remaining distribution step. 0.3.0/0.3.1/0.3.2 were internal only. See [CHANGELOG.md](CHANGELOG.md) and [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
 
 v0.3.3 keeps the 0.3.2 marker/selection layer and adds a regex-only Unicode (u) option, accessibility landmarks/grouping, a Chromium AX-tree audit, and third-party theme adaptation for Catppuccin and Minimal.
 

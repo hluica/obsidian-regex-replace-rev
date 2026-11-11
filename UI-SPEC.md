@@ -1,6 +1,6 @@
 # UI Specification — v0.3.3
 
-- **Status:** implemented on branch `v0.3.0` (pending acceptance); E2E-verified in Obsidian 1.15.0, macOS, Chinese/light and dark UI; 0.3.3 is the first public release candidate
+- **Status:** released from tag `0.3.3` on 2026-11-11; E2E-verified in Obsidian 1.15.0, macOS, Chinese/light and dark UI
 - **Implementation record:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **Plan/status:** [PLAN.md](PLAN.md)
 - **Community audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)

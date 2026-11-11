@@ -36,7 +36,7 @@
 
 ## 状态
 
-当前版本 **0.3.3** 发布候选，位于 `v0.3.0` 分支。0.3.3 是首个计划公开发布的版本，待验收、合并、打 tag 和更新社区目录。上一个基线版本 **0.2.6** 已列入 Obsidian 社区插件目录并有 GitHub Release。发布审计见 [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)，变更见 [CHANGELOG.md](CHANGELOG.md)。
+当前版本 **0.3.3**，已于 2026-11-11 从 `0.3.3` tag 发布。上一个基线版本 **0.2.6** 已列入 Obsidian 社区插件目录；0.3.3 的社区目录更新是剩余的分发步骤。发布审计见 [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)，变更见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 安装
 

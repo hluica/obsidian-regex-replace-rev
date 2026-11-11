@@ -3,10 +3,10 @@
 This changelog starts at **0.2.6**, the baseline community release. Earlier
 versions are intentionally not reconstructed.
 
-## 0.3.3 — 2026-11-11 (release candidate, branch `v0.3.0`)
+## 0.3.3 — 2026-11-11 (released)
 
-0.3.3 is the first public-release candidate; it remains on the development
-branch pending acceptance, merge, tag, and community-directory update.
+0.3.3 was released from tag `0.3.3`; the community-directory update is the
+remaining distribution step.
 
 ### Added
 
@@ -61,8 +61,8 @@ branch pending acceptance, merge, tag, and community-directory update.
 
 ## 0.3.2 — 2026-11-11 (branch `v0.3.0`, internal, not released)
 
-0.3.2 is another internal transitional version; 0.3.3 is the next external
-release candidate.
+0.3.2 is another internal transitional version; 0.3.3 became the next
+external release.
 
 ### Added
 
