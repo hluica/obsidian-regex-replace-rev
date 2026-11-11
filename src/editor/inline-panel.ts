@@ -1,48 +1,90 @@
-import { StateEffect, StateField } from "@codemirror/state";
+import { Prec, StateEffect, StateField, type Range } from "@codemirror/state";
 import {
 	Decoration,
 	EditorView,
+	keymap,
 	showPanel,
+	WidgetType,
 	type DecorationSet,
 	type Panel,
 	type ViewUpdate,
 } from "@codemirror/view";
 import { editorInfoField, MarkdownView } from "obsidian";
+import { buildHighlightPlan } from "./highlights";
 import { FindReplacePanel } from "../ui/FindReplacePanel";
-import type { PanelPlugin } from "../ui/host";
+import type { PanelHighlight, PanelPlugin } from "../ui/host";
 
 export const setInlinePanelOpen = StateEffect.define<boolean>();
-export const setInlineMatchHighlight = StateEffect.define<{
-	from: number;
-	to: number;
-} | null>();
+export const setInlineMatchHighlights =
+	StateEffect.define<PanelHighlight | null>();
 
-const matchHighlightMark = Decoration.mark({ class: "rr-match-highlight" });
+const inactiveMark = Decoration.mark({ class: "rr-match-highlight" });
+const activeMark = Decoration.mark({
+	class: "rr-match-highlight rr-match-highlight-active",
+});
+
+class ZeroWidthMarker extends WidgetType {
+	readonly active: boolean;
+
+	constructor(active: boolean) {
+		super();
+		this.active = active;
+	}
+
+	eq(other: WidgetType): boolean {
+		return other instanceof ZeroWidthMarker && other.active === this.active;
+	}
+
+	toDOM(view: EditorView): HTMLElement {
+		const marker = view.dom.ownerDocument.createElement("span");
+		marker.className = this.active
+			? "rr-zero-width rr-zero-width-active"
+			: "rr-zero-width";
+		marker.setAttribute("aria-hidden", "true");
+		return marker;
+	}
+}
+
+function buildDecorationSet(
+	request: PanelHighlight,
+	docLength: number,
+): DecorationSet {
+	const plan = buildHighlightPlan(
+		request.ranges,
+		request.active,
+		docLength,
+	);
+	const ranges: Array<Range<Decoration>> = [];
+
+	for (const mark of plan.marks) {
+		ranges.push(
+			mark.active
+				? activeMark.range(mark.from, mark.to)
+				: inactiveMark.range(mark.from, mark.to),
+		);
+	}
+	for (const marker of plan.zeroWidth) {
+		ranges.push(
+			Decoration.widget({
+				widget: new ZeroWidthMarker(marker.active),
+				side: 1,
+			}).range(marker.pos),
+		);
+	}
+
+	return ranges.length === 0 ? Decoration.none : Decoration.set(ranges, true);
+}
 
 const matchHighlightField = StateField.define<DecorationSet>({
 	create: () => Decoration.none,
 	update(value, tr) {
 		let next = value.map(tr.changes);
 		for (const effect of tr.effects) {
-			if (effect.is(setInlineMatchHighlight)) {
+			if (effect.is(setInlineMatchHighlights)) {
 				if (effect.value === null) {
 					return Decoration.none;
 				}
-				const docLength = tr.state.doc.length;
-				const from = Math.max(
-					0,
-					Math.min(effect.value.from, docLength),
-				);
-				const to = Math.max(
-					0,
-					Math.min(effect.value.to, docLength),
-				);
-				if (from >= to) {
-					return Decoration.none;
-				}
-				next = Decoration.set([
-					matchHighlightMark.range(from, to),
-				]);
+				next = buildDecorationSet(effect.value, tr.state.doc.length);
 			}
 		}
 		return next;
@@ -53,13 +95,20 @@ const matchHighlightField = StateField.define<DecorationSet>({
 export function closeInlinePanel(view: EditorView): void {
 	view.dispatch({
 		effects: [
-			setInlineMatchHighlight.of(null),
+			setInlineMatchHighlights.of(null),
 			setInlinePanelOpen.of(false),
 		],
 	});
 }
 
-const panelControllers = new WeakMap<EditorView, { focus: () => void }>();
+interface PanelController {
+	focus: () => void;
+	findNext: () => void;
+	findPrevious: () => void;
+	close: () => void;
+}
+
+const panelControllers = new WeakMap<EditorView, PanelController>();
 
 export function focusInlinePanel(view: EditorView): boolean {
 	const controller = panelControllers.get(view);
@@ -78,6 +127,24 @@ export function findEditorView(view: MarkdownView): EditorView | null {
 	return EditorView.findFromDOM(dom);
 }
 
+function runPanelCommand(
+	view: EditorView,
+	action: "next" | "previous" | "close",
+): boolean {
+	const controller = panelControllers.get(view);
+	if (controller === undefined) {
+		return false;
+	}
+	if (action === "next") {
+		controller.findNext();
+	} else if (action === "previous") {
+		controller.findPrevious();
+	} else {
+		controller.close();
+	}
+	return true;
+}
+
 class InlineFindReplacePanel implements Panel {
 	readonly dom: HTMLElement;
 	readonly top = false;
@@ -85,7 +152,7 @@ class InlineFindReplacePanel implements Panel {
 	private readonly panel: FindReplacePanel;
 	private readonly closePanel: () => void;
 	private highlightTimer: number | null = null;
-	private pendingHighlight: { from: number; to: number } | null = null;
+	private pendingHighlight: PanelHighlight | null = null;
 	private hasPendingHighlight = false;
 	private destroyed = false;
 
@@ -114,14 +181,15 @@ class InlineFindReplacePanel implements Panel {
 		};
 
 		this.panel = new FindReplacePanel({
+			app: plugin.app,
 			plugin,
 			containerEl: container,
 			variant: "inline",
 			getEditor,
 			getDocumentKey,
 			requestClose: this.closePanel,
-			highlightMatch: (from, to) => {
-				this.queueHighlight({ from, to });
+			highlightMatches: (request) => {
+				this.queueHighlight(request);
 			},
 			clearHighlight: () => {
 				this.queueHighlight(null);
@@ -134,6 +202,9 @@ class InlineFindReplacePanel implements Panel {
 		this.panel.focusFind();
 		panelControllers.set(this.view, {
 			focus: () => this.panel.focusFind(),
+			findNext: () => this.panel.findNext(),
+			findPrevious: () => this.panel.findPrevious(),
+			close: () => this.closePanel(),
 		});
 		this.dom.addEventListener("keydown", (event) => {
 			if (event.key === "Escape" && !event.defaultPrevented) {
@@ -146,6 +217,8 @@ class InlineFindReplacePanel implements Panel {
 	update(update: ViewUpdate): void {
 		if (update.docChanged) {
 			this.panel.handleEditorChange();
+		} else if (update.selectionSet) {
+			this.panel.handleSelectionChange();
 		}
 	}
 
@@ -159,12 +232,12 @@ class InlineFindReplacePanel implements Panel {
 
 	/**
 	 * Highlight effects can be requested while CodeMirror is mounting the
-	 * panel, which is itself inside an EditorView update. Dispatching there
-	 * throws "Calls to EditorView.update are not allowed while an update is
-	 * in progress", so coalesce the latest request into a task after the
-	 * current update completes.
+	 * panel or while an editor update is in progress. Dispatching there throws
+	 * "Calls to EditorView.update are not allowed while an update is in
+	 * progress", so coalesce the latest request into a task after the current
+	 * update completes.
 	 */
-	private queueHighlight(value: { from: number; to: number } | null): void {
+	private queueHighlight(value: PanelHighlight | null): void {
 		this.pendingHighlight = value;
 		this.hasPendingHighlight = true;
 		if (this.highlightTimer !== null) {
@@ -182,7 +255,7 @@ class InlineFindReplacePanel implements Panel {
 				return;
 			}
 			this.view.dispatch({
-				effects: setInlineMatchHighlight.of(pending),
+				effects: setInlineMatchHighlights.of(pending),
 			});
 		}, 0);
 	}
@@ -213,9 +286,27 @@ export function createInlinePanelExtension(plugin: PanelPlugin) {
 	const constructor = (view: EditorView): Panel =>
 		new InlineFindReplacePanel(view, plugin);
 
+	const panelKeymap = Prec.high(
+		keymap.of([
+			{
+				key: "F3",
+				run: (view) => runPanelCommand(view, "next"),
+			},
+			{
+				key: "Shift-F3",
+				run: (view) => runPanelCommand(view, "previous"),
+			},
+			{
+				key: "Escape",
+				run: (view) => runPanelCommand(view, "close"),
+			},
+		]),
+	);
+
 	return [
 		inlineState,
 		matchHighlightField,
 		showPanel.from(inlineState, (open) => (open ? constructor : null)),
+		panelKeymap,
 	];
 }

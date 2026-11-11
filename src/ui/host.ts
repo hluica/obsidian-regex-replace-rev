@@ -1,9 +1,20 @@
-import type { Editor } from "obsidian";
+import type { App, Editor } from "obsidian";
 import type { PluginSettings, SearchUiState } from "../settings";
 
 export type HistoryKind = "search" | "replace";
 
+export interface PanelHighlightRange {
+	from: number;
+	to: number;
+}
+
+export interface PanelHighlight {
+	ranges: PanelHighlightRange[];
+	active: PanelHighlightRange | null;
+}
+
 export interface PanelPlugin {
+	app: App;
 	settings: PluginSettings;
 	saveSettings(): Promise<void>;
 	getInitialState(): SearchUiState;
@@ -14,12 +25,13 @@ export interface PanelPlugin {
 }
 
 export interface PanelHost {
+	app: App;
 	plugin: PanelPlugin;
 	containerEl: HTMLElement;
 	variant: "modal" | "inline";
 	getEditor: () => Editor | null;
 	getDocumentKey: () => string;
 	requestClose: () => void;
-	highlightMatch?: (from: number, to: number) => void;
+	highlightMatches?: (highlight: PanelHighlight | null) => void;
 	clearHighlight?: () => void;
 }

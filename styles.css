@@ -227,8 +227,22 @@
 	font-size: 12px;
 }
 
+.rr-status-left {
+	display: flex;
+	flex-shrink: 0;
+	gap: var(--size-4-2);
+	align-items: baseline;
+	min-width: 0;
+}
+
 .rr-count {
 	flex-shrink: 0;
+	white-space: nowrap;
+}
+
+.rr-position {
+	color: var(--text-muted);
+	font-variant-numeric: tabular-nums;
 	white-space: nowrap;
 }
 
@@ -270,9 +284,31 @@
 
 .rr-match-highlight {
 	color: inherit;
-	background-color: var(--text-selection);
+	background-color: var(
+		--text-highlight-bg,
+		color-mix(in srgb, var(--text-selection) 55%, transparent)
+	);
 	border-radius: 2px;
+}
+
+.rr-match-highlight.rr-match-highlight-active {
+	background-color: var(--text-selection);
 	box-shadow: 0 0 0 1px var(--interactive-accent);
+}
+
+.rr-zero-width {
+	display: inline-block;
+	width: 0;
+	height: 1.15em;
+	margin: 0 0 0 -1px;
+	border-left: 2px solid var(--interactive-accent);
+	opacity: 0.55;
+	pointer-events: none;
+	vertical-align: text-bottom;
+}
+
+.rr-zero-width.rr-zero-width-active {
+	opacity: 1;
 }
 
 .rr-inline-container {

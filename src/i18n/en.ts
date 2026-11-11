@@ -34,6 +34,8 @@ export const en: Strings = {
 		`${count}${truncated ? "+" : ""} ${
 			count === 1 && !truncated ? "match" : "matches"
 		}`,
+	position: (index, total) => `${index} / ${total}`,
+	positionNone: (total) => `— / ${total}`,
 	emptyFind: "Enter something to find",
 	noMatches: "No matches",
 	noEditor: "No active editor",
@@ -46,6 +48,12 @@ export const en: Strings = {
 	replacedOne: "Replaced 1 occurrence; undo is available",
 	replacedMany: (count) =>
 		`Replaced ${count} occurrences; undo is available`,
+	tooManyMatches: (limit) =>
+		`Results limited to ${limit}; narrow the pattern`,
+	confirmReplaceAllTitle: "Replace all matches?",
+	confirmReplaceAllBody: (count) =>
+		`Replace ${count} matches? This is one undoable action.`,
+	confirmCancel: "Cancel",
 	invalidRegex: (message) => `Invalid regular expression: ${message}`,
 	selectionEmpty: "No selection; using the current file",
 	targetChanged: "Target changed; scope reset to the current file",

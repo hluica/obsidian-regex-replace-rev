@@ -23,6 +23,7 @@ export class FindReplaceModal extends Modal {
 		this.contentEl.empty();
 
 		this.panel = new FindReplacePanel({
+			app: this.app,
 			plugin: this.plugin,
 			containerEl: this.contentEl,
 			variant: "modal",

@@ -29,6 +29,8 @@ export interface Strings {
 	historyEmpty: string;
 	historyClear: string;
 	count: (count: number, truncated?: boolean) => string;
+	position: (index: number, total: string) => string;
+	positionNone: (total: string) => string;
 	emptyFind: string;
 	noMatches: string;
 	noEditor: string;
@@ -40,6 +42,10 @@ export interface Strings {
 	reachedStart: string;
 	replacedOne: string;
 	replacedMany: (count: number) => string;
+	tooManyMatches: (limit: number) => string;
+	confirmReplaceAllTitle: string;
+	confirmReplaceAllBody: (count: number) => string;
+	confirmCancel: string;
 	invalidRegex: (message: string) => string;
 	selectionEmpty: string;
 	targetChanged: string;
