@@ -1,7 +1,7 @@
 # Refined Regex Replace and More — Plan and Status
 
-- **Version:** 0.3.1 (branch `v0.3.0`, pending acceptance)
-- **Status:** implemented and verification-complete on `v0.3.0`; E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI); pending user acceptance; 0.3.1 is transitional and will not be released; 0.2.6 baseline is in the community directory
+- **Version:** 0.3.2 (branch `v0.3.0`, internal transitional version, pending acceptance)
+- **Status:** implemented and verification-complete on `v0.3.0`; E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI); pending user acceptance; 0.3.2 is internal and will not be released; 0.3.3 is the next external release candidate; 0.2.6 baseline is in the community directory
 - **Current implementation:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **UI specification:** [UI-SPEC.md](UI-SPEC.md)
 - **Community readiness audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
@@ -24,7 +24,7 @@ Build a find/replace panel for the **current Markdown note** with:
 - independent panels in multiple Obsidian windows;
 - bounded result sets and a confirmation step for large replace-all operations.
 
-Out of scope for v0.3.1: vault-wide replace, diff preview, preserve case, multiline literal input, `u`/`y`/`d`/`v` flags, default hotkeys, and real-device validation.
+Out of scope for v0.3.2: vault-wide replace, diff preview, preserve case, multiline literal input, `u`/`y`/`d`/`v` flags, default hotkeys, and real-device validation.
 
 ## 2. Current architecture
 
@@ -33,14 +33,14 @@ Out of scope for v0.3.1: vault-wide replace, diff preview, preserve case, multil
 | Desktop host | CodeMirror 6 `showPanel` with `Panel.top = false`, inserted into `.cm-panels-bottom` |
 | Mobile host | `FindReplaceModal` |
 | Open/close | `StateField<boolean>` + `StateEffect` per editor |
-| Match feedback | `StateField<DecorationSet>` with all-match marks, active mark, zero-width dot `WidgetType`, and line-break `↵` `WidgetType`; `.rr-match-highlight` / `.rr-match-highlight-active` / `.rr-zero-width` / `.rr-line-break` |
+| Match feedback | `StateField<DecorationSet>` with all-match marks, active mark, zero-width dot `WidgetType`, and line-break `↵` `WidgetType`; line-break positions are cached per match set |
 | Editor keymap | `Prec.high(keymap.of(...))`: F3, Shift+F3, Escape; active only while a panel controller exists |
 | Shared UI | `FindReplacePanel` mounted in an inline frame or modal |
 | Options | Obsidian native `ToggleComponent` switches |
 | Target selection | Command resolves the `MarkdownView` by **`editor` identity**, not by global active view |
 | Multi-window | One panel per window/document; closing/opening one window does not close another |
-| Settings | Declarative `getSettingDefinitions()`; `data.json` with `settingsVersion: 1` |
-| History | Last 20 search/replace terms, native menu, clear action |
+| Settings | Declarative `getSettingDefinitions()`; `data.json` with `settingsVersion: 1`; panel-driven saves debounced 500ms, settings tab immediate |
+| History | Last 20 search/replace terms, native menu with a history icon, clear action |
 | Replacement | One `editor.transaction` for all changes; one undo restores |
 | Safety | Display scan 10,000; action scan 100,000; highlight cap 5,000 ranges / 1,000 zero-width dots / 1,000 line-break markers; replace-all confirmation above 5,000 |
 | Large-replace confirmation | Obsidian `ConfirmationModal` (1.13+), cancel focused by default |
@@ -86,11 +86,11 @@ Main files:
 ### 3.3 Scope, direction, wrap
 
 - **Current file**: whole document.
-- **Selection**: captured when the panel opens or the scope is switched to Selection; range updated after replacements; reset to Current file when the document changes.
+- **Selection**: captured when the panel opens or the scope is switched to Selection; the mode-row crosshair button refreshes the range from the current selection; range updated after replacements; reset to Current file when the document changes.
 - Direction down/up; Shift+Enter reverses once; F3/Shift+F3 navigate.
 - Wrap off produces boundary messages instead of wrapping.
 
-### 3.4 Match visibility and navigation (0.3.1)
+### 3.4 Match visibility and navigation (0.3.2)
 
 - Every match in scope is marked with `.rr-match-highlight` using the theme highlight color.
 - The active match adds `.rr-match-highlight-active` with the selection background and an accent outline.
@@ -113,7 +113,7 @@ Main files:
 
 - Desktop panel sits at the bottom of the editor content column with a **1px solid separator line**, title, and close button; no heavy card border.
 - Labels and the status count are left-aligned; the position follows the count; the status message sits at the right.
-- Mode selects are three equal fixed **160px** controls, spanning the field + action columns.
+- Mode selects are three fixed **160px** controls, with the scope row hosting a 26px “Use current selection” button; the mode row spans the field + action columns.
 - Action buttons are **122×28px** in a **252px** 2×2 column; hover/pressed feedback.
 - Native toggles have 28px gaps on desktop, 16px in compact/mobile; they wrap naturally.
 - The panel has no reserved empty option row; its height follows content. Very narrow windows cap the panel at **70vh** and scroll internally.
@@ -124,18 +124,18 @@ Main files:
 
 | Area | Status |
 |---|---|
-| TypeScript strict / ESLint / tests / build | 56 tests pass; `tsc` and ESLint clean; production build passes (≈44 KB) |
-| Dark/light theme | Light and dark verified in Obsidian 1.15 for 0.3.1; active match uses an outline in addition to color |
+| TypeScript strict / ESLint / tests / build | 59 tests pass; `tsc` and ESLint clean; production build passes (≈45 KB) |
+| Dark/light theme | Light and dark verified in Obsidian 1.15 for 0.3.2; active match uses an outline in addition to color |
 | English/Chinese UI | Verified; new strings in both languages |
-| Accessibility | Labels, ARIA on selects/status, focus-visible, native toggle Space support, 44px mobile targets; highlight has outline + color; full screen-reader audit not performed |
-| Multi-window | Two Obsidian windows tested in 0.2.6; v0.3.1 popout panel/F3/Escape and normal close verified |
+| Accessibility | Labels, ARIA on selects/status, focus-visible, native toggle Space support, 44px mobile targets; scope refresh has tooltip/ARIA; full screen-reader audit not performed |
+| Multi-window | Two Obsidian windows tested in 0.2.6; v0.3.2 popout panel/F3/Escape and normal close verified |
 | Mobile | Obsidian mobile emulation tested; real iOS/Android not tested |
-| Windows/Linux | not re-tested for 0.3.1 |
+| Windows/Linux | not re-tested for 0.3.2 |
 | Performance | 1 MB / 10,000+ matches and 1 MB / 10,500 lines: count refresh ≈185–189 ms including 180 ms debounce; dotAll and zero-width caps hold; engine scan itself milliseconds |
 | Bounded actions | 100,000 match cap; 5,000 replace-all confirmation; 150,000-match note tested |
-| Community directory | 0.2.6 baseline listed; 0.3.1 internal only; 0.3.2 external release pending |
+| Community directory | 0.2.6 baseline listed; 0.3.1/0.3.2 internal only; 0.3.3 external release pending |
 
-## 5. Acceptance status (v0.3.1)
+## 5. Acceptance status (v0.3.2)
 
 - [x] Three modes × four actions
 - [x] Exact 4 / wildcard 5 / regex 6 options
@@ -154,6 +154,10 @@ Main files:
 - [x] **F3/Shift+F3/Escape from the editor**
 - [x] **Replace-all confirmation and 100,000 match cap**
 - [x] **Compact/narrow layout regression (700px / 500px viewport)**
+- [x] **Use current selection button with selection refresh**
+- [x] **History buttons use the history icon**
+- [x] **Panel settings writes debounced (500ms), flush on unload**
+- [x] **Line-break positions cached per match set; pure-function tests**
 - [x] **Selection scope with newline markers**
 - [x] **1 MB newline/dotAll/zero-width performance regression**
 - [x] **Popout multi-window and F3/Escape regression**
@@ -162,14 +166,14 @@ Main files:
 - [x] Mobile modal fallback
 - [x] Settings tab (4 items)
 - [ ] Real iOS/Android and Windows/Linux verification
-- [x] Dark-theme 0.3.1 visual audit and screenshot
-- [x] 0.3.1 internal acceptance (not released)
+- [x] Dark-theme 0.3.2 visual audit and screenshot
+- [x] 0.3.2 internal acceptance (not released)
 
 ## 6. Next steps
 
-1. **v0.3.2:** real-device/platform checks, third-party theme pass, selection-refresh button, history icon, settings-save debounce.
-2. **v0.3.2:** optional multi-line find/replace fields and a `u` flag toggle, only after user feedback.
-3. **Release:** when 0.3.2 is stable, create tag/release `0.3.2`, attach `main.js`, `manifest.json`, `styles.css`, update the community directory entry. 0.3.1 remains internal.
+1. **v0.3.3:** real-device/platform checks, third-party theme pass, full screen-reader audit.
+2. **v0.3.3:** optional multi-line find/replace fields and a `u` flag toggle, only after user feedback.
+3. **Release:** when 0.3.3 is stable, create tag/release `0.3.3`, attach `main.js`, `manifest.json`, `styles.css`, update the community directory entry. 0.3.1/0.3.2 remain internal.
 4. Keep the 0.2.6 baseline changelog; do not reconstruct older versions.
 
 ## 7. Development

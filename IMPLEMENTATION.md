@@ -1,12 +1,12 @@
-# Implementation Record — v0.3.1 (match markers and visibility)
+# Implementation Record — v0.3.2 (selection refresh and panel polish)
 
-Status: **implemented on branch `v0.3.0`, pending acceptance; development continues on the branch until the next stable version**. E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI). The 0.2.6 baseline is listed in the community directory; 0.3.1 is an internal transitional version and will not be tagged/released (0.3.0 was also not released). 0.3.2 is the next external release candidate. See [CHANGELOG.md](CHANGELOG.md) and [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
+Status: **implemented on branch `v0.3.0`, pending acceptance; development continues on the branch until the next stable version**. E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI). The 0.2.6 baseline is listed in the community directory; 0.3.1 and 0.3.2 are internal transitional versions and will not be tagged/released (0.3.0 was also not released). 0.3.3 is the next external release candidate. See [CHANGELOG.md](CHANGELOG.md) and [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
 
-v0.3.1 adds all-match highlighting, a persistent current-match position, redesigned zero-width dots, visible line-break markers for `\n` matches, editor-focus keyboard navigation, and bounded replace-all behavior.
+v0.3.2 keeps the 0.3.1 match-marker layer and adds a “Use current selection” refresh button, history icons, debounced panel settings saves, cached line-break positions, and a robust compact/narrow layout.
 
 ## Screenshots (real Obsidian window, Chinese/light and dark)
 
-Desktop inline panel: all matches in the visible note are highlighted, the active match has an accent outline, and the status shows `164 个匹配  11 / 164`:
+Desktop inline panel: all matches in the visible note are highlighted, the active match has an accent outline, and the status shows `164 个匹配  4 / 164`:
 
 ![Inline desktop panel](docs/screenshots/panel-inline.png)
 
@@ -56,6 +56,24 @@ Mobile / fallback dialog:
 - The status row is now `count + position` on the left and the action message on the right.
 - Document changes reset the position and schedule the debounced refresh.
 
+### Selection refresh — `src/ui/FindReplacePanel.ts`
+
+- A crosshair button sits inside `.rr-scope-control` next to the scope selector.
+- Clicking it captures the current editor selection, switches the scope to Selection, re-renders the panel, and reports “Selection updated”.
+- With no selection it resets to Current file and reports the existing “no selection” message.
+- The button has an ARIA label, tooltip, hover/pressed/focus-visible styling, and a 28px width override in `.rr-narrow`; 44px in the mobile media/body rules.
+
+### History and settings — `src/main.ts`, `src/ui/FindReplacePanel.ts`
+
+- History buttons use the Lucide `history` icon instead of a chevron that looked like a dropdown.
+- Panel-driven settings writes go through `scheduleSaveSettings()` with a 500ms debounce; `saveSettings()` remains immediate for the settings tab, and `onunload` flushes a pending write.
+- If a panel is destroyed during unload, `unloading` makes the save immediate rather than scheduling after unload.
+
+### Line-break cache — `src/editor/highlights.ts`
+
+- `collectLineBreakPositions(matches)` is a pure function with unit tests.
+- The panel computes the absolute positions when `buildContext()` assigns a new match set and reuses `this.lineBreaks` for highlight syncs and active-index changes.
+
 ### Bounded replace-all
 
 - Limits live in `src/search/limits.ts`:
@@ -95,8 +113,11 @@ Mobile / fallback dialog:
 | 100,000 action-scan cap and `10000+` display | done |
 | Current-file / captured selection scope | done |
 | Live count + status/error messages | done |
-| History (20, clear, persist) | done |
-| Desktop inline panel, compact/narrow layout, multi-window | done (0.2.6 regression baseline; 0.3.1 narrow fix) |
+| History (20, clear, persist, history icon) | done |
+| Use current selection refresh | done |
+| Debounced panel settings saves | done |
+| Cached line-break positions + pure tests | done |
+| Desktop inline panel, compact/narrow layout, multi-window | done (0.2.6 regression baseline; 0.3.2 narrow fix) |
 | Mobile modal fallback | done |
 | Declarative settings | done |
 | Unit tests, lint, type-check, build | done |
@@ -106,15 +127,15 @@ Mobile / fallback dialog:
 ### Static
 
 ```bash
-npm test          # 6 files, 56 tests passed
+npm test          # 6 files, 59 tests passed
 npx tsc -noEmit   # passed
 npx eslint .      # 0 errors, 0 warnings
-npm run build     # main.js produced (v0.3.1, ~44 KB)
+npm run build     # main.js produced (v0.3.2, ~45 KB)
 ```
 
 ### Obsidian end-to-end (dev vault)
 
-- Plugin `0.3.1` loads and reloads with no `dev:errors`; manifest version 0.3.1.
+- Plugin `0.3.2` loads and reloads with no `dev:errors`; manifest version 0.3.2.
 - Desktop panel opens in `.cm-panels-bottom`; status shows `164 个匹配  — / 164` before Find.
 - All-match highlighting: 164 matches, 17 visible `.rr-match-highlight` nodes in the viewport; Find adds one `.rr-match-highlight-active` and shows `3 / 164` plus “已定位第 3 / 164 个匹配”.
 - Selecting a body match with the editor API updates the position to `11 / 164` and adds the active class. Moving the caret off matches returns `— / 164` and removes the active class.
@@ -134,6 +155,10 @@ npm run build     # main.js produced (v0.3.1, ~44 KB)
 - Document edit with `\n` search: inserting a real newline updates 2 → 3 matches/markers; undo returns to 2. Replace all of `\n` with `|` gives `a|b|c`, `无匹配`, and undo restores `a\nb\nc`.
 - Popout window: main and popout panels are independent; F3 in the popout changes `1 / 2 → 2 / 2`; Escape closes only the popout panel. Closing the popout through `workspace:close-window` leaves the main panel open and logs no errors.
 - ResizeObserver regression: manual width changes and CDP viewport changes (700px, 500px) produce no `ResizeObserver loop` errors after the rAF/width guard. Forcing `leaf.detach()` on a popout can still produce browser resize warnings; normal window close does not.
+- Scope refresh: selected `神话` in the body → crosshair button set scope to Selection, 1 match, “已更新选区范围”; with a collapsed selection it reset to Current file and reported the no-selection message.
+- History buttons render `svg.lucide-history`; the desktop mode row fits with the new 26px scope button (no overflow).
+- Debounce: `data.json` mtime unchanged 120ms after Find and updated after 500ms; settings tab still uses immediate `saveSettings`.
+- Narrow scope control: 124px panel keeps “当前文件” in a 90px select and a 26px refresh button; no horizontal overflow.
 - Mobile emulation: `.modal.rr-modal` opens single-column, 44px controls, 6 options; Find updates `2 / 164`; no errors.
 - Scratch notes were deleted after testing; no content changes were left in the dev vault.
 
@@ -143,7 +168,7 @@ npm run build     # main.js produced (v0.3.1, ~44 KB)
 - Replace-all is blocked above 100,000 matches rather than offering a chunked or background replacement.
 - The mobile modal has no custom decorations; it relies on the native selection, count, and position.
 - CM6 decorations in YAML frontmatter/properties are not independently verified; the editor's property widgets may not show marks that exist in the raw document.
-- Real iOS/Android, Windows/Linux, and third-party themes are not re-tested for 0.3.1.
+- Real iOS/Android, Windows/Linux, and third-party themes are not re-tested for 0.3.2.
 - At 124px panel width the compact panel is taller than 70vh and the status row requires internal scrolling; this is the documented narrow-window tradeoff.
 - Programmatic popout teardown with `leaf.detach()` still emits browser ResizeObserver warnings in some runs; normal `workspace:close-window` was clean.
 - The `u` regex flag, multiline literal inputs, preserve case, and vault-wide replace remain out of scope.
@@ -164,7 +189,7 @@ For another vault, copy the same three files into `<vault>/.obsidian/plugins/reg
 
 - `src/main.ts` — plugin lifecycle, command, editor/window targeting, host selection
 - `src/editor/inline-panel.ts` — CM6 panel extension, all-match decoration field, zero-width widget, keymap
-- `src/editor/highlights.ts` — pure highlight/line-break planning (clamp/sort/dedupe/caps)
+- `src/editor/highlights.ts` — pure highlight/line-break planning and cached line-break collection (clamp/sort/dedupe/caps)
 - `src/ui/FindReplacePanel.ts` — shared UI/behavior, position, scope, history, confirmation
 - `src/ui/FindReplaceModal.ts` — mobile/fallback dialog
 - `src/ui/host.ts` — shared host contracts
@@ -172,4 +197,4 @@ For another vault, copy the same three files into `<vault>/.obsidian/plugins/reg
 - `src/i18n/` — en/zh strings
 - `src/search/` — pure engine; `src/search/limits.ts` guard rails
 - `styles.css` — inline separator, highlights, zero-width dots, line-break markers, compact/mobile styling
-- `tests/` — 56 unit tests across 6 files
+- `tests/` — 59 unit tests across 6 files

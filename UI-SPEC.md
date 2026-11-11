@@ -1,13 +1,13 @@
-# UI Specification — v0.3.1
+# UI Specification — v0.3.2
 
-- **Status:** implemented on branch `v0.3.0` (pending acceptance); E2E-verified in Obsidian 1.15.0, macOS, Chinese/light and dark UI; 0.3.1 is an internal transitional version and supersedes the unreleased 0.3.0
+- **Status:** implemented on branch `v0.3.0` (pending acceptance); E2E-verified in Obsidian 1.15.0, macOS, Chinese/light and dark UI; 0.3.2 is an internal transitional version; 0.3.3 is the next external release candidate
 - **Implementation record:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **Plan/status:** [PLAN.md](PLAN.md)
 - **Community audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
 - **Screenshots:** [inline panel](docs/screenshots/panel-inline.png) · [dark theme](docs/screenshots/panel-dark.png) · [zero-width dots](docs/screenshots/panel-zero-width.png) · [newline markers](docs/screenshots/panel-newline.png) · [mixed `。\n`](docs/screenshots/panel-newline-combo.png) · [modal fallback](docs/screenshots/modal-fallback.png)
 
-This specification describes the current inline design and the 0.3.1 match-marker layer.
+This specification describes the current inline design, the 0.3.1 match-marker layer, and the 0.3.2 selection-refresh control.
 
 ## 1. Principles
 
@@ -53,7 +53,7 @@ This specification describes the current inline design and the 0.3.1 match-marke
 - Mode row spans columns 2–3; status row spans columns 1–3.
 - Labels left-aligned; the status count starts at the same left edge as `Find:`/`Replace:`/`Mode:`; the position follows the count; the status message is right-aligned.
 - Inputs/selects 30px tall; action buttons 122×28px in a 252px 2×2 column.
-- Mode selects: three fixed 160px controls, not matched to the input width.
+- Mode selects: three fixed 160px controls, not matched to the input width. The scope control adds a 26px crosshair button; the mode row remains width-fit at desktop and stacks at compact/narrow widths.
 - Options: native toggles; 28px column gap desktop, 16px compact/mobile; row height auto.
 - Bottom clearance: 28px keeps the status message above Obsidian's status bar.
 
@@ -63,11 +63,12 @@ This specification describes the current inline design and the 0.3.1 match-marke
 | Input/select height | 30 | 30 | 44 |
 | Action buttons | 122×28 | full-width 2×2, 28 | full-width 2×2, 44 |
 | Mode selects | 160×3 | 100% stacked | 100% stacked |
+| Scope refresh | 26px | 28px | 44px |
 | Option gap | 28px | 16px | 16px |
 | Options | 4/5/6 by mode | wraps | wraps, 44px targets |
 | Panel height | content | content; 70vh cap | modal content |
 
-### 3.2 Status row (0.3.1)
+### 3.2 Status row (0.3.2)
 
 ```
 .rr-status
@@ -127,7 +128,9 @@ Labels are left-aligned. In compact/mobile single-column mode the mode row, opti
           span.rr-label
           .rr-mode-row
             .rr-select-wrap > select.rr-select
-            .rr-select-wrap > select.rr-select
+            .rr-scope-control
+              .rr-select-wrap > select.rr-select
+              button.rr-scope-refresh
             .rr-select-wrap > select.rr-select
           .rr-options
             .rr-option
@@ -214,6 +217,8 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - History buttons open a native `Menu` with recent values and Clear; Enter/Space accessible.
 - Escape or header ✕ closes, clears highlights, and focuses the editor.
 - Find selects the match and dispatches all-match + active decorations; the highlight remains visible while the find input keeps focus.
+- The scope crosshair button captures the current editor selection, switches scope to Selection, refreshes the range, and shows “Selection updated”. With no selection it resets to Current file and reports the no-selection message.
+- History buttons use the `history` icon with the existing ARIA labels/tooltips.
 - Toggle labels and switches are both clickable; native toggle Space toggles.
 - Re-running the command in the same window focuses the existing panel; opening a panel in another window leaves this one open.
 - Replace all above 5,000 matches opens `ConfirmationModal`; Cancel has initial focus; confirming executes one transaction.
@@ -238,7 +243,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - Compact class updates are coalesced with `requestAnimationFrame` and skipped when the width is unchanged, preventing ResizeObserver loops during viewport/popout resizes.
 - Only Obsidian CSS variables; no `.theme-dark` branches, no `!important`, no `:has`.
 - Multi-window: command targets `editor` identity; panels are closed only within the same `ownerDocument`; one panel per window.
-- Chinese/light and dark verified for 0.3.1; English strings use the same layout and were verified in 0.2.6.
+- Chinese/light and dark verified for 0.3.2; English strings use the same layout and were verified in 0.2.6.
 - Mobile modal verified in emulation; real devices not re-tested.
 
 ## 11. Differences from the native find UI

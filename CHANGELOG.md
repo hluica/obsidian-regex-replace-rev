@@ -3,9 +3,47 @@
 This changelog starts at **0.2.6**, the baseline community release. Earlier
 versions are intentionally not reconstructed.
 
-## 0.3.1 — 2026-11-11 (branch `v0.3.0`, pending acceptance)
+## 0.3.2 — 2026-11-11 (branch `v0.3.0`, internal, not released)
 
-0.3.0 was never released; 0.3.1 supersedes it on the same branch. **0.3.1 is an internal transitional version and will not be released; 0.3.2 is the next external release.**
+0.3.2 is another internal transitional version; 0.3.3 is the next external
+release candidate.
+
+### Added
+
+- A **Use current selection** button next to the scope selector. It captures
+  the current editor selection, switches the scope to Selection, and refreshes
+  the captured range without closing/reopening the panel. With no selection it
+  falls back to the current file and reports the existing “no selection”
+  message.
+- A success message (“Selection updated”) after refreshing a valid selection.
+
+### Changed
+
+- The find/replace history buttons now use the Lucide **history** icon instead
+  of a chevron-down that looked like a dropdown.
+- Panel-driven settings writes are debounced by 500 ms. The settings tab and
+  `saveSettings()` remain immediate; `onunload` flushes a pending save. This
+  avoids writing `data.json` on every Find/Replace keystroke.
+- `collectLineBreakPositions()` is now a pure function in
+  `src/editor/highlights.ts`, covered by unit tests; the panel computes it when
+  the match set changes and reuses the cached positions when the selection or
+  active index changes.
+
+### Verification
+
+- 59 unit tests across 6 files; TypeScript, ESLint, and production build pass.
+- Selection button: refreshes a body selection (1 match), reports “已更新选区范围”;
+  with an empty selection it resets to Current file and reports the existing
+  message.
+- History buttons render `lucide-history`.
+- `data.json` mtime stays unchanged 120 ms after Find and updates after the
+  500 ms debounce.
+- Compact 124px panel: scope select keeps “当前文件”, refresh button remains
+  visible, no horizontal overflow.
+
+## 0.3.1 — 2026-11-11 (branch `v0.3.0`, internal, pending acceptance)
+
+0.3.0 was never released; 0.3.1 supersedes it on the same branch. **0.3.1 is an internal transitional version and will not be released; 0.3.2 follows as another internal iteration, with 0.3.3 as the next external release candidate.**
 
 ### Changed
 
