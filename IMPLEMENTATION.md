@@ -1,14 +1,20 @@
-# Implementation Record — v0.3.2 (selection refresh and panel polish)
+# Implementation Record — v0.3.3 (Unicode, accessibility, themes)
 
-Status: **implemented on branch `v0.3.0`, pending acceptance; development continues on the branch until the next stable version**. E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI). The 0.2.6 baseline is listed in the community directory; 0.3.1 and 0.3.2 are internal transitional versions and will not be tagged/released (0.3.0 was also not released). 0.3.3 is the next external release candidate. See [CHANGELOG.md](CHANGELOG.md) and [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
+Status: **implemented on branch `v0.3.0`, pending acceptance; development continues on the branch until the next stable version**. E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI). The 0.2.6 baseline is listed in the community directory; 0.3.3 is the first public release candidate, pending acceptance, merge, tag, and directory update. 0.3.0/0.3.1/0.3.2 were internal only. See [CHANGELOG.md](CHANGELOG.md) and [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
 
-v0.3.2 keeps the 0.3.1 match-marker layer and adds a “Use current selection” refresh button, history icons, debounced panel settings saves, cached line-break positions, and a robust compact/narrow layout.
+v0.3.3 keeps the 0.3.2 marker/selection layer and adds a regex-only Unicode (u) option, accessibility landmarks/grouping, a Chromium AX-tree audit, and third-party theme adaptation for Catppuccin and Minimal.
 
 ## Screenshots (real Obsidian window, Chinese/light and dark)
 
-Desktop inline panel: all matches in the visible note are highlighted, the active match has an accent outline, and the status shows `164 个匹配  4 / 164`:
+Desktop inline panel: all matches in the visible note are highlighted, the active match has an accent outline, and the status shows `164 个匹配  21 / 164`:
 
 ![Inline desktop panel](docs/screenshots/panel-inline.png)
+
+Catppuccin (enabled) and Minimal theme checks:
+
+![Catppuccin theme](docs/screenshots/theme-catppuccin.png)
+
+![Minimal theme](docs/screenshots/theme-minimal.png)
 
 Dark theme with the same all-match/active distinction:
 
@@ -56,9 +62,29 @@ Mobile / fallback dialog:
 - The status row is now `count + position` on the left and the action message on the right.
 - Document changes reset the position and schedule the debounced refresh.
 
+### Unicode (u) option — `src/search/`, `src/settings.ts`, `src/ui/FindReplacePanel.ts`
+
+- `SearchOptions.unicode` and `SearchUiState.unicode` default to `false` and are normalized from persisted state.
+- The regex-only `Unicode (u)` toggle adds the `u` flag in `flagsFor()`.
+- It enables `\p{...}` property escapes and code-point matching; exact/wildcard hide it and ignore it.
+- `optionUnicode` / `tooltipUnicode` / `optionsGroup` strings exist in English and Chinese.
+
+### Accessibility — `src/ui/FindReplacePanel.ts`
+
+- `.rr-panel` is a labelled `region`; the inline title is a level-2 heading.
+- The option row is a labelled `role=group`; every toggle is a native checkbox with a name.
+- History buttons expose `aria-haspopup="menu"` and `aria-expanded`, updated on menu open/hide.
+- The existing message remains `role=status`, `aria-live="polite"`, `aria-atomic="true"`.
+- The Chromium accessibility tree was audited with `Accessibility.getFullAXTree` (the tree Chromium maps to Windows UIA).
+
+### Themes — `styles.css`
+
+- Active match now uses a 35% `--interactive-accent` tint plus a 2px accent outline instead of the selection color alone. This keeps it stronger than the inactive `--text-highlight-bg` fill on Catppuccin, where the highlight background is opaque.
+- Catppuccin (enabled) and Minimal were tested in light mode; panel chrome, switches, status, scope button, zero-width dots, and `↵` markers remained visible.
+
 ### Selection refresh — `src/ui/FindReplacePanel.ts`
 
-- A crosshair button sits inside `.rr-scope-control` next to the scope selector.
+- A scan-icon selection-refresh button sits inside `.rr-scope-control` next to the scope selector.
 - Clicking it captures the current editor selection, switches the scope to Selection, re-renders the panel, and reports “Selection updated”.
 - With no selection it resets to Current file and reports the existing “no selection” message.
 - The button has an ARIA label, tooltip, hover/pressed/focus-visible styling, and a 28px width override in `.rr-narrow`; 44px in the mobile media/body rules.
@@ -107,6 +133,9 @@ Mobile / fallback dialog:
 | Active match with distinct outline | done |
 | Persistent `position / total` | done |
 | Zero-width match markers (translucent gray / accent dots) | done |
+| Unicode (u) regex option | done |
+| Chromium AX-tree accessibility audit | done (full screen reader pending) |
+| Catppuccin / Minimal theme audit | done |
 | Line-break markers (`\n`, `。\n`) | done |
 | F3 / Shift+F3 / Escape from the editor | done |
 | Replace-all confirmation above 5,000 | done |
@@ -127,15 +156,15 @@ Mobile / fallback dialog:
 ### Static
 
 ```bash
-npm test          # 6 files, 59 tests passed
+npm test          # 6 files, 61 tests passed
 npx tsc -noEmit   # passed
 npx eslint .      # 0 errors, 0 warnings
-npm run build     # main.js produced (v0.3.2, ~45 KB)
+npm run build     # main.js produced (v0.3.3, ~48 KB)
 ```
 
 ### Obsidian end-to-end (dev vault)
 
-- Plugin `0.3.2` loads and reloads with no `dev:errors`; manifest version 0.3.2.
+- Plugin `0.3.3` loads and reloads with no `dev:errors`; manifest version 0.3.3.
 - Desktop panel opens in `.cm-panels-bottom`; status shows `164 个匹配  — / 164` before Find.
 - All-match highlighting: 164 matches, 17 visible `.rr-match-highlight` nodes in the viewport; Find adds one `.rr-match-highlight-active` and shows `3 / 164` plus “已定位第 3 / 164 个匹配”.
 - Selecting a body match with the editor API updates the position to `11 / 164` and adds the active class. Moving the caret off matches returns `— / 164` and removes the active class.
@@ -155,11 +184,15 @@ npm run build     # main.js produced (v0.3.2, ~45 KB)
 - Document edit with `\n` search: inserting a real newline updates 2 → 3 matches/markers; undo returns to 2. Replace all of `\n` with `|` gives `a|b|c`, `无匹配`, and undo restores `a\nb\nc`.
 - Popout window: main and popout panels are independent; F3 in the popout changes `1 / 2 → 2 / 2`; Escape closes only the popout panel. Closing the popout through `workspace:close-window` leaves the main panel open and logs no errors.
 - ResizeObserver regression: manual width changes and CDP viewport changes (700px, 500px) produce no `ResizeObserver loop` errors after the rAF/width guard. Forcing `leaf.detach()` on a popout can still produce browser resize warnings; normal window close does not.
-- Scope refresh: selected `神话` in the body → crosshair button set scope to Selection, 1 match, “已更新选区范围”; with a collapsed selection it reset to Current file and reported the no-selection message.
+- Scope refresh: selected `神话` in the body → selection-refresh button set scope to Selection, 1 match, “已更新选区范围”; with a collapsed selection it reset to Current file and reported the no-selection message.
 - History buttons render `svg.lucide-history`; the desktop mode row fits with the new 26px scope button (no overflow).
 - Debounce: `data.json` mtime unchanged 120ms after Find and updated after 500ms; settings tab still uses immediate `saveSettings`.
 - Narrow scope control: 124px panel keeps “当前文件” in a 90px select and a 26px refresh button; no horizontal overflow.
-- Mobile emulation: `.modal.rr-modal` opens single-column, 44px controls, 6 options; Find updates `2 / 164`; no errors.
+- Unicode: `\p{Script=Han}+` finds 2,665 runs with the toggle on; the same pattern finds nothing with it off. Astral `.` is one match with `u` and two surrogate halves without it. The toggle is hidden in exact/wildcard modes and restored on reopen.
+- Accessibility tree: region “查找与替换”, heading level 2, group “查找选项”, seven named checkboxes (including Unicode), three named comboboxes, live status, and history `aria-expanded=false`.
+- Keyboard audit: Tab went find input → find history → Find → Replace and find → replace input → replace history → Replace → Replace all → mode → scope → Use current selection → direction → seven option toggles → workspace; Escape closed the panel and returned focus to the editor.
+- Themes: Catppuccin and Minimal both render the panel, active/inactive highlights, toggles, scope button, zero-width dots, and newline markers; active match uses a 2px accent outline. Theme screenshots: [Catppuccin](docs/screenshots/theme-catppuccin.png) · [Minimal](docs/screenshots/theme-minimal.png).
+- Mobile emulation: `.modal.rr-modal` opens single-column, 44px controls, 7 regex options; Find updates `2 / 164`; scope and history icons render at 20px after the tablet-padding fix; no errors.
 - Scratch notes were deleted after testing; no content changes were left in the dev vault.
 
 ### Known limitations
@@ -168,10 +201,11 @@ npm run build     # main.js produced (v0.3.2, ~45 KB)
 - Replace-all is blocked above 100,000 matches rather than offering a chunked or background replacement.
 - The mobile modal has no custom decorations; it relies on the native selection, count, and position.
 - CM6 decorations in YAML frontmatter/properties are not independently verified; the editor's property widgets may not show marks that exist in the raw document.
-- Real iOS/Android, Windows/Linux, and third-party themes are not re-tested for 0.3.2.
+- Real iOS/Android and Windows/Linux are not re-tested for 0.3.3; third-party themes tested are Catppuccin and Minimal.
+- Accessibility used the Chromium AX tree; a full VoiceOver/Narrator session is still outstanding.
 - At 124px panel width the compact panel is taller than 70vh and the status row requires internal scrolling; this is the documented narrow-window tradeoff.
 - Programmatic popout teardown with `leaf.detach()` still emits browser ResizeObserver warnings in some runs; normal `workspace:close-window` was clean.
-- The `u` regex flag, multiline literal inputs, preserve case, and vault-wide replace remain out of scope.
+- Multiline literal inputs, preserve case, vault-wide replace, and the `y`/`d`/`v` flags remain out of scope.
 
 ## Install / update
 
@@ -197,4 +231,4 @@ For another vault, copy the same three files into `<vault>/.obsidian/plugins/reg
 - `src/i18n/` — en/zh strings
 - `src/search/` — pure engine; `src/search/limits.ts` guard rails
 - `styles.css` — inline separator, highlights, zero-width dots, line-break markers, compact/mobile styling
-- `tests/` — 59 unit tests across 6 files
+- `tests/` — 61 unit tests across 6 files

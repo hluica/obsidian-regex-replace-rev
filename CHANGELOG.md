@@ -3,6 +3,56 @@
 This changelog starts at **0.2.6**, the baseline community release. Earlier
 versions are intentionally not reconstructed.
 
+## 0.3.3 — 2026-11-11 (release candidate, branch `v0.3.0`)
+
+0.3.3 is the first public-release candidate; it remains on the development
+branch pending acceptance, merge, tag, and community-directory update.
+
+### Added
+
+- **Unicode (u) option** in regex mode. It adds the `u` flag, enables
+  `\p{...}` property escapes, and matches astral characters as one code point.
+  The toggle is hidden in exact/wildcard modes, is persisted with the panel
+  state, and defaults to off.
+- **Accessibility grouping/landmarks**: the panel is a labelled `region`, the
+  inline title is a level-2 heading, the option row is a labelled group, and
+  history buttons expose `aria-haspopup="menu"` plus `aria-expanded` state.
+- **Third-party theme audit**: Catppuccin (enabled) and Minimal were tested in
+  the dev vault; the panel, switches, status, zero-width dots, and `↵` markers
+  use theme variables.
+
+### Changed
+
+- Regex mode now exposes seven options (case, whole word, match newlines,
+  multiline anchors, Unicode, wrap, replace escapes).
+- The active match uses an accent-tinted background and a 2px accent outline
+  instead of the selection color alone. This keeps the active match stronger
+  than inactive matches on themes whose highlight background is opaque.
+
+### Fixed
+
+- Active-match contrast on Catppuccin: the current match was weaker than the
+  all-match peach background; the accent outline and tint now make it distinct.
+- Accessibility tree lacked a panel landmark/heading and history expansion
+  state; both are now exposed.
+- Tablet/mobile global `button` padding was shrinking the selection and
+  history icons to a few pixels; plugin-scoped padding overrides restore full
+  icons. The selection-refresh control now uses the `scan` icon, distinct from
+  the history clocks.
+
+### Verification
+
+- 61 unit tests across 6 files; TypeScript, ESLint, and production build pass.
+- `\p{Script=Han}+` finds 2,665 runs with Unicode enabled and no matches when
+  disabled; astral `.` matches one code point with `u` and two surrogate halves
+  without it.
+- Chromium accessibility tree: region “查找与替换”, heading level 2, seven
+  named checkboxes (including Unicode), three named comboboxes, live status,
+  history `aria-expanded=false`.
+- Catppuccin and Minimal: panel chrome, active/inactive highlights, toggles,
+  scope button, zero-width dots, and newline markers remain visible.
+- Four compact/narrow and one 1 MB checks from 0.3.2 remain green.
+
 ## 0.3.2 — 2026-11-11 (branch `v0.3.0`, internal, not released)
 
 0.3.2 is another internal transitional version; 0.3.3 is the next external

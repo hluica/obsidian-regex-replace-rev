@@ -1,13 +1,13 @@
-# UI Specification — v0.3.2
+# UI Specification — v0.3.3
 
-- **Status:** implemented on branch `v0.3.0` (pending acceptance); E2E-verified in Obsidian 1.15.0, macOS, Chinese/light and dark UI; 0.3.2 is an internal transitional version; 0.3.3 is the next external release candidate
+- **Status:** implemented on branch `v0.3.0` (pending acceptance); E2E-verified in Obsidian 1.15.0, macOS, Chinese/light and dark UI; 0.3.3 is the first public release candidate
 - **Implementation record:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **Plan/status:** [PLAN.md](PLAN.md)
 - **Community audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
-- **Screenshots:** [inline panel](docs/screenshots/panel-inline.png) · [dark theme](docs/screenshots/panel-dark.png) · [zero-width dots](docs/screenshots/panel-zero-width.png) · [newline markers](docs/screenshots/panel-newline.png) · [mixed `。\n`](docs/screenshots/panel-newline-combo.png) · [modal fallback](docs/screenshots/modal-fallback.png)
+- **Screenshots:** [inline panel](docs/screenshots/panel-inline.png) · [dark theme](docs/screenshots/panel-dark.png) · [Catppuccin](docs/screenshots/theme-catppuccin.png) · [Minimal](docs/screenshots/theme-minimal.png) · [zero-width dots](docs/screenshots/panel-zero-width.png) · [newline markers](docs/screenshots/panel-newline.png) · [mixed `。\n`](docs/screenshots/panel-newline-combo.png) · [modal fallback](docs/screenshots/modal-fallback.png)
 
-This specification describes the current inline design, the 0.3.1 match-marker layer, and the 0.3.2 selection-refresh control.
+This specification describes the current inline design, the match-marker layer, the selection-refresh control, and the 0.3.3 Unicode/accessibility layer.
 
 ## 1. Principles
 
@@ -53,7 +53,7 @@ This specification describes the current inline design, the 0.3.1 match-marker l
 - Mode row spans columns 2–3; status row spans columns 1–3.
 - Labels left-aligned; the status count starts at the same left edge as `Find:`/`Replace:`/`Mode:`; the position follows the count; the status message is right-aligned.
 - Inputs/selects 30px tall; action buttons 122×28px in a 252px 2×2 column.
-- Mode selects: three fixed 160px controls, not matched to the input width. The scope control adds a 26px crosshair button; the mode row remains width-fit at desktop and stacks at compact/narrow widths.
+- Mode selects: three fixed 160px controls, not matched to the input width. The scope control adds a 26px scan selection-refresh button; the mode row remains width-fit at desktop and stacks at compact/narrow widths.
 - Options: native toggles; 28px column gap desktop, 16px compact/mobile; row height auto.
 - Bottom clearance: 28px keeps the status message above Obsidian's status bar.
 
@@ -68,7 +68,7 @@ This specification describes the current inline design, the 0.3.1 match-marker l
 | Options | 4/5/6 by mode | wraps | wraps, 44px targets |
 | Panel height | content | content; 70vh cap | modal content |
 
-### 3.2 Status row (0.3.2)
+### 3.2 Status row (0.3.3)
 
 ```
 .rr-status
@@ -162,12 +162,13 @@ Modal uses `.modal.rr-modal`, `.modal-content.rr-content`, `.rr-panel.rr-panel--
 |---|---|---:|
 | Exact | Case sensitive, Whole word, Wrap around, Replace escapes | 4 |
 | Wildcard | + Match newlines | 5 |
-| Regex | + Match newlines, Multiline anchors | 6 |
+| Regex | + Match newlines, Multiline anchors, Unicode (u) | 7 |
 
 - **Match newlines** (`s`): wildcard `*`/`?` cross line breaks; regex `.` crosses line breaks.
 - **Multiline anchors** (`m`): regex only.
+- **Unicode (u)**: regex only; adds the `u` flag, enables `\p{...}` escapes, and treats astral characters as one code point.
 - **Replace escapes**: interpret `\n`, `\r`, `\t`, `\\` before group expansion.
-- Hidden options remain in state, but their flags are ignored when not applicable. Exact mode hides Match newlines and Multiline anchors; wildcard hides only Multiline anchors.
+- Hidden options remain in state, but their flags are ignored when not applicable. Exact mode hides Match newlines, Multiline anchors, and Unicode; wildcard hides Multiline anchors and Unicode.
 - Option rows are not reserved: wrapping changes panel height. `70vh` caps extreme cases.
 
 Labels (Chinese / English):
@@ -179,6 +180,7 @@ Labels (Chinese / English):
 | No active position | `— / 164` | `— / 164` |
 | Zero-width marker | 灰色半透明/强调色实心圆点 | translucent gray / filled accent dot |
 | Newline marker | `↵` 标记 | `↵` pill |
+| Unicode (u) | Unicode（u） | Unicode (u) |
 
 ## 6. States and messages
 
@@ -217,7 +219,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - History buttons open a native `Menu` with recent values and Clear; Enter/Space accessible.
 - Escape or header ✕ closes, clears highlights, and focuses the editor.
 - Find selects the match and dispatches all-match + active decorations; the highlight remains visible while the find input keeps focus.
-- The scope crosshair button captures the current editor selection, switches scope to Selection, refreshes the range, and shows “Selection updated”. With no selection it resets to Current file and reports the no-selection message.
+- The scope selection-refresh button captures the current editor selection, switches scope to Selection, refreshes the range, and shows “Selection updated”. With no selection it resets to Current file and reports the no-selection message.
 - History buttons use the `history` icon with the existing ARIA labels/tooltips.
 - Toggle labels and switches are both clickable; native toggle Space toggles.
 - Re-running the command in the same window focuses the existing panel; opening a panel in another window leaves this one open.
@@ -230,10 +232,13 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - Status message uses `aria-live=polite`; errors are textual.
 - Buttons use real `<button>` elements and `disabled`; focus-visible outlines are defined.
 - Native toggles are keyboard-focusable and Space-tested; label row click tested.
-- All-match/active distinction uses an outline in addition to color; zero-width and line-break markers are `aria-hidden`.
+- All-match/active distinction uses an accent tint + 2px outline in addition to color; zero-width and line-break markers are `aria-hidden`.
+- The panel is a labelled region; the inline title is a level-2 heading; the options row is a labelled group.
+- History buttons expose `aria-haspopup="menu"` and `aria-expanded`; the status message is `role=status` with `aria-live=polite`.
+- The Chromium accessibility tree was audited (the same tree Chromium maps to Windows UIA); a full VoiceOver/Narrator session is outstanding.
 - Mobile targets ≥44px.
-- Tab flow: find → find history → find actions → replace → replace history → replace actions → mode → scope → direction → visible toggles.
-- Full screen-reader audit is not recorded.
+- Tab flow: find → find history → Find → Replace and find → replace → replace history → Replace → Replace all → mode → scope → Use current selection → direction → visible toggles (including Unicode). After the last toggle, Tab leaves the panel for the workspace (the inline host does not trap focus).
+- Full VoiceOver/Narrator session is not recorded; the Chromium AX tree audit is recorded in IMPLEMENTATION.md.
 
 ## 10. Responsive, themes, multi-window
 
@@ -243,7 +248,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - Compact class updates are coalesced with `requestAnimationFrame` and skipped when the width is unchanged, preventing ResizeObserver loops during viewport/popout resizes.
 - Only Obsidian CSS variables; no `.theme-dark` branches, no `!important`, no `:has`.
 - Multi-window: command targets `editor` identity; panels are closed only within the same `ownerDocument`; one panel per window.
-- Chinese/light and dark verified for 0.3.2; English strings use the same layout and were verified in 0.2.6.
+- Chinese/light and dark verified for 0.3.3; Catppuccin and Minimal tested in light mode; English strings use the same layout and were verified in 0.2.6.
 - Mobile modal verified in emulation; real devices not re-tested.
 
 ## 11. Differences from the native find UI

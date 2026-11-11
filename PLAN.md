@@ -1,7 +1,7 @@
 # Refined Regex Replace and More — Plan and Status
 
-- **Version:** 0.3.2 (branch `v0.3.0`, internal transitional version, pending acceptance)
-- **Status:** implemented and verification-complete on `v0.3.0`; E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI); pending user acceptance; 0.3.2 is internal and will not be released; 0.3.3 is the next external release candidate; 0.2.6 baseline is in the community directory
+- **Version:** 0.3.3 (branch `v0.3.0`, public release candidate, pending acceptance)
+- **Status:** implemented and verification-complete on `v0.3.0`; E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI); pending user acceptance; 0.3.3 is the first public release candidate; 0.2.6 baseline is in the community directory
 - **Current implementation:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **UI specification:** [UI-SPEC.md](UI-SPEC.md)
 - **Community readiness audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
@@ -14,17 +14,17 @@ Build a find/replace panel for the **current Markdown note** with:
 
 - exact, wildcard, and JavaScript regular-expression matching;
 - find, replace once, replace and find, and replace all;
-- search options for case, whole word, newlines, multiline anchors, and replacement escapes;
+- search options for case, whole word, newlines, multiline anchors, Unicode (u), and replacement escapes;
 - current-file / captured-selection scope;
 - down/up direction and optional wrap;
 - match count, persistent position, status/error messages, history, and undo-safe replacement;
-- all-match highlighting and zero-width match markers in the editor;
+- all-match highlighting, zero-width and line-break markers in the editor;
 - editor-focus keyboard navigation while the panel is open;
 - desktop inline panel at the bottom of the note area; mobile modal fallback;
 - independent panels in multiple Obsidian windows;
 - bounded result sets and a confirmation step for large replace-all operations.
 
-Out of scope for v0.3.2: vault-wide replace, diff preview, preserve case, multiline literal input, `u`/`y`/`d`/`v` flags, default hotkeys, and real-device validation.
+Out of scope for v0.3.3: vault-wide replace, diff preview, preserve case, multiline literal input, `y`/`d`/`v` flags, default hotkeys, and real-device validation.
 
 ## 2. Current architecture
 
@@ -65,10 +65,11 @@ Main files:
 |---|---|---:|
 | Exact | Case sensitive, Whole word, Wrap around, Replace escapes | 4 |
 | Wildcard | + **Match newlines** | 5 |
-| Regex | + **Match newlines**, **Multiline anchors** | 6 |
+| Regex | + **Match newlines**, **Multiline anchors**, **Unicode (u)** | 7 |
 
 - `Match newlines` (`s` flag): in wildcard mode, `*` and `?` can cross line breaks; in regex mode, `.` can cross line breaks.
-- `Multiline anchors` (`m` flag) is regex-only.
+- `Multiline anchors` (`m` flag) and `Unicode (u)` are regex-only.
+- `Unicode (u)` adds the `u` flag: `\p{...}` property escapes and code-point matching; it is persisted and hidden in exact/wildcard modes.
 - `Replace escapes` interprets `\n`, `\r`, `\t`, and `\\` in the replacement before group expansion.
 - Exact mode replacement is literal; wildcard/regex expand `$1`, `$&`, `$$`, etc.
 - `g` is implicit.
@@ -86,11 +87,11 @@ Main files:
 ### 3.3 Scope, direction, wrap
 
 - **Current file**: whole document.
-- **Selection**: captured when the panel opens or the scope is switched to Selection; the mode-row crosshair button refreshes the range from the current selection; range updated after replacements; reset to Current file when the document changes.
+- **Selection**: captured when the panel opens or the scope is switched to Selection; the mode-row selection-refresh button refreshes the range from the current selection; range updated after replacements; reset to Current file when the document changes.
 - Direction down/up; Shift+Enter reverses once; F3/Shift+F3 navigate.
 - Wrap off produces boundary messages instead of wrapping.
 
-### 3.4 Match visibility and navigation (0.3.2)
+### 3.4 Match visibility and navigation (0.3.3)
 
 - Every match in scope is marked with `.rr-match-highlight` using the theme highlight color.
 - The active match adds `.rr-match-highlight-active` with the selection background and an accent outline.
@@ -124,18 +125,19 @@ Main files:
 
 | Area | Status |
 |---|---|
-| TypeScript strict / ESLint / tests / build | 59 tests pass; `tsc` and ESLint clean; production build passes (≈45 KB) |
-| Dark/light theme | Light and dark verified in Obsidian 1.15 for 0.3.2; active match uses an outline in addition to color |
+| TypeScript strict / ESLint / tests / build | 61 tests pass; `tsc` and ESLint clean; production build passes (≈48 KB) |
+| Dark/light theme | Light and dark verified in Obsidian 1.15 for 0.3.3; active match uses an accent tint + 2px outline |
+| Third-party themes | Catppuccin (enabled) and Minimal tested; active/inactive highlights, toggles, scope button, dots, and `↵` markers visible |
 | English/Chinese UI | Verified; new strings in both languages |
-| Accessibility | Labels, ARIA on selects/status, focus-visible, native toggle Space support, 44px mobile targets; scope refresh has tooltip/ARIA; full screen-reader audit not performed |
-| Multi-window | Two Obsidian windows tested in 0.2.6; v0.3.2 popout panel/F3/Escape and normal close verified |
+| Accessibility | Labelled region/heading, named controls, grouped options, history menu state, live status, focus-visible, 44px mobile targets; Chromium AX tree audited; full VoiceOver/Narrator session outstanding |
+| Multi-window | Two Obsidian windows tested in 0.2.6; v0.3.3 popout panel/F3/Escape and normal close verified |
 | Mobile | Obsidian mobile emulation tested; real iOS/Android not tested |
-| Windows/Linux | not re-tested for 0.3.2 |
+| Windows/Linux | not re-tested for 0.3.3 |
 | Performance | 1 MB / 10,000+ matches and 1 MB / 10,500 lines: count refresh ≈185–189 ms including 180 ms debounce; dotAll and zero-width caps hold; engine scan itself milliseconds |
 | Bounded actions | 100,000 match cap; 5,000 replace-all confirmation; 150,000-match note tested |
-| Community directory | 0.2.6 baseline listed; 0.3.1/0.3.2 internal only; 0.3.3 external release pending |
+| Community directory | 0.2.6 baseline listed; 0.3.3 public release candidate pending acceptance |
 
-## 5. Acceptance status (v0.3.2)
+## 5. Acceptance status (v0.3.3)
 
 - [x] Three modes × four actions
 - [x] Exact 4 / wildcard 5 / regex 6 options
@@ -158,6 +160,9 @@ Main files:
 - [x] **History buttons use the history icon**
 - [x] **Panel settings writes debounced (500ms), flush on unload**
 - [x] **Line-break positions cached per match set; pure-function tests**
+- [x] **Unicode (u) regex option and property-escape tests**
+- [x] **Chromium accessibility tree audit and landmark/group fixes**
+- [x] **Catppuccin and Minimal theme audit**
 - [x] **Selection scope with newline markers**
 - [x] **1 MB newline/dotAll/zero-width performance regression**
 - [x] **Popout multi-window and F3/Escape regression**
@@ -166,14 +171,14 @@ Main files:
 - [x] Mobile modal fallback
 - [x] Settings tab (4 items)
 - [ ] Real iOS/Android and Windows/Linux verification
-- [x] Dark-theme 0.3.2 visual audit and screenshot
-- [x] 0.3.2 internal acceptance (not released)
+- [x] Dark-theme 0.3.3 visual audit and screenshot
+- [ ] 0.3.3 public release (merge/tag/directory)
 
 ## 6. Next steps
 
-1. **v0.3.3:** real-device/platform checks, third-party theme pass, full screen-reader audit.
-2. **v0.3.3:** optional multi-line find/replace fields and a `u` flag toggle, only after user feedback.
-3. **Release:** when 0.3.3 is stable, create tag/release `0.3.3`, attach `main.js`, `manifest.json`, `styles.css`, update the community directory entry. 0.3.1/0.3.2 remain internal.
+1. **Acceptance:** verify 0.3.3 on the branch; then merge and create tag/release `0.3.3` with `main.js`, `manifest.json`, `styles.css`.
+2. **Release:** update the community directory entry to 0.3.3 and verify from a clean vault.
+3. **Post-release:** real iOS/Android/Windows/Linux checks and a full VoiceOver/Narrator session; 0.3.1/0.3.2 remain internal.
 4. Keep the 0.2.6 baseline changelog; do not reconstruct older versions.
 
 ## 7. Development
