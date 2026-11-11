@@ -2,7 +2,9 @@
 
 一个 Obsidian 查找替换插件，支持**完全匹配**、**通配符**和**正则表达式**。桌面端将面板嵌入笔记显示区域底端，用一条细分隔线、标题和关闭按钮与笔记区分，非模态且不遮挡笔记；移动端回退到模态对话框。
 
-![桌面内嵌面板（深色英文界面）](docs/screenshots/panel-inline.png)
+![桌面内嵌面板（中文、浅色主题）](docs/screenshots/panel-inline.png)
+
+![零宽匹配标记](docs/screenshots/panel-zero-width.png)
 
 ![模态回退](docs/screenshots/modal-fallback.png)
 
@@ -13,7 +15,10 @@
 - **随模式变化的查找选项**：区分大小写、全字匹配、循环查找、**匹配换行符**、**替换转义**，全部使用 Obsidian 原生 toggle 开关。完全匹配显示 4 项；通配符增加「匹配换行符」共 5 项；正则再增加「多行锚点」共 6 项。「匹配换行符」使用 `s` 标志：通配符模式下让 `*`/`?` 跨行，正则模式下让 `.` 跨行；「多行锚点」仅正则可用。选项间距更宽松（桌面 28px，紧凑/移动端 16px），放不下时自然换行，面板高度随行数调整。
 - **桌面内嵌面板**：固定在笔记显示区域底端，用一条对比度较高的 1px 实线与笔记内容分隔，并带标题与关闭按钮；占据布局空间而非覆盖笔记，编辑器仍可见可交互。
 - **多窗口**：每个 Obsidian 窗口拥有独立面板；命令作用于触发它的窗口中的编辑器，关闭一个窗口的面板不影响其它窗口。
-- **当前匹配可见**：查找框保持焦点时，笔记中的当前匹配也会高亮，点击「查找」或按 Enter 都能看到落点。
+- **全部匹配高亮**：当前文件或选区内的所有匹配都会高亮，当前匹配使用更强的描边；输入或逐条查找时都能看到结果集。
+- **当前序号**：状态行持续显示 `3 / 164`，并随查找、选区变化、替换和重新打开面板更新。
+- **零宽匹配**：`^`、`\b`、lookahead 等零宽匹配会显示小标记，当前标记更强。
+- **编辑器焦点下的导航**：面板打开时，焦点在正文也可使用 F3、Shift+F3、Escape。
 - **紧凑按钮**：四个动作按钮采用接近设置页控件的大小，并带 hover 与按下（强调色）反馈。
 - **移动端/回退**：移动模式下使用同一套控件的模态对话框。
 - **范围与方向**：当前文件或捕获的选中内容；向下或向上。
@@ -25,27 +30,26 @@
 
 ## 状态
 
-当前版本 **0.2.6**。源码已推送到 GitHub，`0.2.6` 标签/Release 待发布。发布后可从 [最新 Release](https://github.com/hluica/obsidian-regex-replace-rev/releases/latest) 下载发布文件；插件尚未列入 Obsidian 社区插件目录。发布审计见 [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)。
+当前版本 **0.3.0**，位于 `v0.3.0` 分支（待验收合并）。上一个基线版本 **0.2.6** 已列入 Obsidian 社区插件目录并有 GitHub Release；0.3.0 将在验收后发布。发布审计见 [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)，变更见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 安装
 
+### 从社区插件目录安装
+
+1. 在 Obsidian 的 **设置 → 第三方插件** 中关闭安全模式（如需要）。
+2. 在社区插件目录中搜索并安装 **Refined Regex Replace and More**。
+3. 启用插件。
+4. 可在 **设置 → 快捷键** 中给「在当前文件中查找与替换」绑定快捷键。
+
+插件 id 为 `regex-replace-rev`。
+
 ### 从 GitHub Release 安装
 
-1. 打开 [最新 Release](https://github.com/hluica/obsidian-regex-replace-rev/releases/latest)。
-2. 下载 `main.js`、`manifest.json` 和 `styles.css`。
-3. 创建 `<你的库>/.obsidian/plugins/regex-replace-rev/`，把三个文件放进去。
-4. 在 Obsidian 的 **设置 → 第三方插件** 中关闭安全模式（如需要），启用 **Refined Regex Replace and More**。
-5. 可在 **设置 → 快捷键** 中给「在当前文件中查找与替换」绑定快捷键。
-
-插件 id 为 `regex-replace-rev`，插件目录名应与之一致。
+从 [最新 Release](https://github.com/hluica/obsidian-regex-replace-rev/releases/latest) 下载 `main.js`、`manifest.json` 和 `styles.css`，放入 `<你的库>/.obsidian/plugins/regex-replace-rev/`，然后在设置中启用。
 
 ### 从源码安装
 
 参见下方「开发」章节：执行 `npm install && npm run build`，再把三个构建文件复制到库插件目录。
-
-### 从社区插件目录安装
-
-插件被收录后，可在 **设置 → 第三方插件** 中直接安装；在收录前请使用上面的 GitHub Release 或源码安装方式。
 
 ## 使用
 
@@ -64,6 +68,8 @@
 | 替换框      | Enter         | 替换并查找        |
 | 替换框      | Shift+Enter   | 替换（仅一次）    |
 | 面板        | Escape        | 关闭内嵌面板      |
+| 正文（面板打开） | F3 / Shift+F3 | 查找下一个/上一个 |
+| 正文（面板打开） | Escape        | 关闭内嵌面板      |
 | 历史按钮    | Enter / Space | 打开历史菜单      |
 
 Mod 在 macOS 上是 Cmd，其它平台是 Ctrl。按钮均可 Tab 聚焦、Enter/Space 触发。
@@ -91,7 +97,7 @@ Mod 在 macOS 上是 Cmd，其它平台是 Ctrl。按钮均可 Tab 聚焦、Ente
 - JavaScript `RegExp` 语法；只输入模式本身，不要写 `/.../flags`。
 - `g` 隐含。「区分大小写」控制 `i`；「匹配换行符」加 `s`；「多行锚点」加 `m`。
 - 替换支持 `$1`…`$99`、`$&`、`$$`、`` $` ``、`$'`、`$<name>`。
-- 支持零宽匹配（如 `^`、`\b`、`(?=...)`）。
+- 支持零宽匹配（如 `^`、`\b`、`(?=...)`），并在编辑器中显示标记。
 - 不使用 lookbehind，兼容 iOS。
 
 ### 全字匹配
@@ -123,11 +129,13 @@ Mod 在 macOS 上是 Cmd，其它平台是 Ctrl。按钮均可 Tab 聚焦、Ente
 
 - 只处理当前文件或捕获选区，不做全库替换。
 - 输入框单行；多行替换依赖正则 `\n` 或面板中的「替换转义」开关。
-- 不提供全部匹配高亮；当前匹配会被选中并滚动到可视区，匹配数/状态栏给出反馈。
+- 全部匹配高亮最多渲染 5,000 个区间和 1,000 个零宽标记；匹配总数和序号仍显示到扫描上限。
+- 替换超过 5,000 处时会要求确认；超过 100,000 处时拒绝执行，避免单次事务无界增长。
 - 不暴露 `u` 正则标志；依赖 `u` 的 Unicode property escape 在当前版本不可用。
 - 正则交替分支的整词匹配有上述边界限制。
 - 内嵌面板位于编辑器内容区域底端；在很窄的分栏中会自动切换为紧凑堆叠布局，极窄窗口以 70vh 封顶并内部滚动。
-- 移动端使用对话框而不是内嵌面板。
+- 移动端使用对话框而不是内嵌面板；模态框不绘制自定义高亮，但序号和原生选区可用。
+- 0.3.0 未重新测试真实 iOS/Android 与 Windows/Linux，移动端使用模拟模式验证。
 
 ## 开发
 

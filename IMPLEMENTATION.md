@@ -1,14 +1,22 @@
-# Implementation Record — v0.2.6 (inline panel refinements)
+# Implementation Record — v0.3.0 (match visibility and navigation)
 
-Status: **implemented and verified in the local dev vault** (Obsidian 1.15.0, macOS, dark theme, English UI). Source on `main`; tag/release `0.2.6` pending. Not published to the community store. Source/build/docs audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
+Status: **implemented on branch `v0.3.0`, pending acceptance and merge**. E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI). The 0.2.6 baseline is listed in the community directory; the 0.3.0 tag/release is pending. See [CHANGELOG.md](CHANGELOG.md) and [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
 
-v0.2.6 is the current implementation. The desktop panel is embedded at the bottom of the note display area with a thin separator, fixed-width mode selects, compact action buttons, a visible current-match highlight, native Obsidian toggle switches, auto-height option rows, wildcard/regex newline support, status lines aligned with form labels, and independent panels in multiple Obsidian windows.
+v0.3.0 adds all-match highlighting, a persistent current-match position, zero-width markers, editor-focus keyboard navigation, and bounded replace-all behavior.
 
-## Screenshots (real Obsidian windows, dark + English)
+## Screenshots (real Obsidian window, Chinese/light)
 
-Desktop inline panel (bottom of the note area, 1px separator, current match highlighted, wildcard `s` visible):
+Desktop inline panel: all matches in the visible note are highlighted, the active match has an accent outline, and the status shows `164 个匹配  11 / 164`:
 
 ![Inline desktop panel](docs/screenshots/panel-inline.png)
+
+Dark theme with the same all-match/active distinction:
+
+![Inline desktop panel, dark theme](docs/screenshots/panel-dark.png)
+
+Zero-width matches (`^` with multiline anchors): line-start markers, with a stronger active marker:
+
+![Zero-width markers](docs/screenshots/panel-zero-width.png)
 
 Mobile / fallback dialog:
 
@@ -16,40 +24,47 @@ Mobile / fallback dialog:
 
 ## Architecture
 
-- `src/editor/inline-panel.ts`
-  - `StateField<boolean>` + `StateEffect` to open/close the panel per editor.
-  - `showPanel.from(field, open => open ? constructor : null)`; `Panel.top = false` → `.cm-panels-bottom`.
-  - Panel DOM: `.rr-inline-panel` → `.rr-inline-frame` → `.rr-inline-container` → shared `FindReplacePanel`.
-  - `editorInfoField` supplies the Obsidian `Editor`; `EditorView.findFromDOM()` maps a MarkdownView container to its CM6 view.
-  - A second `StateField<DecorationSet>` + `setInlineMatchHighlight` effect draws `.rr-match-highlight` over the current match **even while the find input has focus**. Zero-width matches intentionally fall back to no mark (the caret/position is still selected; no visual marker).
-  - Highlight/clear effects are coalesced into a `setTimeout(0)` task and cancelled on close/destroy. This avoids dispatching `EditorView.update` while CM6 is mounting the panel inside an update (the previous `Calls to EditorView.update are not allowed while an update is in progress` error on an empty find pattern).
-  - `Panel.update()` refreshes the count on document changes; `WeakMap` of panel controllers focuses an already-open panel.
-  - Escape and the header ✕ hide the panel and clear the highlight; the editor regains focus.
-  - A `ResizeObserver` adds `rr-compact` below 620px so narrow split panes stack the controls. `.rr-inline-panel` caps at `max-height: 70vh` with `overflow-y: auto` so an English regex panel in a very narrow window does not exceed the viewport.
-- `src/main.ts`
-  - Registers the editor extension once per plugin instance.
-  - The command finds the `MarkdownView` by **editor identity** (`findMarkdownViewForEditor`), not the global active view. This makes the command act on the window/editor that invoked it.
-  - On desktop it opens the inline panel in that editor’s CM6 view; on mobile or when no CM6 editor DOM exists it opens the modal fallback.
-  - `closeOtherInlinePanelsInWindow()` closes other panels only in the same `ownerDocument`; panels in other Obsidian windows remain open. Mobile closes all inline panels before showing the modal.
-- `src/ui/FindReplacePanel.ts`
-  - Shared UI/behavior; inline header/title/close; no global target tracking.
-  - Mode-aware options:
-    - exact: case, whole word, wrap, replace escapes (4);
-    - wildcard: + Match newlines (5);
-    - regex: + Match newlines + Multiline anchors (6).
-  - **Match newlines** uses `s`: in wildcard mode `*`/`?` cross line breaks; in regex mode `.` crosses line breaks. Multiline anchors (`m`) are regex-only.
-  - Options use **native `ToggleComponent` switches** (`.rr-option` + `.checkbox-container`), 28px column gaps on desktop and 16px in compact/mobile. No reserved empty row; wrapping changes the panel height.
-  - Clicking the option label or the switch toggles it; the native `.checkbox-container` is keyboard-focusable and Space toggles it.
-  - The **Replace escapes** toggle is part of `SearchUiState`; the settings model has no separate `processEscapes` item.
-  - Document change resets a captured selection scope.
-- `src/ui/FindReplaceModal.ts`
-  - Mobile/fallback host. Single-column layout on narrow/mobile screens with actions after the replace field.
-- CSS
-  - `.rr-inline-panel` has a single **1px solid high-contrast top line**, no card border, no rounded frame.
-  - Four action buttons are 28px tall in a 252px 2×2 column (about 122px each); hover and pressed (accent + translateY) feedback. The width fits the English “Replace and find” (101px text; 120px content).
-  - Labels are left-aligned; the status row spans the full grid and starts at the same left edge as “Find/Replace/Mode”. The message sits at the right edge above the native status bar.
-  - Mode selects are three equal fixed 160px widths, spanning field + actions columns instead of matching the input width.
-  - Compact layout for narrow editors; mobile modal uses 44px controls; inline panel has 28px status-bar clearance.
+### All-match decorations — `src/editor/inline-panel.ts`
+
+- `StateEffect` `setInlineMatchHighlights` carries `{ ranges, active } | null`; `matchHighlightField` stores one `DecorationSet`.
+- Marks: `.rr-match-highlight` for every match, `.rr-match-highlight-active` for the active range.
+- Zero-width ranges become `Decoration.widget` instances (`.rr-zero-width`, active `.rr-zero-width-active`) instead of marks, because a mark with `from === to` renders nothing.
+- `src/editor/highlights.ts` is a pure planner: clamps to the document, sorts, de-duplicates exact ranges and zero-width positions, prioritizes the active range, and applies the 5,000 mark / 1,000 zero-width caps.
+- The existing `setTimeout(0)` coalescing remains; highlight requests from a CodeMirror update or panel mount are dispatched after the current update completes.
+- `closeInlinePanel` clears highlights and closes the panel in one transaction.
+
+### Editor-focus navigation
+
+- `panelControllers` now exposes `focus`, `findNext`, `findPrevious`, and `close`.
+- `createInlinePanelExtension` returns `Prec.high(keymap.of(F3, Shift-F3, Escape))`. Handlers return `false` when no panel controller exists, so normal editor behavior is untouched when the panel is closed.
+- The panel's own input key handling remains unchanged.
+
+### Position and selection tracking
+
+- `FindReplacePanel` tracks `activeIndex`, `matchCount`, and `truncated`.
+- After each scan, the selected range is matched against the scanned matches; `refresh()` re-derives the position so reopening the panel with a selected match shows the correct index.
+- CodeMirror `selectionSet` updates call `handleSelectionChange()`; it only re-syncs when the active index actually changes.
+- The status row is now `count + position` on the left and the action message on the right.
+- Document changes reset the position and schedule the debounced refresh.
+
+### Bounded replace-all
+
+- Limits live in `src/search/limits.ts`:
+  - display scan `10_000`;
+  - action scan `100_000`;
+  - highlight ranges `5_000`;
+  - zero-width markers `1_000`;
+  - confirmation threshold `5_000`.
+- Find / Replace / Replace-all scan with the action limit instead of `Infinity`.
+- Replace all refuses to run when the scan is truncated; above 5,000 matches it opens an Obsidian `ConfirmationModal` (1.13+). The cancel button has initial focus; confirming re-scans and executes one transaction.
+- The count shows `10000+` when the display scan is truncated; the position uses the same display total.
+
+### UI/CSS
+
+- `.rr-status-left` groups the count and position; `.rr-position` uses tabular numerals.
+- `.rr-match-highlight` uses `var(--text-highlight-bg, var(--text-selection))`; the active class uses `var(--text-selection)` plus an accent outline so the distinction is not color-only.
+- `.rr-zero-width` is a zero-width inline block with a 2px accent left border, `pointer-events: none`, and reduced opacity for inactive markers.
+- Existing desktop/compact/mobile layout rules are unchanged.
 
 ## What was built
 
@@ -57,25 +72,20 @@ Mobile / fallback dialog:
 |---|---|
 | Three modes (exact / wildcard / regex) | done |
 | Four actions (find, replace once, replace & find, replace all) | done |
-| Native toggle options: case, whole word, wrap, replace escapes | done |
-| Wildcard `s` (Match newlines for `*`/`?`) | done |
-| Regex `s` (Match newlines for `.`) | done |
-| Regex-only Multiline anchors | done |
-| Option-row auto height (no reserved empty row) | done |
-| Direction down/up, wrap-off boundary feedback | done |
-| Current file / captured selection scope | done |
-| Live match count + status/error messages | done |
-| Search/replace history (20 entries, clear) | done |
-| Desktop inline panel at note bottom, thin separator | done |
-| Visible current-match decoration while find focused | done |
-| Smaller buttons with hover/pressed feedback | done |
-| Independent panels in multiple Obsidian windows | done |
-| Compact stacked layout in narrow panes | done |
-| Very narrow panel scroll cap (70vh) | done |
-| Mobile modal fallback, ordered single-column layout | done |
-| Declarative settings (1.13+) | done |
-| Dark theme + English UI verified | done |
-| Single-transaction replacement + undo | done |
+| Native toggle options and mode-aware visibility | done |
+| All-match highlighting | done |
+| Active match with distinct outline | done |
+| Persistent `position / total` | done |
+| Zero-width match markers | done |
+| F3 / Shift+F3 / Escape from the editor | done |
+| Replace-all confirmation above 5,000 | done |
+| 100,000 action-scan cap and `10000+` display | done |
+| Current-file / captured selection scope | done |
+| Live count + status/error messages | done |
+| History (20, clear, persist) | done |
+| Desktop inline panel, compact layout, multi-window | done (0.2.6 regression baseline) |
+| Mobile modal fallback | done |
+| Declarative settings | done |
 | Unit tests, lint, type-check, build | done |
 
 ## Verification performed
@@ -83,49 +93,36 @@ Mobile / fallback dialog:
 ### Static
 
 ```bash
-npm test          # 4 files, 41 tests passed
+npm test          # 6 files, 51 tests passed
 npx tsc -noEmit   # passed
 npx eslint .      # 0 errors, 0 warnings
-npm run build     # main.js produced (v0.2.6)
+npm run build     # main.js produced (v0.3.0, ~44 KB)
 ```
 
-### Obsidian end-to-end (dev vault, dark + English)
+### Obsidian end-to-end (dev vault)
 
-- Plugin loads with no `dev:errors`; manifest version 0.2.6.
-- Command opens `.rr-inline-panel` inside `.cm-panels-bottom` at the bottom of the note area.
-- Separator computed as 1px `--background-modifier-border-focus`; no frame border/card radius.
-- English/dark labels and status measured at left **360px** (`Find:`, `Replace:`, `Mode:`, and the match count); status message right-aligned.
-- Action buttons measured **122×28px**; English “Replace and find” text ≈101px with 120px content width; no ellipsis.
-- Exact mode: 4 toggles; wildcard: 5 (Match newlines visible); regex: 6 (Match newlines + Multiline anchors).
-- Wildcard `s` behavior: pattern `写*你` with Match newlines off → “No matches”; on → 1 match. Regex/wildcard engine test already covers `a.b`/`a*b` with dotAll.
-- Options `Match newlines` tooltip: “In wildcard mode, let * and ? match newlines; in regex mode, let . match newlines (s flag).” Chinese: “通配符模式下让 * 和 ? 匹配换行符；正则模式下让 . 匹配换行符（s 标志）。”
-- Find via Enter selected the match and drew `.rr-match-highlight` while the find input remained focused; dark-theme highlight visible.
-- Replace all via the inline panel changed the note; undo restored it. Replace escapes (`A\nB` with toggle on) inserted a newline.
-- Header ✕ and Escape both close the panel, clear the highlight and return focus to the editor.
-- Empty find pattern on panel mount no longer throws; the panel opens with “Enter something to find”. Find then clear restores highlight 1 → 0 without errors; close/reopen with a pending highlight is clean.
-- Toggle labels, switches and Space key were exercised; state updates correctly.
-- Dark modal: `.modal.rr-modal` opens single-column with actions after replace, 44px controls, four exact-mode toggles.
-- English button/label overflow checked; no truncation after widening the action column.
-- **Multi-window**: two Obsidian windows each showed 1 `.rr-inline-panel`; invoking the command in the second window selected `test` in `Untitled.md`, while the main window kept its `笔记` selection; closing the main panel left the second panel at 1; `dev:errors` empty.
-- Width sweep (English/dark; window width / panel width / rows / panel height):
-  - 1000 / 656 / exact 2, wildcard 2, regex 2 / 290
-  - 900 / 556 compact / 2 / 493
-  - 800 / 456 compact / exact 2, wildcard 2, regex 3 / 493, 493, 520
-  - 700 / 356 compact / 2, 3, 3 / capped 560 (content 644–696, internal scroll)
-  - 600 / 256 compact / 4, 5, 6 / capped 560 (content 748–852, internal scroll)
-- Settings tab has 4 items.
+- Plugin `0.3.0` loads and reloads with no `dev:errors`; manifest version 0.3.0.
+- Desktop panel opens in `.cm-panels-bottom`; status shows `164 个匹配  — / 164` before Find.
+- All-match highlighting: 164 matches, 17 visible `.rr-match-highlight` nodes in the viewport; Find adds one `.rr-match-highlight-active` and shows `3 / 164` plus “已定位第 3 / 164 个匹配”.
+- Selecting a body match with the editor API updates the position to `11 / 164` and adds the active class. Moving the caret off matches returns `— / 164` and removes the active class.
+- Closing and reopening the panel with a selected match restores `11 / 164` and the active highlight.
+- Zero-width: `^` with multiline anchors produced 229 matches; 12 visible `.rr-zero-width` markers; Find produced one `.rr-zero-width-active` and `9 / 229`.
+- Editor-focus keys: F3 from `.cm-content` moved `9 / 229 → 10 / 229`; Shift+F3 returned to `9 / 229`; Escape closed the panel and left focus in the editor.
+- Replace all: `.` on the 55 KB note produced 19,588 matches; Replace all opened “替换全部匹配？” with “确定替换 19588 处？” and Cancel focused; Cancel closed the modal without changes.
+- Replace all on a 6,000-match scratch note: confirmation → replace → `已替换 6000 处，可撤销`; undo restored all 6,000 characters.
+- Safety cap: a 150,000-match scratch note shows `10000+` and Replace all reports “结果超过 100000 条，请缩小查找范围” without opening a modal.
+- 1 MB scratch note (10,500 matches): input-to-count update 184.9 ms including the 180 ms debounce; `10000+` count and 10 visible highlights; `dev:errors` empty.
+- Mobile emulation: `.modal.rr-modal` opens single-column, 44px controls, 6 options; Find updates `2 / 164`; no errors.
+- Scratch notes were deleted after testing; no content changes were left in the dev vault.
 
-## Known limitations
+### Known limitations
 
-- No highlight for **all** matches; only the current match is decorated/selected, with a count.
-- Zero-width matches have no separate visual marker (the caret/selection is collapsed and the find message still reports the result).
-- Whole-word regex alternation edge case (`foo|foobar`) as documented.
-- Single-line input fields; multi-line replacement uses `\n` or the panel’s Replace escapes toggle.
-- No vault-wide replace; no `u` flag exposure.
-- The inline panel consumes vertical space while open; its height changes when toggle options wrap. Very narrow windows cap it at 70vh and require internal scrolling.
-- No 1MB/10k performance benchmark is recorded.
-- Real iOS/Android devices and Windows/Linux were not tested; mobile mode was tested with Obsidian’s mobile emulation.
-- The panel follows the editor content column width; in very wide notes it does not stretch to the full window.
+- Highlight rendering is capped at 5,000 ranges / 1,000 zero-width markers; the count and position still report the full scanned total.
+- Replace-all is blocked above 100,000 matches rather than offering a chunked or background replacement.
+- The mobile modal has no custom decorations; it relies on the native selection, count, and position.
+- CM6 decorations in YAML frontmatter/properties are not independently verified; the editor's property widgets may not show marks that exist in the raw document.
+- Real iOS/Android, Windows/Linux, and third-party themes are not re-tested for 0.3.0.
+- The `u` regex flag, multiline literal inputs, preserve case, and vault-wide replace remain out of scope.
 
 ## Install / update
 
@@ -141,13 +138,14 @@ For another vault, copy the same three files into `<vault>/.obsidian/plugins/reg
 
 ## Main files
 
-- `src/main.ts` — plugin lifecycle, command, editor/window targeting, inline/modal host selection
-- `src/editor/inline-panel.ts` — CM6 panel extension, bottom placement, current-match decoration, controller, focus
-- `src/ui/FindReplacePanel.ts` — shared UI/behavior, native toggle options, mode-aware options
+- `src/main.ts` — plugin lifecycle, command, editor/window targeting, host selection
+- `src/editor/inline-panel.ts` — CM6 panel extension, all-match decoration field, zero-width widget, keymap
+- `src/editor/highlights.ts` — pure highlight planning (clamp/sort/dedupe/caps)
+- `src/ui/FindReplacePanel.ts` — shared UI/behavior, position, scope, history, confirmation
 - `src/ui/FindReplaceModal.ts` — mobile/fallback dialog
 - `src/ui/host.ts` — shared host contracts
 - `src/settings.ts` — settings/state model, declarative settings tab
 - `src/i18n/` — en/zh strings
-- `src/search/` — pure engine
-- `styles.css` — inline separator, buttons, compact/mobile styling
-- `tests/` — 41 unit tests
+- `src/search/` — pure engine; `src/search/limits.ts` guard rails
+- `styles.css` — inline separator, highlights, zero-width markers, compact/mobile styling
+- `tests/` — 51 unit tests across 6 files

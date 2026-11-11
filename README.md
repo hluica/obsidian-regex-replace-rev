@@ -2,7 +2,9 @@
 
 A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular expression** matching. On desktop it is embedded at the bottom of the note area, separated by a thin line with a title and close button; on mobile it falls back to a dialog.
 
-![Inline desktop panel, dark and English](docs/screenshots/panel-inline.png)
+![Inline desktop panel, Chinese and light theme](docs/screenshots/panel-inline.png)
+
+![Zero-width match markers](docs/screenshots/panel-zero-width.png)
 
 ![Modal fallback](docs/screenshots/modal-fallback.png)
 
@@ -13,7 +15,10 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 - **Mode-aware search options**: native Obsidian toggle switches for case sensitive, whole word, wrap around, **Match newlines**, and **Replace escapes**. Exact mode shows 4; wildcard adds Match newlines (5); regex adds Match newlines and Multiline anchors (6). Match newlines uses the `s` flag: in wildcard mode `*`/`?` can cross lines; in regex mode `.` can cross lines. Multiline anchors (`m`) are regex-only. Toggle options use generous spacing (28px desktop, 16px compact/mobile) and wrap naturally; the panel height follows the rows.
 - **Inline desktop panel**: embedded at the bottom of the note display area, separated by a single high-contrast 1px line, with a title and close button. It takes layout space instead of covering the note, so the editor stays visible and interactive.
 - **Multi-window**: each Obsidian window has its own panel; the command targets the editor of the window it is invoked in and closing one window’s panel does not close the others.
-- **Visible current match**: the current match is highlighted in the note even while the find field keeps focus, so Find always shows where it landed.
+- **All-match highlighting**: every match in the current file or selection is highlighted; the current match has a stronger outline, so the result set is visible while you type or step through it.
+- **Current position**: a persistent `3 / 164` indicator follows Find, selection changes, replacements, and panel reopen.
+- **Zero-width matches**: `^`, `\b`, and lookahead matches get a small marker; the active marker is stronger.
+- **Editor-focus navigation**: F3, Shift+F3, and Escape work while the editor has focus, not only while the find field has focus.
 - **Compact actions**: the four action buttons use a desktop size close to Obsidian settings controls, with hover and pressed (accent) feedback.
 - **Mobile / fallback**: the same controls in a modal dialog when Obsidian reports mobile mode.
 - **Scope and direction**: current file or captured selection; down or up.
@@ -25,27 +30,26 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 
 ## Status
 
-Current version: **0.2.6**. The source is on GitHub; the `0.2.6` tag/release is pending. Once published, download the release assets from the [latest release](https://github.com/hluica/obsidian-regex-replace-rev/releases/latest); the plugin is not yet listed in Obsidian's community directory. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
+Current version: **0.3.0** on branch `v0.3.0` (pending acceptance and merge). The previous **0.2.6** baseline is listed in Obsidian's community directory and has a GitHub release. The 0.3.0 release will follow acceptance. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md) · Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
+### From the community directory
+
+1. In Obsidian, open **Settings → Community plugins** and turn off Restricted mode if needed.
+2. Browse the community directory and install **Refined Regex Replace and More**.
+3. Enable the plugin.
+4. Optionally assign a hotkey to **Find and replace in current file** in **Settings → Hotkeys**.
+
+The plugin id is `regex-replace-rev`.
+
 ### From a GitHub release
 
-1. Open the [latest release](https://github.com/hluica/obsidian-regex-replace-rev/releases/latest).
-2. Download `main.js`, `manifest.json`, and `styles.css`.
-3. Create `<your-vault>/.obsidian/plugins/regex-replace-rev/` and place the three files there.
-4. In Obsidian, open **Settings → Community plugins**, turn off Restricted mode if needed, and enable **Refined Regex Replace and More**.
-5. Optionally assign a hotkey to **Find and replace in current file** in **Settings → Hotkeys**.
-
-The plugin id is `regex-replace-rev`; the folder name should match it.
+Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/hluica/obsidian-regex-replace-rev/releases/latest), place them in `<your-vault>/.obsidian/plugins/regex-replace-rev/`, and enable the plugin.
 
 ### From source
 
 See [Development](#development) below. Build with `npm install && npm run build`, then copy the three build files into the vault plugin folder.
-
-### From the community directory
-
-Once the plugin is listed, install it from **Settings → Community plugins**. Until then, use the GitHub release or source installation above.
 
 ## Usage
 
@@ -64,6 +68,8 @@ On desktop, the command opens the panel at the bottom of the active note. Runnin
 | Replace field         | Enter         | Replace and find                   |
 | Replace field         | Shift+Enter   | Replace once                       |
 | Panel                 | Escape        | Close the inline panel             |
+| Editor (panel open)   | F3 / Shift+F3 | Find next / previous               |
+| Editor (panel open)   | Escape        | Close the inline panel             |
 | History button        | Enter / Space | Open history menu                  |
 
 Mod is Cmd on macOS and Ctrl elsewhere. Buttons are reachable with Tab and Enter/Space.
@@ -91,7 +97,7 @@ Example: `第*章` with replacement `第$1节` turns `第1章` into `第1节`.
 - JavaScript `RegExp` syntax. Enter the pattern only; do not include `/.../flags`.
 - `g` is implicit. The **Case sensitive** option removes the `i` flag; **Match newlines** adds `s`; **Multiline anchors** adds `m`.
 - Replacement supports `$1`…`$99`, `$&`, `$$`, `` $` ``, `$'`, and `$<name>`.
-- Zero-width matches (e.g. `^`, `\b`, `(?=...)`) are supported.
+- Zero-width matches (e.g. `^`, `\b`, `(?=...)`) are supported and marked in the editor.
 - Lookbehind is intentionally not used, for iOS compatibility.
 
 ### Whole word
@@ -123,11 +129,13 @@ All data is stored in the plugin's `data.json` under `plugin.settings`.
 
 - Find and replace are limited to the current file (or captured selection); there is no vault-wide replace.
 - The input fields are single-line; use regex `\n` or the panel's **Replace escapes** toggle for line breaks.
-- No all-matches highlight; the current match is selected and scrolled into view, and the count/status show progress.
+- All-match highlighting is capped at 5,000 rendered ranges and 1,000 zero-width markers; the count and position still report the full result up to the scan cap.
+- Replace all asks for confirmation above 5,000 matches and is blocked above the 100,000-match action cap; this keeps the single undoable transaction bounded.
 - The `u` regex flag is not exposed. Unicode property escapes that require `u` are not available in current version.
 - Word-level regex alternation has the boundary caveat described above.
 - The inline panel sits at the bottom of the editor content column; in a narrow split pane it switches to a compact stacked layout. Very narrow windows cap it at 70vh and scroll internally.
-- On mobile the panel is presented as a dialog rather than embedded.
+- On mobile the panel is presented as a dialog rather than embedded; the modal does not draw custom highlights, but the position indicator and native selection work.
+- Real iOS/Android devices and Windows/Linux were not re-tested for 0.3.0; mobile emulation was used.
 
 ## Development
 

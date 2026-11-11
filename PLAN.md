@@ -1,12 +1,12 @@
 # Refined Regex Replace and More — Plan and Status
 
-- **Version:** 0.2.6
-- **Status:** implemented and verified in the local dev vault (Obsidian 1.15.0, macOS, dark theme, English UI); source on `main`; tag/release `0.2.6` pending; **not yet listed in the community directory**
+- **Version:** 0.3.0 (branch `v0.3.0`, pending acceptance)
+- **Status:** implemented on `v0.3.0`; E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI); 0.3.0 tag/release pending; 0.2.6 baseline is in the community directory
 - **Current implementation:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **UI specification:** [UI-SPEC.md](UI-SPEC.md)
 - **Community readiness audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
+- **Changelog:** [CHANGELOG.md](CHANGELOG.md) (starts at 0.2.6)
 - **Install/usage:** [README.md](README.md) · [README.zh-CN.md](README.zh-CN.md)
-
 
 ## 1. Objective and scope
 
@@ -17,11 +17,14 @@ Build a find/replace panel for the **current Markdown note** with:
 - search options for case, whole word, newlines, multiline anchors, and replacement escapes;
 - current-file / captured-selection scope;
 - down/up direction and optional wrap;
-- match count, status/error messages, history, and undo-safe replacement;
+- match count, persistent position, status/error messages, history, and undo-safe replacement;
+- all-match highlighting and zero-width match markers in the editor;
+- editor-focus keyboard navigation while the panel is open;
 - desktop inline panel at the bottom of the note area; mobile modal fallback;
-- independent panels in multiple Obsidian windows.
+- independent panels in multiple Obsidian windows;
+- bounded result sets and a confirmation step for large replace-all operations.
 
-Out of scope for v0.2.6: vault-wide replace, all-match highlighting, diff preview, preserve case, multiline literal input, `u`/`y`/`d`/`v` flags, default hotkeys, and community-directory publication.
+Out of scope for v0.3.0: vault-wide replace, diff preview, preserve case, multiline literal input, `u`/`y`/`d`/`v` flags, default hotkeys, and real-device validation.
 
 ## 2. Current architecture
 
@@ -30,7 +33,8 @@ Out of scope for v0.2.6: vault-wide replace, all-match highlighting, diff previe
 | Desktop host | CodeMirror 6 `showPanel` with `Panel.top = false`, inserted into `.cm-panels-bottom` |
 | Mobile host | `FindReplaceModal` |
 | Open/close | `StateField<boolean>` + `StateEffect` per editor |
-| Match feedback | CM6 `Decoration` mark `.rr-match-highlight`; also sets the editor selection |
+| Match feedback | `StateField<DecorationSet>` with all-match marks, active mark, and zero-width `WidgetType`; `.rr-match-highlight` / `.rr-match-highlight-active` / `.rr-zero-width` |
+| Editor keymap | `Prec.high(keymap.of(...))`: F3, Shift+F3, Escape; active only while a panel controller exists |
 | Shared UI | `FindReplacePanel` mounted in an inline frame or modal |
 | Options | Obsidian native `ToggleComponent` switches |
 | Target selection | Command resolves the `MarkdownView` by **`editor` identity**, not by global active view |
@@ -38,16 +42,20 @@ Out of scope for v0.2.6: vault-wide replace, all-match highlighting, diff previe
 | Settings | Declarative `getSettingDefinitions()`; `data.json` with `settingsVersion: 1` |
 | History | Last 20 search/replace terms, native menu, clear action |
 | Replacement | One `editor.transaction` for all changes; one undo restores |
+| Safety | Display scan 10,000; action scan 100,000; highlight cap 5,000 ranges / 1,000 zero-width markers; replace-all confirmation above 5,000 |
+| Large-replace confirmation | Obsidian `ConfirmationModal` (1.13+), cancel focused by default |
 
 Main files:
 
 - `src/main.ts` — lifecycle, command, editor/window targeting, host selection
-- `src/editor/inline-panel.ts` — CM6 panel, bottom placement, match highlight, focus controller
-- `src/ui/FindReplacePanel.ts` — shared panel behavior
+- `src/editor/inline-panel.ts` — CM6 panel, all-match decoration field, zero-width widget, keymap, focus controller
+- `src/editor/highlights.ts` — pure highlight plan: clamp, sort, dedupe, active priority, caps
+- `src/search/limits.ts` — display/action/highlight limits and replace-all threshold
+- `src/ui/FindReplacePanel.ts` — shared panel behavior, position, scope, history, confirmation
 - `src/ui/FindReplaceModal.ts` — mobile/fallback dialog
 - `src/settings.ts` — settings/state model and declarative settings tab
 - `src/search/` — pure pattern/match/replace engine
-- `styles.css` — inline layout, dark/light variables, compact/mobile rules
+- `styles.css` — inline layout, highlights, zero-width markers, compact/mobile rules
 
 ## 3. Current feature rules
 
@@ -73,7 +81,7 @@ Main files:
 | Find | Selects the next match in the current direction; skips the current match; wraps when enabled |
 | Replace once | Replaces one match and leaves the caret at the replacement end |
 | Replace and find | Replaces once, then selects the next match |
-| Replace all | Replaces all matches in scope in one transaction; undoable |
+| Replace all | Replaces all matches in scope in one transaction; undoable; confirms above 5,000 matches; refuses above 100,000 |
 
 ### 3.3 Scope, direction, wrap
 
@@ -82,10 +90,28 @@ Main files:
 - Direction down/up; Shift+Enter reverses once; F3/Shift+F3 navigate.
 - Wrap off produces boundary messages instead of wrapping.
 
-### 3.4 UI rules
+### 3.4 Match visibility and navigation (0.3.0)
+
+- Every match in scope is marked with `.rr-match-highlight` using the theme highlight color.
+- The active match adds `.rr-match-highlight-active` with the selection background and an accent outline.
+- The status row always shows `count` on the left and `position / total` next to it: `164 个匹配  11 / 164`.
+- The position follows Find, Replace, selection changes, replacement, document changes, and reopening the panel.
+- Zero-width matches render a 2px `.rr-zero-width` widget; the active one is opaque.
+- Highlight ranges are capped at 5,000 and zero-width markers at 1,000; the active match is always kept.
+- F3 / Shift+F3 / Escape work from the editor while the panel is open; the panel does not need focus.
+- The panel still owns its own input key handling (Enter, Shift+Enter, Mod+Enter, F3, Shift+F3, Escape).
+
+### 3.5 Safety and status
+
+- Display scans stop at 10,000 matches; the count shows `10000+`.
+- Action scans stop at 100,000; replace-all refuses to run when the limit is reached.
+- Replace all asks for confirmation above 5,000 matches; Cancel receives initial focus.
+- Highlight updates are coalesced through the existing `setTimeout(0)` task to avoid dispatching while CodeMirror is updating.
+
+### 3.6 UI rules
 
 - Desktop panel sits at the bottom of the editor content column with a **1px solid separator line**, title, and close button; no heavy card border.
-- Labels and the bottom status count are left-aligned to the same edge; status message sits at the right.
+- Labels and the status count are left-aligned; the position follows the count; the status message sits at the right.
 - Mode selects are three equal fixed **160px** controls, spanning the field + action columns.
 - Action buttons are **122×28px** in a **252px** 2×2 column; hover/pressed feedback.
 - Native toggles have 28px gaps on desktop, 16px in compact/mobile; they wrap naturally.
@@ -97,17 +123,18 @@ Main files:
 
 | Area | Status |
 |---|---|
-| TypeScript strict / ESLint / tests / build | 41 tests pass; `tsc` and ESLint clean; build passes |
-| Dark/light theme | Dark and light verified in Obsidian 1.15; third-party themes not specifically tested |
-| English/Chinese UI | Verified; English labels/buttons fit after layout fixes |
-| Accessibility | Labels, ARIA on selects/status, focus-visible, native toggle Space support, 44px mobile targets; full screen-reader audit not performed |
-| Multi-window | Two Obsidian windows tested with independent panels |
+| TypeScript strict / ESLint / tests / build | 51 tests pass; `tsc` and ESLint clean; production build passes (44 KB) |
+| Dark/light theme | Light and dark verified in Obsidian 1.15 for 0.3.0; active match uses an outline in addition to color |
+| English/Chinese UI | Verified; new strings in both languages |
+| Accessibility | Labels, ARIA on selects/status, focus-visible, native toggle Space support, 44px mobile targets; highlight has outline + color; full screen-reader audit not performed |
+| Multi-window | Two Obsidian windows tested in 0.2.6; the v0.3.0 panel/keymap changes are per-editor |
 | Mobile | Obsidian mobile emulation tested; real iOS/Android not tested |
-| Windows/Linux | not tested |
-| Performance | **No 1MB/10k-match benchmark recorded**; debounce is 180ms, replace-all is one transaction |
-| Community directory | Source/build/docs audited in [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md); source on `main`; tag/release `0.2.6` pending; no directory submission yet |
+| Windows/Linux | not re-tested for 0.3.0 |
+| Performance | 1 MB / 10,000+ matches: count refresh ≈185 ms including 180 ms debounce; engine scan itself milliseconds; highlight caps prevent unbounded decoration sets |
+| Bounded actions | 100,000 match cap; 5,000 replace-all confirmation; 150,000-match note tested |
+| Community directory | 0.2.6 baseline listed; 0.3.0 submission/release pending acceptance |
 
-## 5. Acceptance status (v0.2.6)
+## 5. Acceptance status (v0.3.0)
 
 - [x] Three modes × four actions
 - [x] Exact 4 / wildcard 5 / regex 6 options
@@ -115,26 +142,28 @@ Main files:
 - [x] Regex-only multiline anchors
 - [x] Whole-word, case, wrap, direction
 - [x] Current-file and selection scope
-- [x] Match count, errors, action messages
+- [x] Match count, position, errors, action messages
 - [x] History (20, clear, persist)
 - [x] Single-transaction replace + undo
 - [x] Desktop inline panel, 1px separator, close/Escape
-- [x] Visible current-match decoration while find input focused
-- [x] Native toggle options, auto-height, English/dark layout
+- [x] **All-match highlighting with active match**
+- [x] **Persistent current position**
+- [x] **Zero-width match markers**
+- [x] **F3/Shift+F3/Escape from the editor**
+- [x] **Replace-all confirmation and 100,000 match cap**
 - [x] Multi-window independent panels
 - [x] Mobile modal fallback
 - [x] Settings tab (4 items)
-- [ ] Zero-width match visual marker (current selection is collapsed; no decoration)
-- [ ] 1MB/10k-match performance benchmark
 - [ ] Real iOS/Android and Windows/Linux verification
-- [ ] Community submission/release packaging
+- [x] Dark-theme 0.3.0 visual audit and screenshot
+- [ ] 0.3.0 tag/release and community-directory update
 
 ## 6. Next steps
 
-1. **P1:** Add a zero-width match marker (widget/caret decoration) if desired.
-2. **P1:** Record a 1MB/10k-match benchmark and large-document interaction test.
-3. **P2:** Real-device/platform checks and third-party-theme pass.
-4. **P2:** Add GitHub release workflow/tag/assets and submit to the community directory when the user asks.
+1. **v0.3.1:** real-device/platform checks, third-party theme pass, selection-refresh button, history icon, settings-save debounce.
+2. **v0.3.1:** optional multi-line find/replace fields and a `u` flag toggle, only after user feedback.
+3. **Release:** create tag/release `0.3.0`, attach `main.js`, `manifest.json`, `styles.css`, update the community directory entry.
+4. Keep the 0.2.6 baseline changelog; do not reconstruct older versions.
 
 ## 7. Development
 
