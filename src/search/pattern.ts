@@ -85,6 +85,9 @@ function flagsFor(options: SearchOptions): string {
 	if (options.dotAll) {
 		flags += "s";
 	}
+	if (options.unicode) {
+		flags += "u";
+	}
 	return flags;
 }
 

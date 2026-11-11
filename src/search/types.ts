@@ -8,6 +8,7 @@ export interface SearchOptions {
 	wholeWord: boolean;
 	dotAll: boolean;
 	multiline: boolean;
+	unicode: boolean;
 }
 
 export interface MatchRange {

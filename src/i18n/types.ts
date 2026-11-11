@@ -18,6 +18,8 @@ export interface Strings {
 	optionWholeWord: string;
 	optionDotAll: string;
 	optionMultiline: string;
+	optionUnicode: string;
+	optionsGroup: string;
 	optionWrap: string;
 	optionProcessEscapes: string;
 	placeholderExact: string;
@@ -57,6 +59,7 @@ export interface Strings {
 	tooltipWholeWord: string;
 	tooltipDotAll: string;
 	tooltipMultiline: string;
+	tooltipUnicode: string;
 	tooltipWrap: string;
 	tooltipProcessEscapes: string;
 	tooltipFind: string;

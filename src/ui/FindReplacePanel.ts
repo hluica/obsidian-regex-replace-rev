@@ -41,6 +41,7 @@ type OptionKey =
 	| "wholeWord"
 	| "dotAll"
 	| "multiline"
+	| "unicode"
 	| "wrap"
 	| "processEscapes";
 
@@ -89,6 +90,7 @@ export class FindReplacePanel {
 	private lineBreaks: number[] = [];
 	private timer: number | null = null;
 	private historyMenu: Menu | null = null;
+	private historyButton: HTMLButtonElement | null = null;
 	private suppressEditorChangeUntil = 0;
 	private resizeObserver: ResizeObserver | null = null;
 	private compactFrame: number | null = null;
@@ -126,6 +128,8 @@ export class FindReplacePanel {
 		this.rootEl = host.containerEl.createDiv({
 			cls: `rr-panel rr-panel--${host.variant}`,
 		});
+		this.rootEl.setAttr("role", "region");
+		this.rootEl.setAttr("aria-label", this.strings.title);
 	}
 
 	mount(): void {
@@ -193,10 +197,12 @@ export class FindReplacePanel {
 	private build(): void {
 		if (this.host.variant === "inline") {
 			const header = this.rootEl.createDiv({ cls: "rr-panel-header" });
-			header.createSpan({
+			const title = header.createSpan({
 				cls: "rr-panel-title",
 				text: this.strings.title,
 			});
+			title.setAttr("role", "heading");
+			title.setAttr("aria-level", "2");
 			const close = header.createEl("button", {
 				cls: "rr-panel-close",
 				attr: {
@@ -243,6 +249,8 @@ export class FindReplacePanel {
 			attr: {
 				type: "button",
 				"aria-label": this.strings.historySearch,
+				"aria-haspopup": "menu",
+				"aria-expanded": "false",
 				"data-tooltip-position": "bottom",
 			},
 		});
@@ -295,6 +303,8 @@ export class FindReplacePanel {
 			attr: {
 				type: "button",
 				"aria-label": this.strings.historyReplace,
+				"aria-haspopup": "menu",
+				"aria-expanded": "false",
 				"data-tooltip-position": "bottom",
 			},
 		});
@@ -365,7 +375,7 @@ export class FindReplacePanel {
 				"data-tooltip-position": "bottom",
 			},
 		});
-		setIcon(useSelection, "crosshair");
+		setIcon(useSelection, "scan");
 		setTooltip(useSelection, this.strings.tooltipUseSelection);
 		useSelection.addEventListener("click", (event) => {
 			event.preventDefault();
@@ -391,6 +401,8 @@ export class FindReplacePanel {
 
 		grid.createSpan({ cls: "rr-spacer" });
 		const optionsEl = grid.createDiv({ cls: "rr-options" });
+		optionsEl.setAttr("role", "group");
+		optionsEl.setAttr("aria-label", this.strings.optionsGroup);
 		this.createOptionToggle(
 			optionsEl,
 			"caseSensitive",
@@ -414,6 +426,12 @@ export class FindReplacePanel {
 			"multiline",
 			this.strings.optionMultiline,
 			this.strings.tooltipMultiline,
+		);
+		this.createOptionToggle(
+			optionsEl,
+			"unicode",
+			this.strings.optionUnicode,
+			this.strings.tooltipUnicode,
 		);
 		this.createOptionToggle(
 			optionsEl,
@@ -542,7 +560,7 @@ export class FindReplacePanel {
 		if (key === "dotAll") {
 			return this.state.mode !== "exact";
 		}
-		if (key === "multiline") {
+		if (key === "multiline" || key === "unicode") {
 			return this.state.mode === "regex";
 		}
 		return true;
@@ -682,6 +700,7 @@ export class FindReplacePanel {
 			wholeWord: this.state.wholeWord,
 			dotAll: this.state.mode !== "exact" && this.state.dotAll,
 			multiline: this.state.mode === "regex" && this.state.multiline,
+			unicode: this.state.mode === "regex" && this.state.unicode,
 		};
 	}
 
@@ -1386,6 +1405,8 @@ export class FindReplacePanel {
 	): void {
 		this.hideHistoryMenu();
 		const menu = new Menu();
+		this.historyButton = button;
+		button.setAttr("aria-expanded", "true");
 		const history =
 			kind === "search"
 				? this.host.plugin.settings.history.search
@@ -1425,6 +1446,10 @@ export class FindReplacePanel {
 			if (this.historyMenu === menu) {
 				this.historyMenu = null;
 			}
+			button.setAttr("aria-expanded", "false");
+			if (this.historyButton === button) {
+				this.historyButton = null;
+			}
 		});
 	}
 
@@ -1455,5 +1480,7 @@ export class FindReplacePanel {
 			this.historyMenu.hide();
 			this.historyMenu = null;
 		}
+		this.historyButton?.setAttr("aria-expanded", "false");
+		this.historyButton = null;
 	}
 }

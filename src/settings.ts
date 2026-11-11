@@ -13,6 +13,7 @@ export interface SearchUiState {
 	wholeWord: boolean;
 	dotAll: boolean;
 	multiline: boolean;
+	unicode: boolean;
 	wrap: boolean;
 	processEscapes: boolean;
 	scope: SearchScope;
@@ -43,6 +44,7 @@ export const DEFAULT_UI_STATE: SearchUiState = {
 	wholeWord: false,
 	dotAll: false,
 	multiline: false,
+	unicode: false,
 	wrap: true,
 	processEscapes: false,
 	scope: "file",
@@ -132,6 +134,7 @@ export function normalizeUiState(
 		wholeWord: readBoolean(value.wholeWord, fallback.wholeWord),
 		dotAll: readBoolean(value.dotAll, fallback.dotAll),
 		multiline: readBoolean(value.multiline, fallback.multiline),
+		unicode: readBoolean(value.unicode, fallback.unicode),
 		wrap: readBoolean(value.wrap, fallback.wrap),
 		processEscapes: readBoolean(
 			value.processEscapes,

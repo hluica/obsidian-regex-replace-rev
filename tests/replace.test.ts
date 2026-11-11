@@ -16,6 +16,7 @@ function options(overrides: Partial<SearchOptions> = {}): SearchOptions {
 		wholeWord: false,
 		dotAll: false,
 		multiline: false,
+		unicode: false,
 		...overrides,
 	};
 }

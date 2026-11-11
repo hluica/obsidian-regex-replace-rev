@@ -20,6 +20,8 @@ export const en: Strings = {
 	optionWholeWord: "Whole word",
 	optionDotAll: "Match newlines",
 	optionMultiline: "Multiline anchors",
+	optionUnicode: "Unicode (u)",
+	optionsGroup: "Search options",
 	optionWrap: "Wrap around",
 	optionProcessEscapes: "Replace escapes",
 	placeholderExact: "Text to find",
@@ -66,6 +68,8 @@ export const en: Strings = {
 	tooltipDotAll:
 		"In wildcard mode, let * and ? match newlines; in regex mode, let . match newlines (s flag).",
 	tooltipMultiline: "^ and $ match line boundaries (m flag)",
+	tooltipUnicode:
+		"Use the u flag for Unicode code points and \\p{...} escapes (regex only)",
 	tooltipWrap: "Continue from the other end of the document",
 	tooltipProcessEscapes:
 		"Interpret \\n, \\r, \\t and \\\\ in the replacement text.",

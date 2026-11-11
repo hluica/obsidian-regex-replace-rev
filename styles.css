@@ -162,7 +162,7 @@
 	width: 26px;
 	height: var(--input-height);
 	padding: 0;
-	color: var(--text-muted);
+	color: var(--text-normal);
 	background-color: var(--background-modifier-form-field);
 	border: var(--input-border-width) solid var(--background-modifier-border);
 	border-radius: var(--input-radius);
@@ -326,8 +326,12 @@
 }
 
 .rr-match-highlight.rr-match-highlight-active {
-	background-color: var(--text-selection);
-	box-shadow: 0 0 0 1px var(--interactive-accent);
+	background-color: color-mix(
+		in srgb,
+		var(--interactive-accent) 35%,
+		transparent
+	);
+	box-shadow: 0 0 0 2px var(--interactive-accent);
 }
 
 .rr-zero-width,
@@ -739,4 +743,16 @@ body.is-mobile .rr-panel .rr-input {
 
 body.is-mobile .rr-option {
 	min-height: 44px;
+}
+
+/* Obsidian's tablet/mobile button padding applies to every <button>; keep
+ * plugin icon buttons and compact actions on their own padding. */
+.rr-panel .rr-actions button.rr-btn {
+	padding: 0 var(--size-4-2);
+}
+
+.rr-panel .rr-field button.rr-history,
+.rr-panel .rr-scope-control button.rr-scope-refresh,
+.rr-panel .rr-panel-header button.rr-panel-close {
+	padding: 0;
 }

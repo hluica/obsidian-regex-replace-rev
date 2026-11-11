@@ -20,6 +20,8 @@ export const zh: Strings = {
 	optionWholeWord: "全字匹配",
 	optionDotAll: "匹配换行符",
 	optionMultiline: "多行锚点",
+	optionUnicode: "Unicode（u）",
+	optionsGroup: "查找选项",
 	optionWrap: "循环查找",
 	optionProcessEscapes: "替换转义",
 	placeholderExact: "输入要查找的文本",
@@ -61,6 +63,7 @@ export const zh: Strings = {
 	tooltipDotAll:
 		"通配符模式下让 * 和 ? 匹配换行符；正则模式下让 . 匹配换行符（s 标志）。",
 	tooltipMultiline: "^ 和 $ 匹配每行首尾（m 标志）",
+	tooltipUnicode: "启用 u 标志，支持 Unicode 码点和 \\p{...} 转义（仅正则模式）",
 	tooltipWrap: "到达文档另一端后继续查找",
 	tooltipProcessEscapes: "解析替换文本中的 \\n、\\r、\\t 和 \\\\。",
 	tooltipFind: "查找下一个（Enter）",
