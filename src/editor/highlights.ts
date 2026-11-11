@@ -192,3 +192,30 @@ export function buildLineBreakPlan(
 	}
 	return kept;
 }
+
+export interface LineBreakSource {
+	text: string;
+	absoluteStart: number;
+}
+
+/**
+ * Collect absolute offsets of newline characters covered by matches.
+ * Matches are expected to carry document-absolute start offsets, so this
+ * works unchanged for current-file and captured-selection searches.
+ */
+export function collectLineBreakPositions(
+	matches: readonly LineBreakSource[],
+): number[] {
+	const positions = new Set<number>();
+	for (const match of matches) {
+		if (!match.text.includes("\n")) {
+			continue;
+		}
+		let index = match.text.indexOf("\n");
+		while (index !== -1) {
+			positions.add(match.absoluteStart + index);
+			index = match.text.indexOf("\n", index + 1);
+		}
+	}
+	return [...positions].sort((a, b) => a - b);
+}

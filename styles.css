@@ -146,6 +146,40 @@
 	min-width: 0;
 }
 
+.rr-scope-control {
+	display: inline-flex;
+	flex: 0 0 auto;
+	gap: var(--size-4-2);
+	align-items: center;
+	min-width: 0;
+}
+
+.rr-panel .rr-scope-refresh {
+	display: inline-flex;
+	flex: 0 0 26px;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: var(--input-height);
+	padding: 0;
+	color: var(--text-muted);
+	background-color: var(--background-modifier-form-field);
+	border: var(--input-border-width) solid var(--background-modifier-border);
+	border-radius: var(--input-radius);
+	box-shadow: none;
+	cursor: pointer;
+}
+
+.rr-panel .rr-scope-refresh:hover {
+	color: var(--text-normal);
+	background-color: var(--background-modifier-hover);
+}
+
+.rr-panel .rr-scope-refresh:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
+
 .rr-select-wrap::after {
 	position: absolute;
 	top: 50%;
@@ -442,6 +476,15 @@
 	grid-template-columns: 1fr;
 }
 
+.rr-panel.rr-narrow .rr-scope-control {
+	gap: 4px;
+}
+
+.rr-panel.rr-narrow .rr-scope-refresh {
+	flex-basis: 28px;
+	width: 28px;
+}
+
 .rr-panel.rr-narrow .rr-status-left {
 	flex-wrap: wrap;
 	row-gap: 2px;
@@ -458,6 +501,15 @@
 .rr-panel.rr-compact .rr-select {
 	flex: 1 1 auto;
 	width: 100%;
+}
+
+.rr-panel.rr-compact .rr-scope-control {
+	width: 100%;
+}
+
+.rr-panel.rr-compact .rr-scope-control .rr-select-wrap {
+	flex: 1 1 auto;
+	width: auto;
 }
 
 .rr-panel.rr-compact .rr-options,
@@ -566,6 +618,17 @@
 		height: 44px;
 	}
 
+	.rr-panel .rr-scope-refresh {
+		flex-basis: 44px;
+		width: 44px;
+		height: 44px;
+	}
+
+	.rr-panel .rr-scope-control .rr-select-wrap {
+		flex: 1 1 auto;
+		width: auto;
+	}
+
 	.rr-panel .rr-input {
 		padding-inline-end: 48px;
 	}
@@ -657,6 +720,17 @@ body.is-mobile .rr-panel .rr-history {
 	top: 0;
 	width: 44px;
 	height: 44px;
+}
+
+body.is-mobile .rr-panel .rr-scope-refresh {
+	flex-basis: 44px;
+	width: 44px;
+	height: 44px;
+}
+
+body.is-mobile .rr-panel .rr-scope-control .rr-select-wrap {
+	flex: 1 1 auto;
+	width: auto;
 }
 
 body.is-mobile .rr-panel .rr-input {

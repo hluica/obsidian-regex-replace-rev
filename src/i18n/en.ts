@@ -76,6 +76,10 @@ export const en: Strings = {
 	tooltipHistorySearch: "Search history",
 	tooltipHistoryReplace: "Replace history",
 	tooltipScope: "Search scope: current file or selection",
+	useSelection: "Use current selection",
+	tooltipUseSelection:
+		"Capture the current editor selection as the search scope",
+	selectionRefreshed: "Selection updated",
 	tooltipDirection: "Search direction: down or up",
 	tooltipMode: "Match mode: exact, wildcard, or regular expression",
 	tooltipTarget: "Current target note",

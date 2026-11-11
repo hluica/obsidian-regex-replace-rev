@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	buildHighlightPlan,
 	buildLineBreakPlan,
+	collectLineBreakPositions,
 } from "../src/editor/highlights";
 
 describe("buildHighlightPlan", () => {
@@ -150,5 +151,34 @@ describe("buildLineBreakPlan", () => {
 
 	it("returns an empty plan for no positions", () => {
 		expect(buildLineBreakPlan([], null, 20)).toEqual([]);
+	});
+});
+
+describe("collectLineBreakPositions", () => {
+	it("collects absolute positions from single and multiple newlines", () => {
+		expect(
+			collectLineBreakPositions([
+				{ text: "a\nb", absoluteStart: 10 },
+				{ text: "a\n\nb", absoluteStart: 40 },
+			]),
+		).toEqual([11, 41, 42]);
+	});
+
+	it("de-duplicates overlapping matches and ignores non-newline matches", () => {
+		expect(
+			collectLineBreakPositions([
+				{ text: "\n", absoluteStart: 5 },
+				{ text: "x\ny", absoluteStart: 5 },
+				{ text: "abc", absoluteStart: 20 },
+				{ text: "z", absoluteStart: 30 },
+			]),
+		).toEqual([5, 6]);
+	});
+
+	it("returns an empty list for no newline matches", () => {
+		expect(collectLineBreakPositions([])).toEqual([]);
+		expect(
+			collectLineBreakPositions([{ text: "abc", absoluteStart: 0 }]),
+		).toEqual([]);
 	});
 });

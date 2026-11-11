@@ -11,6 +11,7 @@ import {
 	type EditorChange,
 } from "obsidian";
 import { currentStrings, type Strings } from "../i18n";
+import { collectLineBreakPositions } from "../editor/highlights";
 import type { SearchUiState } from "../settings";
 import {
 	findMatchAtSelection,
@@ -85,6 +86,7 @@ export class FindReplacePanel {
 	private documentKey: string;
 	private scopeRange: ScopeRange | null = null;
 	private matches: PanelMatch[] = [];
+	private lineBreaks: number[] = [];
 	private timer: number | null = null;
 	private historyMenu: Menu | null = null;
 	private suppressEditorChangeUntil = 0;
@@ -244,7 +246,7 @@ export class FindReplacePanel {
 				"data-tooltip-position": "bottom",
 			},
 		});
-		setIcon(findHistory, "chevron-down");
+		setIcon(findHistory, "history");
 		setTooltip(findHistory, this.strings.tooltipHistorySearch);
 		findHistory.addEventListener("click", (event) => {
 			event.preventDefault();
@@ -296,7 +298,7 @@ export class FindReplacePanel {
 				"data-tooltip-position": "bottom",
 			},
 		});
-		setIcon(replaceHistory, "chevron-down");
+		setIcon(replaceHistory, "history");
 		setTooltip(replaceHistory, this.strings.tooltipHistoryReplace);
 		replaceHistory.addEventListener("click", (event) => {
 			event.preventDefault();
@@ -342,8 +344,9 @@ export class FindReplacePanel {
 				this.refresh();
 			},
 		);
+		const scopeControl = modeRow.createSpan({ cls: "rr-scope-control" });
 		this.scopeSelect = this.createSelect(
-			modeRow,
+			scopeControl,
 			"rr-select-scope",
 			this.strings.tooltipScope,
 			{
@@ -354,6 +357,20 @@ export class FindReplacePanel {
 				this.onScopeChange(value as SearchScope);
 			},
 		);
+		const useSelection = scopeControl.createEl("button", {
+			cls: "rr-scope-refresh",
+			attr: {
+				type: "button",
+				"aria-label": this.strings.useSelection,
+				"data-tooltip-position": "bottom",
+			},
+		});
+		setIcon(useSelection, "crosshair");
+		setTooltip(useSelection, this.strings.tooltipUseSelection);
+		useSelection.addEventListener("click", (event) => {
+			event.preventDefault();
+			this.useCurrentSelection();
+		});
 		this.directionSelect = this.createSelect(
 			modeRow,
 			"rr-select-dir",
@@ -646,6 +663,7 @@ export class FindReplacePanel {
 		}));
 
 		this.matches = matches;
+		this.lineBreaks = collectLineBreakPositions(matches);
 
 		return {
 			editor,
@@ -722,6 +740,25 @@ export class FindReplacePanel {
 			this.setUnavailableUi();
 			return null;
 		}
+	}
+
+	private useCurrentSelection(): void {
+		if (this.host.getEditor() === null) {
+			this.setMessage(this.strings.noEditor, true);
+			return;
+		}
+		this.activeIndex = null;
+		if (!this.captureScope()) {
+			this.resetScopeToFile();
+			this.setMessage(this.strings.selectionEmpty, true);
+			this.refresh();
+			return;
+		}
+		this.state = { ...this.state, scope: "selection" };
+		this.scopeSelect.setValue("selection");
+		this.clearMessage();
+		this.setMessage(this.strings.selectionRefreshed);
+		this.refresh();
 	}
 
 	private onScopeChange(scope: SearchScope): void {
@@ -850,24 +887,9 @@ export class FindReplacePanel {
 							from: activeMatch.absoluteStart,
 							to: activeMatch.absoluteEnd,
 						},
-			lineBreaks: this.collectLineBreaks(),
+			lineBreaks: this.lineBreaks,
 		});
 		this.updatePosition();
-	}
-
-	private collectLineBreaks(): number[] {
-		const positions = new Set<number>();
-		for (const match of this.matches) {
-			if (!match.text.includes("\n")) {
-				continue;
-			}
-			let index = match.text.indexOf("\n");
-			while (index !== -1) {
-				positions.add(match.absoluteStart + index);
-				index = match.text.indexOf("\n", index + 1);
-			}
-		}
-		return [...positions].sort((a, b) => a - b);
 	}
 
 	handleSelectionChange(): void {
@@ -893,6 +915,7 @@ export class FindReplacePanel {
 	private setNoEditorUi(): void {
 		this.clearHighlight();
 		this.matches = [];
+		this.lineBreaks = [];
 		this.activeIndex = null;
 		this.matchCount = 0;
 		this.truncated = false;
@@ -905,6 +928,7 @@ export class FindReplacePanel {
 	private setEmptyUi(): void {
 		this.clearHighlight();
 		this.matches = [];
+		this.lineBreaks = [];
 		this.activeIndex = null;
 		this.matchCount = 0;
 		this.truncated = false;
@@ -917,6 +941,7 @@ export class FindReplacePanel {
 	private setErrorUi(message: string): void {
 		this.clearHighlight();
 		this.matches = [];
+		this.lineBreaks = [];
 		this.activeIndex = null;
 		this.matchCount = 0;
 		this.truncated = false;
@@ -929,6 +954,7 @@ export class FindReplacePanel {
 	private setUnavailableUi(): void {
 		this.clearHighlight();
 		this.matches = [];
+		this.lineBreaks = [];
 		this.activeIndex = null;
 		this.matchCount = 0;
 		this.truncated = false;
@@ -1351,7 +1377,7 @@ export class FindReplacePanel {
 			this.findText,
 			this.replaceText,
 		);
-		void this.host.plugin.saveSettings().catch(() => undefined);
+		this.host.plugin.scheduleSaveSettings();
 	}
 
 	private openHistoryMenu(
@@ -1420,7 +1446,7 @@ export class FindReplacePanel {
 	private clearHistory(): void {
 		this.hideHistoryMenu();
 		this.host.plugin.clearHistory();
-		void this.host.plugin.saveSettings().catch(() => undefined);
+		this.host.plugin.scheduleSaveSettings();
 		this.setMessage(this.strings.historyCleared);
 	}
 

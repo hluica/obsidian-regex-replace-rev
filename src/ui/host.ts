@@ -18,6 +18,7 @@ export interface PanelPlugin {
 	app: App;
 	settings: PluginSettings;
 	saveSettings(): Promise<void>;
+	scheduleSaveSettings(): void;
 	getInitialState(): SearchUiState;
 	recordHistory(kind: HistoryKind, value: string): void;
 	clearHistory(): void;

@@ -66,6 +66,9 @@ export interface Strings {
 	tooltipHistorySearch: string;
 	tooltipHistoryReplace: string;
 	tooltipScope: string;
+	useSelection: string;
+	tooltipUseSelection: string;
+	selectionRefreshed: string;
 	tooltipDirection: string;
 	tooltipMode: string;
 	tooltipTarget: string;
