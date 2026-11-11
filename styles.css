@@ -298,16 +298,46 @@
 
 .rr-zero-width {
 	display: inline-block;
-	width: 0;
-	height: 1.15em;
-	margin: 0 0 0 -1px;
-	border-left: 2px solid var(--interactive-accent);
-	opacity: 0.55;
+	box-sizing: border-box;
+	width: 6px;
+	height: 6px;
+	margin: 0 2px 0 0;
+	border: 1.5px solid var(--text-muted);
+	border-radius: 50%;
+	background-color: transparent;
+	opacity: 0.9;
+	pointer-events: none;
+	vertical-align: 0.1em;
+}
+
+.rr-zero-width.rr-zero-width-active {
+	border-color: var(--interactive-accent);
+	background-color: var(--interactive-accent);
+	box-shadow: 0 0 0 1px var(--background-primary);
+	opacity: 1;
+}
+
+.rr-line-break {
+	display: inline-block;
+	box-sizing: border-box;
+	margin: 0 1px;
+	padding: 0 2px;
+	color: var(--text-muted);
+	font-family: var(--font-interface);
+	font-size: 0.72em;
+	line-height: 1.35;
+	border: 1px solid var(--text-muted);
+	border-radius: 3px;
+	background-color: var(--background-primary);
+	opacity: 0.85;
 	pointer-events: none;
 	vertical-align: text-bottom;
 }
 
-.rr-zero-width.rr-zero-width-active {
+.rr-line-break.rr-line-break-active {
+	color: var(--text-on-accent);
+	background-color: var(--interactive-accent);
+	border-color: var(--interactive-accent);
 	opacity: 1;
 }
 

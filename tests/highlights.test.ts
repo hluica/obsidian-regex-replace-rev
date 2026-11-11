@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildHighlightPlan } from "../src/editor/highlights";
+import {
+	buildHighlightPlan,
+	buildLineBreakPlan,
+} from "../src/editor/highlights";
 
 describe("buildHighlightPlan", () => {
 	it("sorts ranges and marks the active range", () => {
@@ -89,5 +92,45 @@ describe("buildHighlightPlan", () => {
 		expect(plan.zeroWidth).toEqual([]);
 		expect(plan.omittedMarks).toBe(0);
 		expect(plan.omittedZeroWidth).toBe(0);
+	});
+});
+
+describe("buildLineBreakPlan", () => {
+	it("de-duplicates positions and marks breaks inside the active range", () => {
+		const plan = buildLineBreakPlan(
+			[5, 5, 7, 9],
+			{ from: 4, to: 8 },
+			20,
+		);
+
+		expect(plan).toEqual([
+			{ pos: 5, active: true },
+			{ pos: 7, active: true },
+			{ pos: 9, active: false },
+		]);
+	});
+
+	it("clamps positions to the document", () => {
+		const plan = buildLineBreakPlan([-3, 0, 19, 20, 30], null, 20);
+		expect(plan).toEqual([
+			{ pos: 0, active: false },
+			{ pos: 19, active: false },
+		]);
+	});
+
+	it("caps markers but keeps the active line break", () => {
+		const plan = buildLineBreakPlan(
+			[1, 2, 3, 4, 5, 6],
+			{ from: 5, to: 6 },
+			20,
+			3,
+		);
+		expect(plan).toHaveLength(3);
+		expect(plan.some((item) => item.active)).toBe(true);
+		expect(plan.find((item) => item.active)?.pos).toBe(5);
+	});
+
+	it("returns an empty plan for no positions", () => {
+		expect(buildLineBreakPlan([], null, 20)).toEqual([]);
 	});
 });

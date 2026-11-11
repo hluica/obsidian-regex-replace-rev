@@ -1,5 +1,6 @@
 import {
 	MAX_HIGHLIGHT_RANGES,
+	MAX_LINE_BREAK_MARKERS,
 	MAX_ZERO_WIDTH_MARKERS,
 } from "../search/limits";
 
@@ -13,6 +14,11 @@ export interface HighlightMark extends HighlightRange {
 }
 
 export interface HighlightZeroWidth {
+	pos: number;
+	active: boolean;
+}
+
+export interface HighlightLineBreak {
 	pos: number;
 	active: boolean;
 }
@@ -134,4 +140,55 @@ export function buildHighlightPlan(
 		omittedMarks,
 		omittedZeroWidth,
 	};
+}
+
+/**
+ * Newline characters have no visible glyph in CodeMirror. Matches such as
+ * `\n` or `。\n` therefore need a small marker at the line break so the
+ * user can see that the match covers the break. The active match keeps its
+ * marker even when the cap is exceeded.
+ */
+export function buildLineBreakPlan(
+	positions: readonly number[],
+	active: HighlightRange | null,
+	docLength: number,
+	limit = MAX_LINE_BREAK_MARKERS,
+): HighlightLineBreak[] {
+	const activeFrom =
+		active === null ? null : clamp(active.from, 0, docLength);
+	const activeTo = active === null ? null : clamp(active.to, 0, docLength);
+	const unique = new Map<number, boolean>();
+
+	for (const position of positions) {
+		const pos = clamp(position, 0, docLength);
+		if (pos < 0 || pos >= docLength) {
+			continue;
+		}
+		const isActive =
+			activeFrom !== null &&
+			activeTo !== null &&
+			pos >= activeFrom &&
+			pos < activeTo;
+		unique.set(pos, (unique.get(pos) ?? false) || isActive);
+	}
+
+	const all = [...unique.entries()]
+		.sort((a, b) => a[0] - b[0])
+		.map(([pos, isActive]) => ({ pos, active: isActive }));
+
+	if (all.length <= limit) {
+		return all;
+	}
+
+	const kept = all.slice(0, limit);
+	if (kept.some((item) => item.active)) {
+		return kept;
+	}
+	const activeItem = all.find((item) => item.active);
+	const replaceable = kept.findIndex((item) => !item.active);
+	if (activeItem !== undefined && replaceable !== -1) {
+		kept[replaceable] = activeItem;
+		kept.sort((a, b) => a.pos - b.pos);
+	}
+	return kept;
 }

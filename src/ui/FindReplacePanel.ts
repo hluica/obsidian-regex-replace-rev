@@ -842,8 +842,24 @@ export class FindReplacePanel {
 							from: activeMatch.absoluteStart,
 							to: activeMatch.absoluteEnd,
 						},
+			lineBreaks: this.collectLineBreaks(),
 		});
 		this.updatePosition();
+	}
+
+	private collectLineBreaks(): number[] {
+		const positions = new Set<number>();
+		for (const match of this.matches) {
+			if (!match.text.includes("\n")) {
+				continue;
+			}
+			let index = match.text.indexOf("\n");
+			while (index !== -1) {
+				positions.add(match.absoluteStart + index);
+				index = match.text.indexOf("\n", index + 1);
+			}
+		}
+		return [...positions].sort((a, b) => a - b);
 	}
 
 	handleSelectionChange(): void {

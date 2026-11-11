@@ -11,6 +11,7 @@ export interface PanelHighlightRange {
 export interface PanelHighlight {
 	ranges: PanelHighlightRange[];
 	active: PanelHighlightRange | null;
+	lineBreaks?: number[];
 }
 
 export interface PanelPlugin {

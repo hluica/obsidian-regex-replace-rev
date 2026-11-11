@@ -10,7 +10,7 @@ import {
 	type ViewUpdate,
 } from "@codemirror/view";
 import { editorInfoField, MarkdownView } from "obsidian";
-import { buildHighlightPlan } from "./highlights";
+import { buildHighlightPlan, buildLineBreakPlan } from "./highlights";
 import { FindReplacePanel } from "../ui/FindReplacePanel";
 import type { PanelHighlight, PanelPlugin } from "../ui/host";
 
@@ -45,12 +45,40 @@ class ZeroWidthMarker extends WidgetType {
 	}
 }
 
+class LineBreakMarker extends WidgetType {
+	readonly active: boolean;
+
+	constructor(active: boolean) {
+		super();
+		this.active = active;
+	}
+
+	eq(other: WidgetType): boolean {
+		return other instanceof LineBreakMarker && other.active === this.active;
+	}
+
+	toDOM(view: EditorView): HTMLElement {
+		const marker = view.dom.ownerDocument.createElement("span");
+		marker.className = this.active
+			? "rr-line-break rr-line-break-active"
+			: "rr-line-break";
+		marker.textContent = "\u21B5";
+		marker.setAttribute("aria-hidden", "true");
+		return marker;
+	}
+}
+
 function buildDecorationSet(
 	request: PanelHighlight,
 	docLength: number,
 ): DecorationSet {
 	const plan = buildHighlightPlan(
 		request.ranges,
+		request.active,
+		docLength,
+	);
+	const lineBreaks = buildLineBreakPlan(
+		request.lineBreaks ?? [],
 		request.active,
 		docLength,
 	);
@@ -67,6 +95,14 @@ function buildDecorationSet(
 		ranges.push(
 			Decoration.widget({
 				widget: new ZeroWidthMarker(marker.active),
+				side: 1,
+			}).range(marker.pos),
+		);
+	}
+	for (const marker of lineBreaks) {
+		ranges.push(
+			Decoration.widget({
+				widget: new LineBreakMarker(marker.active),
 				side: 1,
 			}).range(marker.pos),
 		);
