@@ -21,6 +21,16 @@
  * Shared panel
  * ------------------------------------------------------------------------ */
 
+.rr-visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
 .rr-panel {
 	--rr-label-width: 52px;
 	--rr-actions-width: 252px;

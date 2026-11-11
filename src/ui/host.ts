@@ -30,6 +30,7 @@ export interface PanelHost {
 	app: App;
 	plugin: PanelPlugin;
 	containerEl: HTMLElement;
+	labelledBy?: string;
 	variant: "modal" | "inline";
 	getEditor: () => Editor | null;
 	getDocumentKey: () => string;

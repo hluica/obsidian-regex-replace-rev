@@ -120,7 +120,7 @@ dev:errors        # no errors
 - Replace-all confirmation at 19,588 matches (Cancel focused); 6,000-match confirm + undo; 150,000-match cap message.
 - 1 MB / 10,500 matches: count update 184.9 ms including the 180 ms debounce; no errors.
 - 0.3.2: scope refresh with a body selection (1 match), history icons, 500ms settings debounce (data.json mtime unchanged at 120ms, updated after 500ms), narrow scope control fit.
-- 0.3.3: `\p{Script=Han}+` finds 2,665 runs with Unicode on and none with it off; astral `.` is one code point with `u`; Chromium AX tree exposes region/heading/options group/checks/status; Tab order reaches every control and leaves the panel to the workspace; Catppuccin and Minimal render highlights, toggles, dots, and `↵`; tablet/mobile button padding no longer clips the scan/history icons.
+- 0.3.3: `\p{Script=Han}+` finds 2,665 runs with Unicode on and none with it off; astral `.` is one code point with `u`; Chromium AX tree exposes region/heading/options group/checks/status; Tab order reaches every control and leaves the panel to the workspace; hovering a component then the panel background no longer emits a spurious “查找与替换” tooltip; Catppuccin and Minimal render highlights, toggles, dots, and `↵`; tablet/mobile button padding no longer clips the scan/history icons.
 - 1 MB / 10,500 lines: `\n` 185.4 ms, dotAll `.*` 185.3 ms, zero-width `^` 188.5 ms (all including debounce); caps hold; no freeze.
 - Compact 700px → 324px panel and 500px → 124px panel: no horizontal overflow; 124px uses one action per row and wraps status; documented 70vh internal scroll.
 - Popout window: independent panel, F3/Escape verified; normal `workspace:close-window` leaves the main panel open with no errors.

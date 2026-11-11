@@ -71,8 +71,8 @@ Mobile / fallback dialog:
 
 ### Accessibility — `src/ui/FindReplacePanel.ts`
 
-- `.rr-panel` is a labelled `region`; the inline title is a level-2 heading.
-- The option row is a labelled `role=group`; every toggle is a native checkbox with a name.
+- `.rr-panel` is a `region` labelled by the visible title via `aria-labelledby` (not `aria-label`, which Obsidian would also show as a hover tooltip); the inline title is a level-2 heading.
+- The option row is a `role=group` labelled by a visually hidden “查找选项” span via `aria-labelledby`; every toggle is a native checkbox with a name.
 - History buttons expose `aria-haspopup="menu"` and `aria-expanded`, updated on menu open/hide.
 - The existing message remains `role=status`, `aria-live="polite"`, `aria-atomic="true"`.
 - The Chromium accessibility tree was audited with `Accessibility.getFullAXTree` (the tree Chromium maps to Windows UIA).
@@ -190,6 +190,7 @@ npm run build     # main.js produced (v0.3.3, ~48 KB)
 - Narrow scope control: 124px panel keeps “当前文件” in a 90px select and a 26px refresh button; no horizontal overflow.
 - Unicode: `\p{Script=Han}+` finds 2,665 runs with the toggle on; the same pattern finds nothing with it off. Astral `.` is one match with `u` and two surrogate halves without it. The toggle is hidden in exact/wildcard modes and restored on reopen.
 - Accessibility tree: region “查找与替换”, heading level 2, group “查找选项”, seven named checkboxes (including Unicode), three named comboboxes, live status, and history `aria-expanded=false`.
+- Hover audit: after hovering an option tooltip and moving to panel background, no “查找与替换” tooltip is created (confirmed with a DOM MutationObserver).
 - Keyboard audit: Tab went find input → find history → Find → Replace and find → replace input → replace history → Replace → Replace all → mode → scope → Use current selection → direction → seven option toggles → workspace; Escape closed the panel and returned focus to the editor.
 - Themes: Catppuccin and Minimal both render the panel, active/inactive highlights, toggles, scope button, zero-width dots, and newline markers; active match uses a 2px accent outline. Theme screenshots: [Catppuccin](docs/screenshots/theme-catppuccin.png) · [Minimal](docs/screenshots/theme-minimal.png).
 - Mobile emulation: `.modal.rr-modal` opens single-column, 44px controls, 7 regex options; Find updates `2 / 164`; scope and history icons render at 20px after the tablet-padding fix; no errors.

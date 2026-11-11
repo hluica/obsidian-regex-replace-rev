@@ -129,7 +129,9 @@ export class FindReplacePanel {
 			cls: `rr-panel rr-panel--${host.variant}`,
 		});
 		this.rootEl.setAttr("role", "region");
-		this.rootEl.setAttr("aria-label", this.strings.title);
+		if (this.host.labelledBy !== undefined) {
+			this.rootEl.setAttr("aria-labelledby", this.host.labelledBy);
+		}
 	}
 
 	mount(): void {
@@ -203,6 +205,9 @@ export class FindReplacePanel {
 			});
 			title.setAttr("role", "heading");
 			title.setAttr("aria-level", "2");
+			const titleId = `rr-panel-title-${this.panelId}`;
+			title.id = titleId;
+			this.rootEl.setAttr("aria-labelledby", titleId);
 			const close = header.createEl("button", {
 				cls: "rr-panel-close",
 				attr: {
@@ -401,8 +406,14 @@ export class FindReplacePanel {
 
 		grid.createSpan({ cls: "rr-spacer" });
 		const optionsEl = grid.createDiv({ cls: "rr-options" });
+		const optionsLabel = optionsEl.createSpan({
+			cls: "rr-visually-hidden",
+			text: this.strings.optionsGroup,
+		});
+		optionsLabel.id = `rr-options-label-${this.panelId}`;
+		optionsLabel.setAttr("aria-hidden", "true");
 		optionsEl.setAttr("role", "group");
-		optionsEl.setAttr("aria-label", this.strings.optionsGroup);
+		optionsEl.setAttr("aria-labelledby", optionsLabel.id);
 		this.createOptionToggle(
 			optionsEl,
 			"caseSensitive",

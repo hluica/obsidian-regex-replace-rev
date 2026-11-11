@@ -162,6 +162,7 @@ Main files:
 - [x] **Line-break positions cached per match set; pure-function tests**
 - [x] **Unicode (u) regex option and property-escape tests**
 - [x] **Chromium accessibility tree audit and landmark/group fixes**
+- [x] **Hover tooltip regression fix (`aria-labelledby`)**
 - [x] **Catppuccin and Minimal theme audit**
 - [x] **Selection scope with newline markers**
 - [x] **1 MB newline/dotAll/zero-width performance regression**

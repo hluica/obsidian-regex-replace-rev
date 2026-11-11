@@ -35,6 +35,12 @@ branch pending acceptance, merge, tag, and community-directory update.
   all-match peach background; the accent outline and tint now make it distinct.
 - Accessibility tree lacked a panel landmark/heading and history expansion
   state; both are now exposed.
+- The panel region and options group used `aria-label`, which Obsidian's
+  tooltip system also treated as hover text. Hovering the panel background
+  after a component tooltip produced a spurious “查找与替换” bubble. Both
+  labels now use `aria-labelledby` (visible title for the region, a
+  visually hidden group label), so the accessibility names remain without
+  background tooltips.
 - Tablet/mobile global `button` padding was shrinking the selection and
   history icons to a few pixels; plugin-scoped padding overrides restore full
   icons. The selection-refresh control now uses the `scan` icon, distinct from

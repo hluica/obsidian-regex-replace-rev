@@ -233,7 +233,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - Buttons use real `<button>` elements and `disabled`; focus-visible outlines are defined.
 - Native toggles are keyboard-focusable and Space-tested; label row click tested.
 - All-match/active distinction uses an accent tint + 2px outline in addition to color; zero-width and line-break markers are `aria-hidden`.
-- The panel is a labelled region; the inline title is a level-2 heading; the options row is a labelled group.
+- The panel is a region labelled by the visible title; the inline title is a level-2 heading; the options row is a group labelled by a visually hidden span. `aria-labelledby` is used instead of `aria-label` so Obsidian does not show extra background tooltips on hover.
 - History buttons expose `aria-haspopup="menu"` and `aria-expanded`; the status message is `role=status` with `aria-live=polite`.
 - The Chromium accessibility tree was audited (the same tree Chromium maps to Windows UIA); a full VoiceOver/Narrator session is outstanding.
 - Mobile targets ≥44px.
