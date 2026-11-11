@@ -3,7 +3,35 @@
 This changelog starts at **0.2.6**, the baseline community release. Earlier
 versions are intentionally not reconstructed.
 
-## 0.3.0 — 2026-11-11 (branch `v0.3.0`, pending acceptance)
+## 0.3.1 — 2026-11-11 (branch `v0.3.0`, pending acceptance)
+
+0.3.0 was never released; 0.3.1 supersedes it on the same branch.
+
+### Changed
+
+- Redesigned zero-width markers from theme-accent vertical bars to small
+  **hollow dots** for inactive matches and **filled accent dots** with a
+  background-colored halo for the active match. The dot shape no longer reads
+  as a blockquote's left border, and active/inactive states are distinct.
+- Added **line-break markers** for matches that contain `\n` (for example
+  `\n`, `。\n`, or a dotAll match crossing lines). Each covered newline shows
+  a small `↵` pill at the end of the affected line; the active match's pill is
+  filled with the accent color. A newline-only match is now visible even though
+  the newline itself has no glyph.
+
+### Added
+
+- `buildLineBreakPlan()` pure planner with de-duplication, clamping, active
+  priority, and a 1,000-marker cap.
+- 4 new unit tests for line-break planning.
+
+### Verification
+
+- 55 unit tests across 6 files; TypeScript, ESLint, and production build pass.
+- Obsidian 1.15.0 light/dark: zero-width active dot, newline-only match `↵`,
+  and combined `。\n` match with both the character highlight and the mark.
+
+## 0.3.0 — 2026-11-11 (branch `v0.3.0`, not released)
 
 ### Added
 

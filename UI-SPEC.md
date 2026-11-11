@@ -1,13 +1,13 @@
-# UI Specification — v0.3.0
+# UI Specification — v0.3.1
 
-- **Status:** implemented on branch `v0.3.0` (pending acceptance); E2E-verified in Obsidian 1.15.0, macOS, Chinese/light and dark UI
+- **Status:** implemented on branch `v0.3.0` (pending acceptance); E2E-verified in Obsidian 1.15.0, macOS, Chinese/light and dark UI; 0.3.1 supersedes the unreleased 0.3.0
 - **Implementation record:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **Plan/status:** [PLAN.md](PLAN.md)
 - **Community audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
-- **Screenshots:** [inline panel](docs/screenshots/panel-inline.png) · [dark theme](docs/screenshots/panel-dark.png) · [zero-width markers](docs/screenshots/panel-zero-width.png) · [modal fallback](docs/screenshots/modal-fallback.png)
+- **Screenshots:** [inline panel](docs/screenshots/panel-inline.png) · [dark theme](docs/screenshots/panel-dark.png) · [zero-width dots](docs/screenshots/panel-zero-width.png) · [newline markers](docs/screenshots/panel-newline.png) · [mixed `。\n`](docs/screenshots/panel-newline-combo.png) · [modal fallback](docs/screenshots/modal-fallback.png)
 
-This specification describes the current inline design and the 0.3.0 match-visibility layer.
+This specification describes the current inline design and the 0.3.1 match-marker layer.
 
 ## 1. Principles
 
@@ -15,10 +15,11 @@ This specification describes the current inline design and the 0.3.0 match-visib
 2. A single high-contrast 1px line separates the panel from the note. No heavy card border or rounded frame.
 3. Use Obsidian-native components: `ToggleComponent` switches, `TextComponent`, `DropdownComponent`, `ButtonComponent`, `Menu`, `ConfirmationModal`, and CSS variables.
 4. Labels and status information follow the label column, not the input/option column.
-5. Every match in scope is visible; the active match is stronger and the position is always readable.
+5. Every match in scope is visible, including a newline with no glyph; the active match is stronger and the position is always readable.
 6. One panel per window/document; panels in other Obsidian windows remain independent.
 7. Layout must work in English and Chinese, light and dark themes, desktop and mobile modal.
 8. Large operations are bounded and confirmed; the UI must not lock up on a pathological result set.
+9. Markers must remain distinguishable from surrounding UI (for example a blockquote border) and from each other.
 
 ## 2. Hosts
 
@@ -66,7 +67,7 @@ This specification describes the current inline design and the 0.3.0 match-visib
 | Options | 4/5/6 by mode | wraps | wraps, 44px targets |
 | Panel height | content | content; 70vh cap | modal content |
 
-### 3.2 Status row (0.3.0)
+### 3.2 Status row (0.3.1)
 
 ```
 .rr-status
@@ -146,6 +147,8 @@ Editor decorations, owned by the CM6 field:
 .rr-match-highlight.rr-match-highlight-active
 .rr-zero-width
 .rr-zero-width.rr-zero-width-active
+.rr-line-break
+.rr-line-break.rr-line-break-active
 ```
 
 Modal uses `.modal.rr-modal`, `.modal-content.rr-content`, `.rr-panel.rr-panel--modal`; the native Modal title replaces the inline header. All DOM is created on the owning element/document; no global `document` for panel UI. The history menu uses `button.ownerDocument`.
@@ -171,7 +174,8 @@ Labels (Chinese / English):
 | Match newlines | 匹配换行符 | Match newlines |
 | Position | `11 / 164` | `11 / 164` |
 | No active position | `— / 164` | `— / 164` |
-| Zero-width marker | 细竖线 | thin accent bar |
+| Zero-width marker | 空心/实心圆点 | hollow/filled dot |
+| Newline marker | `↵` 标记 | `↵` pill |
 
 ## 6. States and messages
 
@@ -195,8 +199,9 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 
 - **All matches** in the current file or captured selection use `.rr-match-highlight` with `--text-highlight-bg` (fallback `--text-selection`). Visible at all times, including while the find field has focus.
 - **Active match** adds `.rr-match-highlight-active`, using `--text-selection` and an accent outline. The outline means the distinction is not color-only.
-- **Zero-width matches** use a 2px accent bar (`.rr-zero-width`), with `.rr-zero-width-active` for the active position. The bar has zero width plus a border and `pointer-events: none`, so it does not shift text or block the caret.
-- At most 5,000 ranges and 1,000 zero-width markers are rendered; the active range is always preserved. The count/position still reflect the scan total up to 10,000/100,000.
+- **Zero-width matches** use a 6px hollow circular dot (`.rr-zero-width`) for inactive matches and a filled accent dot with a `--background-primary` halo (`.rr-zero-width-active`) for the active match. The dot shape is deliberately different from a blockquote border; it is `pointer-events: none` so it does not block the caret.
+- **Newline matches** (`\n`, `。\n`, dotAll spans) use a small `↵` pill (`.rr-line-break`, active `.rr-line-break-active`) at each covered line end. A newline-only match has no text mark, but its marker is visible; a mixed match shows the character mark plus the marker.
+- At most 5,000 ranges, 1,000 zero-width dots, and 1,000 line-break markers are rendered; the active range is always preserved. The count/position still reflect the scan total up to 10,000/100,000.
 - Highlights are cleared on close, empty/error states, and document switch.
 - Highlight effects are coalesced into a `setTimeout(0)` task; no dispatch occurs while CodeMirror is updating.
 
@@ -220,7 +225,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - Status message uses `aria-live=polite`; errors are textual.
 - Buttons use real `<button>` elements and `disabled`; focus-visible outlines are defined.
 - Native toggles are keyboard-focusable and Space-tested; label row click tested.
-- All-match/active distinction uses an outline in addition to color; zero-width markers are `aria-hidden`.
+- All-match/active distinction uses an outline in addition to color; zero-width and line-break markers are `aria-hidden`.
 - Mobile targets ≥44px.
 - Tab flow: find → find history → find actions → replace → replace history → replace actions → mode → scope → direction → visible toggles.
 - Full screen-reader audit is not recorded.
@@ -231,7 +236,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - `max-height: 70vh` with internal scroll prevents the English regex panel from exceeding a 600px-wide window.
 - Only Obsidian CSS variables; no `.theme-dark` branches, no `!important`, no `:has`.
 - Multi-window: command targets `editor` identity; panels are closed only within the same `ownerDocument`; one panel per window.
-- Chinese/light and dark verified for 0.3.0; English strings use the same layout and were verified in 0.2.6.
+- Chinese/light and dark verified for 0.3.1; English strings use the same layout and were verified in 0.2.6.
 - Mobile modal verified in emulation; real devices not re-tested.
 
 ## 11. Differences from the native find UI
@@ -252,5 +257,6 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - Very narrow windows require internal scrolling at the 70vh cap.
 - The mobile modal has no custom all-match decorations; it relies on native selection.
 - No full screen-reader or third-party-theme audit yet.
-- Highlight ranges/zero-width markers are capped; extremely large result sets show `10000+` and only the first 5,000 highlighted ranges.
+- Highlight ranges/zero-width dots/line-break markers are capped; extremely large result sets show `10000+` and only the first 5,000 highlighted ranges.
 - YAML frontmatter/property widgets may not display raw-document decorations; not independently verified.
+- Newline markers are shown at line ends; a line break still has no text background of its own.

@@ -6,6 +6,8 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 
 ![Zero-width match markers](docs/screenshots/panel-zero-width.png)
 
+![Newline match markers](docs/screenshots/panel-newline.png)
+
 ![Modal fallback](docs/screenshots/modal-fallback.png)
 
 ## Features
@@ -17,7 +19,8 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 - **Multi-window**: each Obsidian window has its own panel; the command targets the editor of the window it is invoked in and closing one window’s panel does not close the others.
 - **All-match highlighting**: every match in the current file or selection is highlighted; the current match has a stronger outline, so the result set is visible while you type or step through it.
 - **Current position**: a persistent `3 / 164` indicator follows Find, selection changes, replacements, and panel reopen.
-- **Zero-width matches**: `^`, `\b`, and lookahead matches get a small marker; the active marker is stronger.
+- **Zero-width matches**: `^`, `\b`, and lookahead matches get a small hollow dot; the active match gets a filled accent dot with a halo.
+- **Newline matches**: matches containing a line break (`\n`, `。\n`, or dotAll matches crossing lines) show a small `↵` pill at the affected line end, so an otherwise invisible newline is visible and the active break is highlighted.
 - **Editor-focus navigation**: F3, Shift+F3, and Escape work while the editor has focus, not only while the find field has focus.
 - **Compact actions**: the four action buttons use a desktop size close to Obsidian settings controls, with hover and pressed (accent) feedback.
 - **Mobile / fallback**: the same controls in a modal dialog when Obsidian reports mobile mode.
@@ -30,7 +33,7 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 
 ## Status
 
-Current version: **0.3.0** on branch `v0.3.0` (pending acceptance and merge). The previous **0.2.6** baseline is listed in Obsidian's community directory and has a GitHub release. The 0.3.0 release will follow acceptance. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md) · Changes: [CHANGELOG.md](CHANGELOG.md).
+Current version: **0.3.1** on branch `v0.3.0` (pending acceptance and merge). The previous **0.2.6** baseline is listed in Obsidian's community directory and has a GitHub release. The 0.3.1 release will follow acceptance. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md) · Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
@@ -129,13 +132,14 @@ All data is stored in the plugin's `data.json` under `plugin.settings`.
 
 - Find and replace are limited to the current file (or captured selection); there is no vault-wide replace.
 - The input fields are single-line; use regex `\n` or the panel's **Replace escapes** toggle for line breaks.
-- All-match highlighting is capped at 5,000 rendered ranges and 1,000 zero-width markers; the count and position still report the full result up to the scan cap.
+- All-match highlighting is capped at 5,000 rendered ranges, 1,000 zero-width dots, and 1,000 line-break markers; the count and position still report the full result up to the scan cap.
+- A newline-only match has no visible glyph of its own; it is shown by the `↵` marker rather than a text background.
 - Replace all asks for confirmation above 5,000 matches and is blocked above the 100,000-match action cap; this keeps the single undoable transaction bounded.
 - The `u` regex flag is not exposed. Unicode property escapes that require `u` are not available in current version.
 - Word-level regex alternation has the boundary caveat described above.
 - The inline panel sits at the bottom of the editor content column; in a narrow split pane it switches to a compact stacked layout. Very narrow windows cap it at 70vh and scroll internally.
 - On mobile the panel is presented as a dialog rather than embedded; the modal does not draw custom highlights, but the position indicator and native selection work.
-- Real iOS/Android devices and Windows/Linux were not re-tested for 0.3.0; mobile emulation was used.
+- Real iOS/Android devices and Windows/Linux were not re-tested for 0.3.1; mobile emulation was used.
 
 ## Development
 
