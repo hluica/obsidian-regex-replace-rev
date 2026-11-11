@@ -90,12 +90,22 @@ function buildDecorationSet(
 				: inactiveMark.range(mark.from, mark.to),
 		);
 	}
+	// Defensive display-level de-duplication: even if a caller ever emits
+	// several zero-width matches at one offset, draw a single dot there and
+	// let the active state win.
+	const zeroWidthAt = new Map<number, boolean>();
 	for (const marker of plan.zeroWidth) {
+		zeroWidthAt.set(
+			marker.pos,
+			(zeroWidthAt.get(marker.pos) ?? false) || marker.active,
+		);
+	}
+	for (const [pos, active] of zeroWidthAt) {
 		ranges.push(
 			Decoration.widget({
-				widget: new ZeroWidthMarker(marker.active),
+				widget: new ZeroWidthMarker(active),
 				side: 1,
-			}).range(marker.pos),
+			}).range(pos),
 		);
 	}
 	for (const marker of lineBreaks) {

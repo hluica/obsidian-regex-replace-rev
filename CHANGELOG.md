@@ -10,7 +10,7 @@ versions are intentionally not reconstructed.
 ### Changed
 
 - Redesigned zero-width markers from theme-accent vertical bars to small
-  **hollow dots** for inactive matches and **filled accent dots** with a
+  **translucent gray dots** for inactive matches and **filled accent dots** with a
   background-colored halo for the active match. The dots use a pseudo-element
   with zero layout width and sit just above the insertion point, so they do
   not shift text, collide with a blockquote border, or get confused with one.
@@ -25,11 +25,11 @@ versions are intentionally not reconstructed.
 
 - `buildLineBreakPlan()` pure planner with de-duplication, clamping, active
   priority, and a 1,000-marker cap.
-- 4 new unit tests for line-break planning.
+- 4 new unit tests for line-break planning and a stacked zero-width de-duplication test.
 
 ### Verification
 
-- 55 unit tests across 6 files; TypeScript, ESLint, and production build pass.
+- 56 unit tests across 6 files; TypeScript, ESLint, and production build pass.
 - Obsidian 1.15.0 light/dark: zero-width active dot, newline-only match `↵`,
   and combined `。\n` match with both the character highlight and the mark.
 

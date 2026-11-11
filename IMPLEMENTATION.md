@@ -14,7 +14,7 @@ Dark theme with the same all-match/active distinction:
 
 ![Inline desktop panel, dark theme](docs/screenshots/panel-dark.png)
 
-Zero-width matches (`^` with multiline anchors): hollow dots, with a filled active dot and halo:
+Zero-width matches (`^` with multiline anchors): translucent gray dots, with a filled active dot and halo:
 
 ![Zero-width markers](docs/screenshots/panel-zero-width.png)
 
@@ -36,7 +36,7 @@ Mobile / fallback dialog:
 
 - `StateEffect` `setInlineMatchHighlights` carries `{ ranges, active, lineBreaks? } | null`; `matchHighlightField` stores one `DecorationSet`.
 - Marks: `.rr-match-highlight` for every match, `.rr-match-highlight-active` for the active range.
-- Zero-width ranges become `Decoration.widget` instances (`.rr-zero-width`, active `.rr-zero-width-active`). They are hollow dots for inactive matches and filled accent dots with a `--background-primary` halo for the active match; the shape no longer resembles a blockquote border.
+- Zero-width ranges become `Decoration.widget` instances (`.rr-zero-width`, active `.rr-zero-width-active`). They are translucent gray filled dots for inactive matches and filled accent dots with a `--background-primary` halo for the active match; the shape no longer resembles a blockquote border.
 - Newline positions inside a match text become `LineBreakMarker` widgets (`.rr-line-break`, active `.rr-line-break-active`) displaying `↵`. A newline-only match has no mark, but its marker is visible; `。\n` shows both the character mark and the marker.
 - `src/editor/highlights.ts` has two pure planners: `buildHighlightPlan()` clamps, sorts, de-duplicates, prioritizes the active range, and applies the 5,000 mark / 1,000 zero-width caps; `buildLineBreakPlan()` de-duplicates line-break positions, marks the active range, and caps at 1,000 markers while preserving the active break.
 - The existing `setTimeout(0)` coalescing remains; highlight requests from a CodeMirror update or panel mount are dispatched after the current update completes.
@@ -73,7 +73,7 @@ Mobile / fallback dialog:
 
 - `.rr-status-left` groups the count and position; `.rr-position` uses tabular numerals.
 - `.rr-match-highlight` uses `var(--text-highlight-bg, color-mix(... --text-selection ...))`; the active class uses `var(--text-selection)` plus an accent outline so the distinction is not color-only.
-- `.rr-zero-width` is a 6px hollow circular dot above the insertion point for inactive matches; `.rr-zero-width-active` is filled accent with a background-colored halo. Both use a zero-layout-width pseudo-element, so text does not shift.
+- `.rr-zero-width` is a 6px translucent-gray filled circular dot above the insertion point for inactive matches; `.rr-zero-width-active` is filled accent with a background-colored halo. Both use a zero-layout-width pseudo-element, so text does not shift.
 - `.rr-line-break` is an absolutely positioned `↵` pill at the line end; `.rr-line-break-active` is accent-filled with `--text-on-accent` text. It does not change line width.
 - Existing desktop/compact/mobile layout rules are unchanged.
 
@@ -87,7 +87,7 @@ Mobile / fallback dialog:
 | All-match highlighting | done |
 | Active match with distinct outline | done |
 | Persistent `position / total` | done |
-| Zero-width match markers (hollow/filled dots) | done |
+| Zero-width match markers (translucent gray / accent dots) | done |
 | Line-break markers (`\n`, `。\n`) | done |
 | F3 / Shift+F3 / Escape from the editor | done |
 | Replace-all confirmation above 5,000 | done |
@@ -105,7 +105,7 @@ Mobile / fallback dialog:
 ### Static
 
 ```bash
-npm test          # 6 files, 55 tests passed
+npm test          # 6 files, 56 tests passed
 npx tsc -noEmit   # passed
 npx eslint .      # 0 errors, 0 warnings
 npm run build     # main.js produced (v0.3.1, ~44 KB)
@@ -118,7 +118,7 @@ npm run build     # main.js produced (v0.3.1, ~44 KB)
 - All-match highlighting: 164 matches, 17 visible `.rr-match-highlight` nodes in the viewport; Find adds one `.rr-match-highlight-active` and shows `3 / 164` plus “已定位第 3 / 164 个匹配”.
 - Selecting a body match with the editor API updates the position to `11 / 164` and adds the active class. Moving the caret off matches returns `— / 164` and removes the active class.
 - Closing and reopening the panel with a selected match restores `11 / 164` and the active highlight.
-- Zero-width: `^` with multiline anchors produced 229 matches; 16 visible hollow `.rr-zero-width` dots; Find produced one filled `.rr-zero-width-active` and `9 / 229` (later `47 / 229` in the scrolled test).
+- Zero-width: `^` with multiline anchors produced 229 matches; 16 visible translucent-gray `.rr-zero-width` dots; Find produced one filled `.rr-zero-width-active` and `9 / 229` (later `47 / 229` in the scrolled test).
 - Newline: regex `\n` on the 55 KB note produced 228 matches and 24 visible `.rr-line-break` pills; Find produced one `.rr-line-break-active` and `47 / 228`, with no `.rr-match-highlight` (the break has no glyph).
 - Mixed `。\n` on a small note: 1 match, 1 `.rr-match-highlight` containing `。`, 1 `.rr-line-break`, and the marker sits at the line end.
 - Dark theme: zero dot, active dot, and `↵` markers use theme variables; inactive vs active contrast is visible.
@@ -163,4 +163,4 @@ For another vault, copy the same three files into `<vault>/.obsidian/plugins/reg
 - `src/i18n/` — en/zh strings
 - `src/search/` — pure engine; `src/search/limits.ts` guard rails
 - `styles.css` — inline separator, highlights, zero-width dots, line-break markers, compact/mobile styling
-- `tests/` — 55 unit tests across 6 files
+- `tests/` — 56 unit tests across 6 files

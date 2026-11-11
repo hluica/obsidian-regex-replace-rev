@@ -17,7 +17,7 @@ Official references used:
 
 | Area | Status | Notes |
 |---|---|---|
-| Source code | **Pass with documented limitations** | TS strict, ESLint clean, 55 tests, no disallowed APIs found |
+| Source code | **Pass with documented limitations** | TS strict, ESLint clean, 56 tests, no disallowed APIs found |
 | Compiled artifacts | **Pass locally; release packaging pending** | `main.js`, `styles.css`, `manifest.json`, `versions.json` present; `main.js` intentionally gitignored and must be a release asset |
 | Auxiliary docs | **Pass** | README EN/ZH, LICENSE, CHANGELOG (0.2.6 baseline), current screenshots, PLAN/UI-SPEC/IMPLEMENTATION |
 | Community listing | **0.2.6 listed; 0.3.1 update pending** | Release 0.3.1 first, then update the directory entry |
@@ -61,7 +61,7 @@ The only `window.*` use is `window.setTimeout`/`clearTimeout` for the 180ms refr
 ### 2.3 Quality checks
 
 ```text
-npm test          # 6 files, 55 tests passed
+npm test          # 6 files, 56 tests passed
 npx tsc -noEmit   # passed
 npx eslint .      # 0 errors / 0 warnings
 npm run build     # passed, main.js ≈44 KB
@@ -89,7 +89,7 @@ dev:errors        # no errors
 | `LICENSE` | Current | MIT, non-template |
 | `CHANGELOG.md` | Added | starts at 0.2.6 baseline; 0.3.0/0.3.1 entries |
 | `docs/screenshots/panel-inline.png` | Current | Chinese/light; all-match highlight + `11 / 164` |
-| `docs/screenshots/panel-zero-width.png` | Current | hollow/filled zero-width dots |
+| `docs/screenshots/panel-zero-width.png` | Current | translucent gray / accent zero-width dots |
 | `docs/screenshots/panel-newline.png` | Added | newline-only `\n` markers |
 | `docs/screenshots/panel-newline-combo.png` | Added | mixed `。\n` marker |
 | `docs/screenshots/modal-fallback.png` | Current | Chinese/light mobile modal |
@@ -112,7 +112,7 @@ dev:errors        # no errors
 
 - 164 matches in the 55 KB note: all-match highlights visible, active match distinct, position `3 / 164`.
 - Selection/reopen position: `11 / 164`; caret off matches: `— / 164`.
-- Zero-width `^`: 229 matches, 16 visible hollow dots, filled active dot; F3/Shift+F3/Escape from editor.
+- Zero-width `^`: 229 matches, 16 visible translucent-gray dots, filled active dot; F3/Shift+F3/Escape from editor.
 - Newline `\n`: 228 matches, 24 `↵` markers; active break filled; mixed `。\n` shows `。` mark + `↵`.
 - Replace-all confirmation at 19,588 matches (Cancel focused); 6,000-match confirm + undo; 150,000-match cap message.
 - 1 MB / 10,500 matches: count update 184.9 ms including the 180 ms debounce; no errors.

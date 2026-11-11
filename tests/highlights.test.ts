@@ -60,6 +60,24 @@ describe("buildHighlightPlan", () => {
 		expect(plan.marks).toEqual([{ from: 1, to: 4, active: false }]);
 	});
 
+	it("collapses stacked zero-width matches at one offset to one marker", () => {
+		const plan = buildHighlightPlan(
+			[
+				{ from: 4, to: 4 },
+				{ from: 4, to: 4 },
+				{ from: 4, to: 4 },
+				{ from: 9, to: 9 },
+			],
+			{ from: 4, to: 4 },
+			20,
+		);
+
+		expect(plan.zeroWidth).toEqual([
+			{ pos: 4, active: true },
+			{ pos: 9, active: false },
+		]);
+	});
+
 	it("caps marks but always keeps the active mark", () => {
 		const ranges = Array.from({ length: 10 }, (_, index) => ({
 			from: index * 2,

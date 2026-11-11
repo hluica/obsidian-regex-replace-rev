@@ -96,7 +96,7 @@ Main files:
 - The active match adds `.rr-match-highlight-active` with the selection background and an accent outline.
 - The status row always shows `count` on the left and `position / total` next to it: `164 个匹配  11 / 164`.
 - The position follows Find, Replace, selection changes, replacement, document changes, and reopening the panel.
-- Zero-width matches render a small hollow `.rr-zero-width` dot above the insertion point (zero layout width); the active match is a filled accent dot with a background halo, so it is distinct from other matches and from a blockquote border.
+- Zero-width matches render a small translucent gray `.rr-zero-width` dot above the insertion point (zero layout width); the active match is a filled accent dot with a background halo, so it is distinct from other matches and from a blockquote border.
 - Matches containing `\n` render a `.rr-line-break` `↵` pill at each affected line end; the active match's pill is accent-filled. This makes newline-only matches and mixed matches such as `。\n` visible.
 - Highlight ranges are capped at 5,000, zero-width dots at 1,000, and line-break markers at 1,000; the active match is always kept.
 - F3 / Shift+F3 / Escape work from the editor while the panel is open; the panel does not need focus.
@@ -124,7 +124,7 @@ Main files:
 
 | Area | Status |
 |---|---|
-| TypeScript strict / ESLint / tests / build | 55 tests pass; `tsc` and ESLint clean; production build passes (≈44 KB) |
+| TypeScript strict / ESLint / tests / build | 56 tests pass; `tsc` and ESLint clean; production build passes (≈44 KB) |
 | Dark/light theme | Light and dark verified in Obsidian 1.15 for 0.3.1; active match uses an outline in addition to color |
 | English/Chinese UI | Verified; new strings in both languages |
 | Accessibility | Labels, ARIA on selects/status, focus-visible, native toggle Space support, 44px mobile targets; highlight has outline + color; full screen-reader audit not performed |
