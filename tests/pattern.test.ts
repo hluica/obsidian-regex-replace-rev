@@ -10,6 +10,7 @@ function options(overrides: Partial<SearchOptions> = {}): SearchOptions {
 		wholeWord: false,
 		dotAll: false,
 		multiline: false,
+		unicode: false,
 		...overrides,
 	};
 }
@@ -129,6 +130,23 @@ describe("compilePattern", () => {
 			"",
 			"",
 		]);
+	});
+
+	it("supports the u flag and Unicode property escapes", () => {
+		expect(
+			matchedTexts("\\p{Script=Han}+", "神话 abc", { unicode: true }),
+		).toEqual(["神话"]);
+		expect(
+			matchedTexts("\\p{Script=Han}+", "神话 abc", { unicode: false }),
+		).toEqual([]);
+
+		const unicode = compiled("\\p{Script=Han}+", { unicode: true });
+		expect(unicode.compiled.regex.flags).toContain("u");
+	});
+
+	it("matches astral characters as one code point with u", () => {
+		expect(matchedTexts(".", "😀")).toHaveLength(2);
+		expect(matchedTexts(".", "😀", { unicode: true })).toEqual(["😀"]);
 	});
 
 	it("filters whole words for Latin text", () => {

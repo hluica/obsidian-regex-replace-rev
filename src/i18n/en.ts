@@ -20,6 +20,8 @@ export const en: Strings = {
 	optionWholeWord: "Whole word",
 	optionDotAll: "Match newlines",
 	optionMultiline: "Multiline anchors",
+	optionUnicode: "Unicode (u)",
+	optionsGroup: "Search options",
 	optionWrap: "Wrap around",
 	optionProcessEscapes: "Replace escapes",
 	placeholderExact: "Text to find",
@@ -34,6 +36,8 @@ export const en: Strings = {
 		`${count}${truncated ? "+" : ""} ${
 			count === 1 && !truncated ? "match" : "matches"
 		}`,
+	position: (index, total) => `${index} / ${total}`,
+	positionNone: (total) => `— / ${total}`,
 	emptyFind: "Enter something to find",
 	noMatches: "No matches",
 	noEditor: "No active editor",
@@ -46,6 +50,12 @@ export const en: Strings = {
 	replacedOne: "Replaced 1 occurrence; undo is available",
 	replacedMany: (count) =>
 		`Replaced ${count} occurrences; undo is available`,
+	tooManyMatches: (limit) =>
+		`Results limited to ${limit}; narrow the pattern`,
+	confirmReplaceAllTitle: "Replace all matches?",
+	confirmReplaceAllBody: (count) =>
+		`Replace ${count} matches? This is one undoable action.`,
+	confirmCancel: "Cancel",
 	invalidRegex: (message) => `Invalid regular expression: ${message}`,
 	selectionEmpty: "No selection; using the current file",
 	targetChanged: "Target changed; scope reset to the current file",
@@ -58,6 +68,8 @@ export const en: Strings = {
 	tooltipDotAll:
 		"In wildcard mode, let * and ? match newlines; in regex mode, let . match newlines (s flag).",
 	tooltipMultiline: "^ and $ match line boundaries (m flag)",
+	tooltipUnicode:
+		"Use the u flag for Unicode code points and \\p{...} escapes (regex only)",
 	tooltipWrap: "Continue from the other end of the document",
 	tooltipProcessEscapes:
 		"Interpret \\n, \\r, \\t and \\\\ in the replacement text.",
@@ -68,6 +80,10 @@ export const en: Strings = {
 	tooltipHistorySearch: "Search history",
 	tooltipHistoryReplace: "Replace history",
 	tooltipScope: "Search scope: current file or selection",
+	useSelection: "Use current selection",
+	tooltipUseSelection:
+		"Capture the current editor selection as the search scope",
+	selectionRefreshed: "Selection updated",
 	tooltipDirection: "Search direction: down or up",
 	tooltipMode: "Match mode: exact, wildcard, or regular expression",
 	tooltipTarget: "Current target note",

@@ -21,6 +21,19 @@ describe("stringsFor", () => {
 		expect(stringsFor("zh").count(10000, true)).toBe("10000+ 个匹配");
 	});
 
+	it("formats the current match position", () => {
+		expect(stringsFor("en").position(3, "164")).toBe("3 / 164");
+		expect(stringsFor("en").positionNone("164")).toBe("— / 164");
+		expect(stringsFor("zh").position(3, "164")).toBe("3 / 164");
+		expect(stringsFor("zh").positionNone("164")).toBe("— / 164");
+	});
+
+	it("has the same keys in every language", () => {
+		const enKeys = Object.keys(stringsFor("en")).sort();
+		const zhKeys = Object.keys(stringsFor("zh")).sort();
+		expect(zhKeys).toEqual(enKeys);
+	});
+
 	it("has non-empty primary labels", () => {
 		for (const language of ["en", "zh"]) {
 			const strings = stringsFor(language);

@@ -19,12 +19,15 @@ export class FindReplaceModal extends Modal {
 		this.shouldRestoreSelection = false;
 		this.modalEl.addClass("rr-modal");
 		this.titleEl.setText(strings.title);
+		this.titleEl.id = "rr-modal-title";
 		this.contentEl.addClass("rr-content");
 		this.contentEl.empty();
 
 		this.panel = new FindReplacePanel({
+			app: this.app,
 			plugin: this.plugin,
 			containerEl: this.contentEl,
+			labelledBy: "rr-modal-title",
 			variant: "modal",
 			getEditor: () => this.editor,
 			getDocumentKey: () => "modal",

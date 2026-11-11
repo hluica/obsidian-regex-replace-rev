@@ -1,5 +1,6 @@
 import {
 	ButtonComponent,
+	ConfirmationModal,
 	DropdownComponent,
 	Menu,
 	TextComponent,
@@ -10,6 +11,7 @@ import {
 	type EditorChange,
 } from "obsidian";
 import { currentStrings, type Strings } from "../i18n";
+import { collectLineBreakPositions } from "../editor/highlights";
 import type { SearchUiState } from "../settings";
 import {
 	findMatchAtSelection,
@@ -26,6 +28,12 @@ import type {
 	SearchOptions,
 	SearchScope,
 } from "../search/types";
+import {
+	ACTION_MATCH_LIMIT,
+	DISPLAY_MATCH_LIMIT,
+	MAX_HIGHLIGHT_RANGES,
+	shouldConfirmReplaceAll,
+} from "../search/limits";
 import type { PanelHost } from "./host";
 
 type OptionKey =
@@ -33,6 +41,7 @@ type OptionKey =
 	| "wholeWord"
 	| "dotAll"
 	| "multiline"
+	| "unicode"
 	| "wrap"
 	| "processEscapes";
 
@@ -78,10 +87,17 @@ export class FindReplacePanel {
 	private documentKey: string;
 	private scopeRange: ScopeRange | null = null;
 	private matches: PanelMatch[] = [];
+	private lineBreaks: number[] = [];
 	private timer: number | null = null;
 	private historyMenu: Menu | null = null;
+	private historyButton: HTMLButtonElement | null = null;
 	private suppressEditorChangeUntil = 0;
 	private resizeObserver: ResizeObserver | null = null;
+	private compactFrame: number | null = null;
+	private compactWidth = -1;
+	private activeIndex: number | null = null;
+	private matchCount = 0;
+	private truncated = false;
 
 	private findInput!: TextComponent;
 	private replaceInput!: TextComponent;
@@ -93,6 +109,7 @@ export class FindReplacePanel {
 	private replaceFindButton!: ButtonComponent;
 	private replaceAllButton!: ButtonComponent;
 	private countEl!: HTMLElement;
+	private positionEl!: HTMLElement;
 	private messageEl!: HTMLElement;
 	private readonly optionToggles: Partial<Record<OptionKey, ToggleComponent>> =
 		{};
@@ -111,6 +128,10 @@ export class FindReplacePanel {
 		this.rootEl = host.containerEl.createDiv({
 			cls: `rr-panel rr-panel--${host.variant}`,
 		});
+		this.rootEl.setAttr("role", "region");
+		if (this.host.labelledBy !== undefined) {
+			this.rootEl.setAttr("aria-labelledby", this.host.labelledBy);
+		}
 	}
 
 	mount(): void {
@@ -124,11 +145,11 @@ export class FindReplacePanel {
 		}
 		this.refresh();
 		if (this.host.variant === "inline") {
+			this.updateCompact();
 			this.resizeObserver = new ResizeObserver(() => {
-				this.updateCompact();
+				this.scheduleCompactUpdate();
 			});
 			this.resizeObserver.observe(this.rootEl);
-			this.updateCompact();
 		}
 	}
 
@@ -141,6 +162,7 @@ export class FindReplacePanel {
 		if (Date.now() >= this.suppressEditorChangeUntil) {
 			this.clearMessage();
 		}
+		this.activeIndex = null;
 		this.scheduleRefresh();
 	}
 
@@ -149,6 +171,12 @@ export class FindReplacePanel {
 		this.hideHistoryMenu();
 		this.resizeObserver?.disconnect();
 		this.resizeObserver = null;
+		if (this.compactFrame !== null) {
+			this.rootEl.ownerDocument.defaultView?.cancelAnimationFrame(
+				this.compactFrame,
+			);
+			this.compactFrame = null;
+		}
 		this.persist();
 		this.rootEl.remove();
 	}
@@ -171,10 +199,15 @@ export class FindReplacePanel {
 	private build(): void {
 		if (this.host.variant === "inline") {
 			const header = this.rootEl.createDiv({ cls: "rr-panel-header" });
-			header.createSpan({
+			const title = header.createSpan({
 				cls: "rr-panel-title",
 				text: this.strings.title,
 			});
+			title.setAttr("role", "heading");
+			title.setAttr("aria-level", "2");
+			const titleId = `rr-panel-title-${this.panelId}`;
+			title.id = titleId;
+			this.rootEl.setAttr("aria-labelledby", titleId);
 			const close = header.createEl("button", {
 				cls: "rr-panel-close",
 				attr: {
@@ -209,6 +242,7 @@ export class FindReplacePanel {
 		this.findInput.setValue(this.findText);
 		this.findInput.onChange((value) => {
 			this.findText = value;
+			this.activeIndex = null;
 			this.clearHighlight();
 			this.clearMessage();
 			this.scheduleRefresh();
@@ -220,10 +254,12 @@ export class FindReplacePanel {
 			attr: {
 				type: "button",
 				"aria-label": this.strings.historySearch,
+				"aria-haspopup": "menu",
+				"aria-expanded": "false",
 				"data-tooltip-position": "bottom",
 			},
 		});
-		setIcon(findHistory, "chevron-down");
+		setIcon(findHistory, "history");
 		setTooltip(findHistory, this.strings.tooltipHistorySearch);
 		findHistory.addEventListener("click", (event) => {
 			event.preventDefault();
@@ -272,10 +308,12 @@ export class FindReplacePanel {
 			attr: {
 				type: "button",
 				"aria-label": this.strings.historyReplace,
+				"aria-haspopup": "menu",
+				"aria-expanded": "false",
 				"data-tooltip-position": "bottom",
 			},
 		});
-		setIcon(replaceHistory, "chevron-down");
+		setIcon(replaceHistory, "history");
 		setTooltip(replaceHistory, this.strings.tooltipHistoryReplace);
 		replaceHistory.addEventListener("click", (event) => {
 			event.preventDefault();
@@ -313,6 +351,7 @@ export class FindReplacePanel {
 			},
 			(value) => {
 				this.state = { ...this.state, mode: value as MatchMode };
+				this.activeIndex = null;
 				this.syncPlaceholder();
 				this.syncOptionVisibility();
 				this.clearHighlight();
@@ -320,8 +359,9 @@ export class FindReplacePanel {
 				this.refresh();
 			},
 		);
+		const scopeControl = modeRow.createSpan({ cls: "rr-scope-control" });
 		this.scopeSelect = this.createSelect(
-			modeRow,
+			scopeControl,
 			"rr-select-scope",
 			this.strings.tooltipScope,
 			{
@@ -332,6 +372,20 @@ export class FindReplacePanel {
 				this.onScopeChange(value as SearchScope);
 			},
 		);
+		const useSelection = scopeControl.createEl("button", {
+			cls: "rr-scope-refresh",
+			attr: {
+				type: "button",
+				"aria-label": this.strings.useSelection,
+				"data-tooltip-position": "bottom",
+			},
+		});
+		setIcon(useSelection, "scan");
+		setTooltip(useSelection, this.strings.tooltipUseSelection);
+		useSelection.addEventListener("click", (event) => {
+			event.preventDefault();
+			this.useCurrentSelection();
+		});
 		this.directionSelect = this.createSelect(
 			modeRow,
 			"rr-select-dir",
@@ -352,6 +406,14 @@ export class FindReplacePanel {
 
 		grid.createSpan({ cls: "rr-spacer" });
 		const optionsEl = grid.createDiv({ cls: "rr-options" });
+		const optionsLabel = optionsEl.createSpan({
+			cls: "rr-visually-hidden",
+			text: this.strings.optionsGroup,
+		});
+		optionsLabel.id = `rr-options-label-${this.panelId}`;
+		optionsLabel.setAttr("aria-hidden", "true");
+		optionsEl.setAttr("role", "group");
+		optionsEl.setAttr("aria-labelledby", optionsLabel.id);
 		this.createOptionToggle(
 			optionsEl,
 			"caseSensitive",
@@ -378,6 +440,12 @@ export class FindReplacePanel {
 		);
 		this.createOptionToggle(
 			optionsEl,
+			"unicode",
+			this.strings.optionUnicode,
+			this.strings.tooltipUnicode,
+		);
+		this.createOptionToggle(
+			optionsEl,
 			"wrap",
 			this.strings.optionWrap,
 			this.strings.tooltipWrap,
@@ -391,7 +459,9 @@ export class FindReplacePanel {
 
 		grid.createSpan({ cls: "rr-spacer" });
 		const statusEl = grid.createDiv({ cls: "rr-status" });
-		this.countEl = statusEl.createSpan({ cls: "rr-count" });
+		const statusLeft = statusEl.createDiv({ cls: "rr-status-left" });
+		this.countEl = statusLeft.createSpan({ cls: "rr-count" });
+		this.positionEl = statusLeft.createSpan({ cls: "rr-position" });
 		this.messageEl = statusEl.createSpan({ cls: "rr-message" });
 		this.messageEl.setAttr("role", "status");
 		this.messageEl.setAttr("aria-live", "polite");
@@ -482,6 +552,7 @@ export class FindReplacePanel {
 		setTooltip(optionEl, tooltip);
 		toggle.onChange((value) => {
 			this.state = { ...this.state, [key]: value };
+			this.activeIndex = null;
 			this.clearHighlight();
 			this.clearMessage();
 			this.refresh();
@@ -500,7 +571,7 @@ export class FindReplacePanel {
 		if (key === "dotAll") {
 			return this.state.mode !== "exact";
 		}
-		if (key === "multiline") {
+		if (key === "multiline" || key === "unicode") {
 			return this.state.mode === "regex";
 		}
 		return true;
@@ -563,9 +634,19 @@ export class FindReplacePanel {
 
 	private refresh(): void {
 		this.clearStaleStateMessage();
-		const context = this.buildContext(10001);
+		const context = this.buildContext(DISPLAY_MATCH_LIMIT + 1);
 		if (context !== null) {
 			this.updateUi(context);
+			const info = this.getSelectionInfo(context.editor);
+			const selectionIndex =
+				info.current === null
+					? null
+					: context.matches.indexOf(info.current);
+			this.activeIndex =
+				selectionIndex !== null && selectionIndex >= 0
+					? selectionIndex
+					: null;
+			this.syncHighlights(this.activeIndex);
 		}
 	}
 
@@ -611,6 +692,7 @@ export class FindReplacePanel {
 		}));
 
 		this.matches = matches;
+		this.lineBreaks = collectLineBreakPositions(matches);
 
 		return {
 			editor,
@@ -629,6 +711,7 @@ export class FindReplacePanel {
 			wholeWord: this.state.wholeWord,
 			dotAll: this.state.mode !== "exact" && this.state.dotAll,
 			multiline: this.state.mode === "regex" && this.state.multiline,
+			unicode: this.state.mode === "regex" && this.state.unicode,
 		};
 	}
 
@@ -639,6 +722,7 @@ export class FindReplacePanel {
 		}
 		this.documentKey = key;
 		this.scopeRange = null;
+		this.activeIndex = null;
 		if (this.state.scope === "selection") {
 			this.state = { ...this.state, scope: "file" };
 			this.scopeSelect.setValue("file");
@@ -657,8 +741,7 @@ export class FindReplacePanel {
 		if (scope === null) {
 			this.resetScopeToFile();
 			this.setMessage(this.strings.selectionEmpty, true);
-			this.countEl.setText("—");
-			this.setButtonsDisabled(true);
+			this.setUnavailableUi();
 			return null;
 		}
 
@@ -667,8 +750,7 @@ export class FindReplacePanel {
 			if (scope.start < 0 || scope.end > docLength || scope.start >= scope.end) {
 				this.resetScopeToFile();
 				this.setMessage(this.strings.selectionEmpty, true);
-				this.countEl.setText("—");
-				this.setButtonsDisabled(true);
+				this.setUnavailableUi();
 				return null;
 			}
 			const text = editor.getRange(
@@ -678,21 +760,39 @@ export class FindReplacePanel {
 			if (text.length === 0) {
 				this.resetScopeToFile();
 				this.setMessage(this.strings.selectionEmpty, true);
-				this.countEl.setText("—");
-				this.setButtonsDisabled(true);
+				this.setUnavailableUi();
 				return null;
 			}
 			return { text, offsetBase: scope.start };
 		} catch {
 			this.resetScopeToFile();
 			this.setMessage(this.strings.selectionEmpty, true);
-			this.countEl.setText("—");
-			this.setButtonsDisabled(true);
+			this.setUnavailableUi();
 			return null;
 		}
 	}
 
+	private useCurrentSelection(): void {
+		if (this.host.getEditor() === null) {
+			this.setMessage(this.strings.noEditor, true);
+			return;
+		}
+		this.activeIndex = null;
+		if (!this.captureScope()) {
+			this.resetScopeToFile();
+			this.setMessage(this.strings.selectionEmpty, true);
+			this.refresh();
+			return;
+		}
+		this.state = { ...this.state, scope: "selection" };
+		this.scopeSelect.setValue("selection");
+		this.clearMessage();
+		this.setMessage(this.strings.selectionRefreshed);
+		this.refresh();
+	}
+
 	private onScopeChange(scope: SearchScope): void {
+		this.activeIndex = null;
 		if (scope === "selection") {
 			this.state = { ...this.state, scope: "selection" };
 			if (!this.captureScope()) {
@@ -744,18 +844,98 @@ export class FindReplacePanel {
 
 	private updateUi(context: SearchContext): void {
 		const count = context.matches.length;
+		this.matchCount = count;
+		this.truncated = context.truncated || count > DISPLAY_MATCH_LIMIT;
 		if (count === 0) {
 			this.countEl.setText(this.strings.noMatches);
 		} else {
-			const display = Math.min(count, 10000);
+			const display = Math.min(count, DISPLAY_MATCH_LIMIT);
 			this.countEl.setText(
-				this.strings.count(
-					display,
-					context.truncated || count > 10000,
-				),
+				this.strings.count(display, this.truncated),
 			);
 		}
 		this.setButtonsDisabled(count === 0);
+		this.updatePosition();
+	}
+
+	private updatePosition(): void {
+		if (this.matchCount === 0) {
+			this.positionEl.setText("");
+			return;
+		}
+		const total = this.truncated
+			? `${DISPLAY_MATCH_LIMIT}+`
+			: String(this.matchCount);
+		this.positionEl.setText(
+			this.activeIndex === null
+				? this.strings.positionNone(total)
+				: this.strings.position(this.activeIndex + 1, total),
+		);
+	}
+
+	private syncHighlights(activeIndex: number | null = this.activeIndex): void {
+		if (this.matches.length === 0) {
+			this.activeIndex = null;
+			this.clearHighlight();
+			this.updatePosition();
+			return;
+		}
+		const index =
+			activeIndex !== null &&
+			activeIndex >= 0 &&
+			activeIndex < this.matches.length
+				? activeIndex
+				: null;
+		this.activeIndex = index;
+		const ranges = this.matches
+			.slice(0, MAX_HIGHLIGHT_RANGES)
+			.map((match) => ({
+				from: match.absoluteStart,
+				to: match.absoluteEnd,
+			}));
+		const activeMatch =
+			index !== null ? this.matches[index] : undefined;
+		if (activeMatch !== undefined) {
+			const alreadyIncluded = ranges.some(
+				(range) =>
+					range.from === activeMatch.absoluteStart &&
+					range.to === activeMatch.absoluteEnd,
+			);
+			if (!alreadyIncluded) {
+				ranges.push({
+					from: activeMatch.absoluteStart,
+					to: activeMatch.absoluteEnd,
+				});
+			}
+		}
+		this.host.highlightMatches?.({
+			ranges,
+			active:
+				activeMatch === undefined
+					? null
+					: {
+							from: activeMatch.absoluteStart,
+							to: activeMatch.absoluteEnd,
+						},
+			lineBreaks: this.lineBreaks,
+		});
+		this.updatePosition();
+	}
+
+	handleSelectionChange(): void {
+		const editor = this.host.getEditor();
+		if (editor === null || this.matches.length === 0) {
+			return;
+		}
+		const info = this.getSelectionInfo(editor);
+		const nextIndex =
+			info.current === null ? null : this.matches.indexOf(info.current);
+		const normalized = nextIndex !== null && nextIndex >= 0 ? nextIndex : null;
+		if (normalized === this.activeIndex) {
+			return;
+		}
+		this.activeIndex = normalized;
+		this.syncHighlights();
 	}
 
 	private clearHighlight(): void {
@@ -765,7 +945,12 @@ export class FindReplacePanel {
 	private setNoEditorUi(): void {
 		this.clearHighlight();
 		this.matches = [];
+		this.lineBreaks = [];
+		this.activeIndex = null;
+		this.matchCount = 0;
+		this.truncated = false;
 		this.countEl.setText("—");
+		this.updatePosition();
 		this.setButtonsDisabled(true);
 		this.setMessage(this.strings.noEditor);
 	}
@@ -773,7 +958,12 @@ export class FindReplacePanel {
 	private setEmptyUi(): void {
 		this.clearHighlight();
 		this.matches = [];
+		this.lineBreaks = [];
+		this.activeIndex = null;
+		this.matchCount = 0;
+		this.truncated = false;
 		this.countEl.setText("—");
+		this.updatePosition();
 		this.setButtonsDisabled(true);
 		this.setMessage(this.strings.emptyFind);
 	}
@@ -781,16 +971,56 @@ export class FindReplacePanel {
 	private setErrorUi(message: string): void {
 		this.clearHighlight();
 		this.matches = [];
+		this.lineBreaks = [];
+		this.activeIndex = null;
+		this.matchCount = 0;
+		this.truncated = false;
 		this.countEl.setText("—");
+		this.updatePosition();
 		this.setButtonsDisabled(true);
 		this.setMessage(this.strings.invalidRegex(message), true);
 	}
 
+	private setUnavailableUi(): void {
+		this.clearHighlight();
+		this.matches = [];
+		this.lineBreaks = [];
+		this.activeIndex = null;
+		this.matchCount = 0;
+		this.truncated = false;
+		this.countEl.setText("—");
+		this.updatePosition();
+		this.setButtonsDisabled(true);
+	}
+
+	private scheduleCompactUpdate(): void {
+		if (this.compactFrame !== null) {
+			return;
+		}
+		const win = this.rootEl.ownerDocument.defaultView;
+		if (win === null) {
+			this.updateCompact();
+			return;
+		}
+		this.compactFrame = win.requestAnimationFrame(() => {
+			this.compactFrame = null;
+			this.updateCompact();
+		});
+	}
+
 	private updateCompact(): void {
 		const width = this.rootEl.clientWidth;
+		if (width === this.compactWidth) {
+			return;
+		}
+		this.compactWidth = width;
 		this.rootEl.toggleClass(
 			"rr-compact",
 			width > 0 && width < 620,
+		);
+		this.rootEl.toggleClass(
+			"rr-narrow",
+			width > 0 && width < 260,
 		);
 	}
 
@@ -846,14 +1076,24 @@ export class FindReplacePanel {
 		return result?.match ?? null;
 	}
 
+	findNext(): void {
+		this.runFind(false);
+	}
+
+	findPrevious(): void {
+		this.runFind(true);
+	}
+
 	private runFind(reverse: boolean): void {
-		const context = this.buildContext(Number.POSITIVE_INFINITY);
+		const context = this.buildContext(ACTION_MATCH_LIMIT);
 		if (context === null) {
 			return;
 		}
 		this.updateUi(context);
 		if (context.matches.length === 0) {
+			this.activeIndex = null;
 			this.clearHighlight();
+			this.updatePosition();
 			this.setMessage(this.strings.noMatches);
 			return;
 		}
@@ -898,9 +1138,16 @@ export class FindReplacePanel {
 			return;
 		}
 
-		this.selectMatch(context.editor, result.match);
+		this.selectMatch(context.editor, result.match, result.index);
 		this.recordSearch();
 		this.persist();
+		if (context.truncated) {
+			this.setMessage(
+				this.strings.tooManyMatches(ACTION_MATCH_LIMIT),
+				true,
+			);
+			return;
+		}
 		if (result.wrapped) {
 			this.setMessage(
 				direction === "forward"
@@ -914,16 +1161,21 @@ export class FindReplacePanel {
 		}
 	}
 
-	private selectMatch(editor: Editor, match: PanelMatch): void {
+	private selectMatch(
+		editor: Editor,
+		match: PanelMatch,
+		index: number,
+	): void {
 		const from = editor.offsetToPos(match.absoluteStart);
 		const to = editor.offsetToPos(match.absoluteEnd);
+		this.activeIndex = index;
 		editor.setSelection(from, to);
 		editor.scrollIntoView({ from, to }, true);
-		this.host.highlightMatch?.(match.absoluteStart, match.absoluteEnd);
+		this.syncHighlights(index);
 	}
 
 	private runReplaceOnce(): void {
-		const context = this.buildContext(Number.POSITIVE_INFINITY);
+		const context = this.buildContext(ACTION_MATCH_LIMIT);
 		if (context === null) {
 			return;
 		}
@@ -943,13 +1195,14 @@ export class FindReplacePanel {
 		}
 		this.recordReplacement();
 		this.persist();
+		this.activeIndex = null;
 		this.clearHighlight();
 		this.refresh();
 		this.setMessage(this.strings.replacedOne);
 	}
 
 	private runReplaceAndFind(): void {
-		const context = this.buildContext(Number.POSITIVE_INFINITY);
+		const context = this.buildContext(ACTION_MATCH_LIMIT);
 		if (context === null) {
 			return;
 		}
@@ -968,6 +1221,7 @@ export class FindReplacePanel {
 		}
 		this.recordReplacement();
 		this.persist();
+		this.activeIndex = null;
 		this.clearHighlight();
 		this.refresh();
 		this.runFind(false);
@@ -998,18 +1252,62 @@ export class FindReplacePanel {
 		}
 	}
 
-	private runReplaceAll(): void {
-		const context = this.buildContext(Number.POSITIVE_INFINITY);
+	private runReplaceAll(skipConfirmation = false): void {
+		const context = this.buildContext(ACTION_MATCH_LIMIT);
 		if (context === null) {
 			return;
 		}
 		this.updateUi(context);
 		if (context.matches.length === 0) {
+			this.activeIndex = null;
 			this.clearHighlight();
+			this.updatePosition();
 			this.setMessage(this.strings.noMatches);
 			return;
 		}
+		if (context.truncated) {
+			this.setMessage(
+				this.strings.tooManyMatches(ACTION_MATCH_LIMIT),
+				true,
+			);
+			return;
+		}
+		if (
+			!skipConfirmation &&
+			shouldConfirmReplaceAll(context.matches.length)
+		) {
+			this.confirmReplaceAll(context.matches.length);
+			return;
+		}
+		this.performReplaceAll(context);
+	}
 
+	private confirmReplaceAll(count: number): void {
+		const modal = new ConfirmationModal(this.host.app);
+		modal.titleEl.setText(this.strings.confirmReplaceAllTitle);
+		modal.contentEl.createEl("p", {
+			text: this.strings.confirmReplaceAllBody(count),
+		});
+		modal.addButton((button) => {
+			button
+				.setButtonText(this.strings.actionReplaceAll)
+				.setDestructive()
+				.setCta()
+				.onClick(() => {
+					this.runReplaceAll(true);
+				});
+		});
+		modal.addButton((button) => {
+			button
+				.setButtonText(this.strings.confirmCancel)
+				.setCancel()
+				.setInitialFocus();
+		});
+		modal.open();
+	}
+
+	private performReplaceAll(context: SearchContext): void {
+		this.activeIndex = null;
 		try {
 			const prepared = this.state.processEscapes
 				? processEscapes(this.replaceText)
@@ -1109,7 +1407,7 @@ export class FindReplacePanel {
 			this.findText,
 			this.replaceText,
 		);
-		void this.host.plugin.saveSettings().catch(() => undefined);
+		this.host.plugin.scheduleSaveSettings();
 	}
 
 	private openHistoryMenu(
@@ -1118,6 +1416,8 @@ export class FindReplacePanel {
 	): void {
 		this.hideHistoryMenu();
 		const menu = new Menu();
+		this.historyButton = button;
+		button.setAttr("aria-expanded", "true");
 		const history =
 			kind === "search"
 				? this.host.plugin.settings.history.search
@@ -1157,6 +1457,10 @@ export class FindReplacePanel {
 			if (this.historyMenu === menu) {
 				this.historyMenu = null;
 			}
+			button.setAttr("aria-expanded", "false");
+			if (this.historyButton === button) {
+				this.historyButton = null;
+			}
 		});
 	}
 
@@ -1178,7 +1482,7 @@ export class FindReplacePanel {
 	private clearHistory(): void {
 		this.hideHistoryMenu();
 		this.host.plugin.clearHistory();
-		void this.host.plugin.saveSettings().catch(() => undefined);
+		this.host.plugin.scheduleSaveSettings();
 		this.setMessage(this.strings.historyCleared);
 	}
 
@@ -1187,5 +1491,7 @@ export class FindReplacePanel {
 			this.historyMenu.hide();
 			this.historyMenu = null;
 		}
+		this.historyButton?.setAttr("aria-expanded", "false");
+		this.historyButton = null;
 	}
 }

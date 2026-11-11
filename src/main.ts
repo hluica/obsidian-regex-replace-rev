@@ -21,6 +21,7 @@ import { FindReplaceModal } from "./ui/FindReplaceModal";
 import type { HistoryKind, PanelPlugin } from "./ui/host";
 
 const HISTORY_LIMIT = 20;
+const SETTINGS_SAVE_DEBOUNCE_MS = 500;
 
 export default class RegexReplacePlugin
 	extends Plugin
@@ -28,6 +29,8 @@ export default class RegexReplacePlugin
 {
 	settings: PluginSettings = createDefaultSettings();
 	private activeModal: FindReplaceModal | null = null;
+	private saveTimer: number | null = null;
+	private unloading = false;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -45,8 +48,10 @@ export default class RegexReplacePlugin
 	}
 
 	onunload(): void {
+		this.unloading = true;
 		this.activeModal?.close();
 		this.activeModal = null;
+		this.flushSettingsSave();
 	}
 
 	async onExternalSettingsChange(): Promise<void> {
@@ -54,6 +59,7 @@ export default class RegexReplacePlugin
 	}
 
 	async loadSettings(): Promise<void> {
+		this.cancelScheduledSave();
 		const raw: unknown = await this.loadData();
 		this.settings = normalizeSettings(raw);
 		if (!this.settings.rememberHistory) {
@@ -62,7 +68,38 @@ export default class RegexReplacePlugin
 	}
 
 	async saveSettings(): Promise<void> {
+		this.cancelScheduledSave();
 		await this.saveData(this.settings);
+	}
+
+	scheduleSaveSettings(): void {
+		if (this.unloading) {
+			void this.saveSettingsNow().catch(() => undefined);
+			return;
+		}
+		if (this.saveTimer !== null) {
+			return;
+		}
+		this.saveTimer = window.setTimeout(() => {
+			this.saveTimer = null;
+			void this.saveSettingsNow().catch(() => undefined);
+		}, SETTINGS_SAVE_DEBOUNCE_MS);
+	}
+
+	private cancelScheduledSave(): void {
+		if (this.saveTimer !== null) {
+			window.clearTimeout(this.saveTimer);
+			this.saveTimer = null;
+		}
+	}
+
+	private async saveSettingsNow(): Promise<void> {
+		await this.saveData(this.settings);
+	}
+
+	private flushSettingsSave(): void {
+		this.cancelScheduledSave();
+		void this.saveSettingsNow().catch(() => undefined);
 	}
 
 	getInitialState(): SearchUiState {

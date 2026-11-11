@@ -10,6 +10,7 @@ function matchesOf(text: string) {
 		wholeWord: false,
 		dotAll: false,
 		multiline: false,
+		unicode: false,
 	};
 	const result = compilePattern("a", options);
 	if (!result.ok) {
@@ -55,6 +56,7 @@ describe("findMatchFrom", () => {
 			wholeWord: false,
 			dotAll: false,
 			multiline: true,
+			unicode: false,
 		};
 		const result = compilePattern("^", options);
 		if (!result.ok) {

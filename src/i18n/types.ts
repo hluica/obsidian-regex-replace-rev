@@ -18,6 +18,8 @@ export interface Strings {
 	optionWholeWord: string;
 	optionDotAll: string;
 	optionMultiline: string;
+	optionUnicode: string;
+	optionsGroup: string;
 	optionWrap: string;
 	optionProcessEscapes: string;
 	placeholderExact: string;
@@ -29,6 +31,8 @@ export interface Strings {
 	historyEmpty: string;
 	historyClear: string;
 	count: (count: number, truncated?: boolean) => string;
+	position: (index: number, total: string) => string;
+	positionNone: (total: string) => string;
 	emptyFind: string;
 	noMatches: string;
 	noEditor: string;
@@ -40,6 +44,10 @@ export interface Strings {
 	reachedStart: string;
 	replacedOne: string;
 	replacedMany: (count: number) => string;
+	tooManyMatches: (limit: number) => string;
+	confirmReplaceAllTitle: string;
+	confirmReplaceAllBody: (count: number) => string;
+	confirmCancel: string;
 	invalidRegex: (message: string) => string;
 	selectionEmpty: string;
 	targetChanged: string;
@@ -51,6 +59,7 @@ export interface Strings {
 	tooltipWholeWord: string;
 	tooltipDotAll: string;
 	tooltipMultiline: string;
+	tooltipUnicode: string;
 	tooltipWrap: string;
 	tooltipProcessEscapes: string;
 	tooltipFind: string;
@@ -60,6 +69,9 @@ export interface Strings {
 	tooltipHistorySearch: string;
 	tooltipHistoryReplace: string;
 	tooltipScope: string;
+	useSelection: string;
+	tooltipUseSelection: string;
+	selectionRefreshed: string;
 	tooltipDirection: string;
 	tooltipMode: string;
 	tooltipTarget: string;

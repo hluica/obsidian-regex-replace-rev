@@ -1,0 +1,184 @@
+import { describe, expect, it } from "vitest";
+import {
+	buildHighlightPlan,
+	buildLineBreakPlan,
+	collectLineBreakPositions,
+} from "../src/editor/highlights";
+
+describe("buildHighlightPlan", () => {
+	it("sorts ranges and marks the active range", () => {
+		const plan = buildHighlightPlan(
+			[
+				{ from: 10, to: 12 },
+				{ from: 1, to: 3 },
+				{ from: 20, to: 21 },
+			],
+			{ from: 10, to: 12 },
+			100,
+		);
+
+		expect(plan.marks).toEqual([
+			{ from: 1, to: 3, active: false },
+			{ from: 10, to: 12, active: true },
+			{ from: 20, to: 21, active: false },
+		]);
+		expect(plan.zeroWidth).toEqual([]);
+	});
+
+	it("clamps ranges to the document and drops inverted ranges", () => {
+		const plan = buildHighlightPlan(
+			[
+				{ from: -5, to: 2 },
+				{ from: 8, to: 200 },
+				{ from: 50, to: 40 },
+			],
+			null,
+			20,
+		);
+
+		expect(plan.marks).toEqual([
+			{ from: 0, to: 2, active: false },
+			{ from: 8, to: 20, active: false },
+		]);
+	});
+
+	it("de-duplicates zero-width positions and keeps the active flag", () => {
+		const plan = buildHighlightPlan(
+			[
+				{ from: 3, to: 3 },
+				{ from: 3, to: 3 },
+				{ from: 7, to: 7 },
+				{ from: 1, to: 4 },
+			],
+			{ from: 3, to: 3 },
+			20,
+		);
+
+		expect(plan.zeroWidth).toEqual([
+			{ pos: 3, active: true },
+			{ pos: 7, active: false },
+		]);
+		expect(plan.marks).toEqual([{ from: 1, to: 4, active: false }]);
+	});
+
+	it("collapses stacked zero-width matches at one offset to one marker", () => {
+		const plan = buildHighlightPlan(
+			[
+				{ from: 4, to: 4 },
+				{ from: 4, to: 4 },
+				{ from: 4, to: 4 },
+				{ from: 9, to: 9 },
+			],
+			{ from: 4, to: 4 },
+			20,
+		);
+
+		expect(plan.zeroWidth).toEqual([
+			{ pos: 4, active: true },
+			{ pos: 9, active: false },
+		]);
+	});
+
+	it("caps marks but always keeps the active mark", () => {
+		const ranges = Array.from({ length: 10 }, (_, index) => ({
+			from: index * 2,
+			to: index * 2 + 1,
+		}));
+		const plan = buildHighlightPlan(ranges, { from: 18, to: 19 }, 100, 3);
+
+		expect(plan.marks).toHaveLength(3);
+		expect(plan.marks.some((mark) => mark.active)).toBe(true);
+		expect(plan.marks.find((mark) => mark.active)?.from).toBe(18);
+		expect(plan.omittedMarks).toBeGreaterThan(0);
+	});
+
+	it("caps zero-width markers but always keeps the active one", () => {
+		const ranges = Array.from({ length: 10 }, (_, index) => ({
+			from: index,
+			to: index,
+		}));
+		const plan = buildHighlightPlan(ranges, { from: 9, to: 9 }, 100, 10, 3);
+
+		expect(plan.zeroWidth).toHaveLength(3);
+		expect(plan.zeroWidth.some((marker) => marker.active)).toBe(true);
+		expect(plan.zeroWidth.find((marker) => marker.active)?.pos).toBe(9);
+		expect(plan.omittedZeroWidth).toBeGreaterThan(0);
+	});
+
+	it("returns an empty plan for no ranges", () => {
+		const plan = buildHighlightPlan([], null, 10);
+		expect(plan.marks).toEqual([]);
+		expect(plan.zeroWidth).toEqual([]);
+		expect(plan.omittedMarks).toBe(0);
+		expect(plan.omittedZeroWidth).toBe(0);
+	});
+});
+
+describe("buildLineBreakPlan", () => {
+	it("de-duplicates positions and marks breaks inside the active range", () => {
+		const plan = buildLineBreakPlan(
+			[5, 5, 7, 9],
+			{ from: 4, to: 8 },
+			20,
+		);
+
+		expect(plan).toEqual([
+			{ pos: 5, active: true },
+			{ pos: 7, active: true },
+			{ pos: 9, active: false },
+		]);
+	});
+
+	it("clamps positions to the document", () => {
+		const plan = buildLineBreakPlan([-3, 0, 19, 20, 30], null, 20);
+		expect(plan).toEqual([
+			{ pos: 0, active: false },
+			{ pos: 19, active: false },
+		]);
+	});
+
+	it("caps markers but keeps the active line break", () => {
+		const plan = buildLineBreakPlan(
+			[1, 2, 3, 4, 5, 6],
+			{ from: 5, to: 6 },
+			20,
+			3,
+		);
+		expect(plan).toHaveLength(3);
+		expect(plan.some((item) => item.active)).toBe(true);
+		expect(plan.find((item) => item.active)?.pos).toBe(5);
+	});
+
+	it("returns an empty plan for no positions", () => {
+		expect(buildLineBreakPlan([], null, 20)).toEqual([]);
+	});
+});
+
+describe("collectLineBreakPositions", () => {
+	it("collects absolute positions from single and multiple newlines", () => {
+		expect(
+			collectLineBreakPositions([
+				{ text: "a\nb", absoluteStart: 10 },
+				{ text: "a\n\nb", absoluteStart: 40 },
+			]),
+		).toEqual([11, 41, 42]);
+	});
+
+	it("de-duplicates overlapping matches and ignores non-newline matches", () => {
+		expect(
+			collectLineBreakPositions([
+				{ text: "\n", absoluteStart: 5 },
+				{ text: "x\ny", absoluteStart: 5 },
+				{ text: "abc", absoluteStart: 20 },
+				{ text: "z", absoluteStart: 30 },
+			]),
+		).toEqual([5, 6]);
+	});
+
+	it("returns an empty list for no newline matches", () => {
+		expect(collectLineBreakPositions([])).toEqual([]);
+		expect(
+			collectLineBreakPositions([{ text: "abc", absoluteStart: 0 }]),
+		).toEqual([]);
+	});
+});
