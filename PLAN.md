@@ -1,7 +1,7 @@
 # Refined Regex Replace and More — Plan and Status
 
-- **Version:** 0.3.3 (released from tag `0.3.3`)
-- **Status:** implemented and verification-complete; released 2026-11-11 from tag `0.3.3`; 0.3.3 community-directory update pending; 0.2.6 baseline is in the community directory
+- **Version:** 0.3.4 (released from tag `0.3.4`)
+- **Status:** implemented and verification-complete; released 2026-11-12 from tag `0.3.4`; 0.3.4 community-directory update pending; 0.2.6 baseline is in the community directory
 - **Current implementation:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **UI specification:** [UI-SPEC.md](UI-SPEC.md)
 - **Community readiness audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
@@ -24,7 +24,7 @@ Build a find/replace panel for the **current Markdown note** with:
 - independent panels in multiple Obsidian windows;
 - bounded result sets and a confirmation step for large replace-all operations.
 
-Out of scope for v0.3.3: vault-wide replace, diff preview, preserve case, multiline literal input, `y`/`d`/`v` flags, default hotkeys, and real-device validation.
+Out of scope for v0.3.4: vault-wide replace, diff preview, preserve case, multiline literal input, `y`/`d`/`v` flags, default hotkeys, and real-device validation.
 
 ## 2. Current architecture
 
@@ -86,10 +86,11 @@ Main files:
 
 ### 3.3 Scope, direction, wrap
 
-- **Current file**: whole document.
-- **Selection**: captured when the panel opens or the scope is switched to Selection; the mode-row selection-refresh button refreshes the range from the current selection; range updated after replacements; reset to Current file when the document changes.
+- **Current file**: whole document with wrap on. With wrap off, scanning is bounded from the cursor to the document edge in the current direction.
+- **Selection**: captured when the panel opens or the scope is switched to Selection; the mode-row selection-refresh button refreshes the range from the current selection; range updated after replacements; reset to Current file when the document changes. With wrap off, the whole captured selection is scanned regardless of the cursor; down starts at the selection top and up starts at the selection bottom.
 - Direction down/up; Shift+Enter reverses once; F3/Shift+F3 navigate.
-- Wrap off produces boundary messages instead of wrapping.
+- Wrap off produces boundary messages instead of wrapping; document and selection boundaries use different messages.
+- In Selection with wrap off, Find/Replace start at the selection boundary when no match is active; Replace and find continues from the replacement.
 
 ### 3.4 Match visibility and navigation (0.3.3)
 
@@ -125,22 +126,22 @@ Main files:
 
 | Area | Status |
 |---|---|
-| TypeScript strict / ESLint / tests / build | 61 tests pass; `tsc` and ESLint clean; production build passes (≈48 KB) |
+| TypeScript strict / ESLint / tests / build | 78 tests pass; `tsc` and ESLint clean; production build passes (≈53 KB) |
 | Dark/light theme | Light and dark verified in Obsidian 1.15 for 0.3.3; active match uses an accent tint + 2px outline |
 | Third-party themes | Catppuccin (enabled) and Minimal tested; active/inactive highlights, toggles, scope button, dots, and `↵` markers visible |
 | English/Chinese UI | Verified; new strings in both languages |
 | Accessibility | Labelled region/heading, named controls, grouped options, history menu state, live status, focus-visible, 44px mobile targets; Chromium AX tree audited; full VoiceOver/Narrator session outstanding |
-| Multi-window | Two Obsidian windows tested in 0.2.6; v0.3.3 popout panel/F3/Escape and normal close verified |
+| Multi-window | Two Obsidian windows tested in 0.2.6; v0.3.3 popout panel/F3/Escape and normal close verified; v0.3.4 window DOM helpers preserve popout document ownership |
 | Mobile | Obsidian mobile emulation tested; real iOS/Android not tested |
-| Windows/Linux | not re-tested for 0.3.3 |
+| Windows/Linux | not re-tested for 0.3.4 |
 | Performance | 1 MB / 10,000+ matches and 1 MB / 10,500 lines: count refresh ≈185–189 ms including 180 ms debounce; dotAll and zero-width caps hold; engine scan itself milliseconds |
 | Bounded actions | 100,000 match cap; 5,000 replace-all confirmation; 150,000-match note tested |
-| Community directory | 0.2.6 baseline listed; 0.3.3 released, directory update pending |
+| Community directory | 0.2.6 baseline listed; 0.3.4 released, directory update pending |
 
-## 5. Acceptance status (v0.3.3)
+## 5. Acceptance status (v0.3.4)
 
 - [x] Three modes × four actions
-- [x] Exact 4 / wildcard 5 / regex 6 options
+- [x] Exact 4 / wildcard 5 / regex 7 options
 - [x] Wildcard `s` for `*`/`?`, regex `s` for `.`
 - [x] Regex-only multiline anchors
 - [x] Whole-word, case, wrap, direction
@@ -168,19 +169,23 @@ Main files:
 - [x] **1 MB newline/dotAll/zero-width performance regression**
 - [x] **Popout multi-window and F3/Escape regression**
 - [x] **ResizeObserver loop fix**
+- [x] **Scope-aware wrap-off bounds and zero-match recovery**
+- [x] **Selection-specific boundary messages**
+- [x] **Window DOM helpers preserve popout document ownership**
 - [x] Multi-window independent panels
 - [x] Mobile modal fallback
 - [x] Settings tab (4 items)
 - [ ] Real iOS/Android and Windows/Linux verification
 - [x] Dark-theme 0.3.3 visual audit and screenshot
 - [x] 0.3.3 public release (merge/tag)
-- [ ] 0.3.3 community-directory update
+- [x] 0.3.4 public release (merge/tag)
+- [ ] 0.3.4 community-directory update
 
 ## 6. Next steps
 
-1. **Directory:** update the community directory entry to 0.3.3 and verify from a clean vault.
+1. **Directory:** update the community directory entry to 0.3.4 and verify from a clean vault.
 2. **Post-release:** real iOS/Android/Windows/Linux checks and a full VoiceOver/Narrator session.
-3. **Next:** keep 0.3.1/0.3.2 as internal history; 0.3.3 is the released version.
+3. **Next:** keep 0.3.1/0.3.2 as internal history; 0.3.4 is the released version.
 4. Keep the 0.2.6 baseline changelog; do not reconstruct older versions.
 
 ## 7. Development

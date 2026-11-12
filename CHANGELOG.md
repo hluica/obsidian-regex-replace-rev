@@ -3,6 +3,45 @@
 This changelog starts at **0.2.6**, the baseline community release. Earlier
 versions are intentionally not reconstructed.
 
+## 0.3.4 — 2026-11-12 (released)
+
+0.3.4 was released from tag `0.3.4`; the community-directory update is the
+remaining distribution step.
+
+### Changed
+
+- **Wrap-off bounds are now directional and scope-aware.** With Current file,
+  wrap off scans from the cursor to the document edge in the current direction.
+  With Selection, it always scans the whole captured selection: down from the
+  selection top, up from the selection bottom, independent of the cursor.
+- The same wrap-off region drives the live count, all-match highlights, Find,
+  Replace, Replace and find, and Replace all.
+- Find/Replace in Selection now start at the selection boundary when no match
+  is active; Replace and find continues from the replacement instead of
+  restarting at the selection edge.
+- Boundary messages distinguish documents from selections (“end/start of the
+  document” vs “end/start of the selection”).
+- Inline panel and marker DOM now use the owning window's
+  `createDiv`/`createSpan` helpers instead of `document.createElement`,
+  satisfying `obsidianmd/prefer-create-el` and preserving popout document
+  ownership.
+
+### Fixed
+
+- Moving the cursor out of a zero-match wrap-off region and back into a match
+  now refreshes the count and highlights immediately; previously they stayed
+  empty until the query changed.
+- Selection scope with wrap off was incorrectly narrowed to the cursor-to-edge
+  span, hiding matches above or below the cursor.
+- Selection boundaries no longer report “end/start of the document”.
+
+### Verification
+
+- 78 unit tests across 7 files; TypeScript, ESLint, and production build pass.
+- Verified forward/backward cursor regions, full-selection bounds with the
+  cursor inside/outside, zero-match recovery, selection-specific messages,
+  Replace and find continuity, and main/popout DOM ownership.
+
 ## 0.3.3 — 2026-11-11 (released)
 
 0.3.3 was released from tag `0.3.3`; the community-directory update is the

@@ -1,13 +1,13 @@
-# UI Specification — v0.3.3
+# UI Specification — v0.3.4
 
-- **Status:** released from tag `0.3.3` on 2026-11-11; E2E-verified in Obsidian 1.15.0, macOS, Chinese/light and dark UI
+- **Status:** released from tag `0.3.4` on 2026-11-12; E2E-verified in Obsidian 1.15.0, macOS, Chinese/light and dark UI
 - **Implementation record:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **Plan/status:** [PLAN.md](PLAN.md)
 - **Community audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
 - **Screenshots:** [inline panel](docs/screenshots/panel-inline.png) · [dark theme](docs/screenshots/panel-dark.png) · [Catppuccin](docs/screenshots/theme-catppuccin.png) · [Minimal](docs/screenshots/theme-minimal.png) · [zero-width dots](docs/screenshots/panel-zero-width.png) · [newline markers](docs/screenshots/panel-newline.png) · [mixed `。\n`](docs/screenshots/panel-newline-combo.png) · [modal fallback](docs/screenshots/modal-fallback.png)
 
-This specification describes the current inline design, the match-marker layer, the selection-refresh control, and the 0.3.3 Unicode/accessibility layer.
+This specification describes the current inline design, the match-marker layer, the selection-refresh control, the 0.3.3 Unicode/accessibility layer, and the 0.3.4 wrap-off region behavior.
 
 ## 1. Principles
 
@@ -68,7 +68,16 @@ This specification describes the current inline design, the match-marker layer, 
 | Options | 4/5/6 by mode | wraps | wraps, 44px targets |
 | Panel height | content | content; 70vh cap | modal content |
 
-### 3.2 Status row (0.3.3)
+### 3.2 Wrap-off bounds (0.3.4)
+
+- **Current file + wrap off**: the active region runs from the cursor/selection edge to the document edge in the current direction. The count, highlights, Find, Replace, and Replace all use that region.
+- **Selection + wrap off**: the active region is always the whole captured selection. Forward starts at the selection top and backward at the selection bottom, independent of the cursor.
+- Moving the cursor inside or outside the selection does not change the selection count; it may change the active match only when the cursor exactly selects a match.
+- Replace and find continues from the replacement edge; it does not restart at the selection boundary.
+- Zero-match regions still refresh when the cursor moves back into a match.
+- Boundary messages are “已到达文档末尾/开头” for Current file and “已到达选中区域末尾/开头” for Selection.
+
+### 3.3 Status row (0.3.4)
 
 ```
 .rr-status
@@ -83,7 +92,7 @@ This specification describes the current inline design, the match-marker layer, 
 - The message uses `overflow: hidden; text-overflow: ellipsis; white-space: nowrap`.
 - In compact/mobile the row wraps; the message can fall to a second line.
 
-### 3.3 Grid
+### 3.4 Grid
 
 ```
 grid-template-columns: 52px minmax(0, 1fr) 252px;
@@ -193,6 +202,8 @@ Labels (Chinese / English):
 | Find lands | N matches | `i / N` | enabled | Found match i of N / wrapped |
 | Replace once/all | recomputed | — / new N | enabled | Replaced N… undo available |
 | Selection scope empty | — | — | disabled until file scope | No selection; using current file |
+| Selection boundary (down) | N | `N / N` | enabled | Reached the end of the selection |
+| Selection boundary (up) | N | `1 / N` | enabled | Reached the start of the selection |
 | Document changed | recomputed | — / new N | per result | Target changed; scope reset |
 | No editor | — | — | disabled | No active editor (modal fallback) |
 | Too many for action | `10000+` | `— / 10000+` | find/replace once enabled; replace-all shows error | Results limited to 100000; narrow the pattern |
@@ -202,7 +213,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 
 ## 7. Match highlighting
 
-- **All matches** in the current file or captured selection use `.rr-match-highlight` with `--text-highlight-bg` (fallback `--text-selection`). Visible at all times, including while the find field has focus.
+- **All matches** in the active search region (current file or captured selection, further bounded when wrap is off) use `.rr-match-highlight` with `--text-highlight-bg` (fallback `--text-selection`). Visible at all times, including while the find field has focus.
 - **Active match** adds `.rr-match-highlight-active`, using `--text-selection` and an accent outline. The outline means the distinction is not color-only.
 - **Zero-width matches** use a 6px translucent-gray filled circular dot (`.rr-zero-width`) for inactive matches and a filled accent dot with a `--background-primary` halo (`.rr-zero-width-active`) for the active match. Multiple zero-width matches at one offset are collapsed to a single dot, with the active state winning. Dots are rendered just above the insertion point by a zero-layout-width pseudo-element, so they neither shift text nor resemble a blockquote border; `pointer-events: none` keeps the caret usable.
 - **Newline matches** (`\n`, `。\n`, dotAll spans) use a small `↵` pill (`.rr-line-break`, active `.rr-line-break-active`) at each covered line end; it is absolutely positioned and adds no line width. A newline-only match has no text mark, but its marker is visible; a mixed match shows the character mark plus the marker.
@@ -219,7 +230,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - History buttons open a native `Menu` with recent values and Clear; Enter/Space accessible.
 - Escape or header ✕ closes, clears highlights, and focuses the editor.
 - Find selects the match and dispatches all-match + active decorations; the highlight remains visible while the find input keeps focus.
-- The scope selection-refresh button captures the current editor selection, switches scope to Selection, refreshes the range, and shows “Selection updated”. With no selection it resets to Current file and reports the no-selection message.
+- The scope selection-refresh button captures the current editor selection, switches scope to Selection, refreshes the range, and shows “Selection updated”. With no selection it resets to Current file and reports the no-selection message. With wrap off, the refreshed selection is scanned in full from its top (down) or bottom (up).
 - History buttons use the `history` icon with the existing ARIA labels/tooltips.
 - Toggle labels and switches are both clickable; native toggle Space toggles.
 - Re-running the command in the same window focuses the existing panel; opening a panel in another window leaves this one open.
@@ -248,7 +259,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - Compact class updates are coalesced with `requestAnimationFrame` and skipped when the width is unchanged, preventing ResizeObserver loops during viewport/popout resizes.
 - Only Obsidian CSS variables; no `.theme-dark` branches, no `!important`, no `:has`.
 - Multi-window: command targets `editor` identity; panels are closed only within the same `ownerDocument`; one panel per window.
-- Chinese/light and dark verified for 0.3.3; Catppuccin and Minimal tested in light mode; English strings use the same layout and were verified in 0.2.6.
+- Chinese/light and dark verified for 0.3.4; Catppuccin and Minimal tested in light mode; English strings use the same layout and were verified in 0.2.6.
 - Mobile modal verified in emulation; real devices not re-tested.
 
 ## 11. Differences from the native find UI
@@ -268,7 +279,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 
 - Very narrow windows require internal scrolling at the 70vh cap; below 260px the four actions stack one per row and the status row may sit below the fold.
 - The mobile modal has no custom all-match decorations; it relies on native selection.
-- No full screen-reader or third-party-theme audit yet.
+- No full screen-reader session yet; Catppuccin and Minimal were audited, and other third-party themes are not covered.
 - Highlight ranges/zero-width dots/line-break markers are capped; extremely large result sets show `10000+` and only the first 5,000 highlighted ranges.
 - YAML frontmatter/property widgets may not display raw-document decorations; not independently verified.
 - Newline markers are shown at line ends; a line break still has no text background of its own.

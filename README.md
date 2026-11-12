@@ -17,7 +17,7 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 - **Mode-aware search options**: native Obsidian toggle switches for case sensitive, whole word, wrap around, **Match newlines**, and **Replace escapes**. Exact mode shows 4; wildcard adds Match newlines (5); regex adds Match newlines, Multiline anchors, and **Unicode (u)** (7). Match newlines uses the `s` flag: in wildcard mode `*`/`?` can cross lines; in regex mode `.` can cross lines. Multiline anchors (`m`) are regex-only. Toggle options use generous spacing (28px desktop, 16px compact/mobile) and wrap naturally; the panel height follows the rows.
 - **Inline desktop panel**: embedded at the bottom of the note display area, separated by a single high-contrast 1px line, with a title and close button. It takes layout space instead of covering the note, so the editor stays visible and interactive.
 - **Multi-window**: each Obsidian window has its own panel; the command targets the editor of the window it is invoked in and closing one window’s panel does not close the others.
-- **All-match highlighting**: every match in the current file or selection is highlighted; the current match has a stronger outline, so the result set is visible while you type or step through it.
+- **All-match highlighting**: every match in the active search region is highlighted; the current match has a stronger outline, so the result set is visible while you type or step through it.
 - **Current position**: a persistent `3 / 164` indicator follows Find, selection changes, replacements, and panel reopen.
 - **Zero-width matches**: `^`, `\b`, and lookahead matches get a small translucent gray dot above the caret position; the active match gets a filled accent dot with a halo. The dots add no layout width.
 - **Newline matches**: matches containing a line break (`\n`, `。\n`, or dotAll matches crossing lines) show a small `↵` pill at the affected line end, so an otherwise invisible newline is visible and the active break is highlighted.
@@ -28,7 +28,8 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 - **Compact actions**: the four action buttons use a desktop size close to Obsidian settings controls, with hover and pressed (accent) feedback.
 - **Mobile / fallback**: the same controls in a modal dialog when Obsidian reports mobile mode.
 - **Scope and direction**: current file or captured selection; **Use current selection** refreshes the captured range without reopening the panel; down or up.
-- **Match count and status**: live count, invalid-regex errors, wrap/boundary feedback, replacement results.
+- **Wrap-off bounds**: Current file searches from the cursor to the document edge; Selection always searches the whole captured selection from its top (down) or bottom (up), independent of the cursor.
+- **Match count and status**: live count, invalid-regex errors, wrap/boundary feedback with separate document and selection messages, replacement results.
 - **History**: last 20 search and replacement terms, with a clear action.
 - **Undo-safe**: every replacement is a single `editor.transaction`; one undo restores it.
 - **Unicode-aware whole word**: works for Latin and CJK text, without regex lookbehind.
@@ -36,7 +37,7 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 
 ## Status
 
-Current version: **0.3.3**, released on 2026-11-11 from tag `0.3.3`. The **0.2.6** baseline is listed in Obsidian's community directory; the 0.3.3 community-directory update is the remaining distribution step. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md) · Changes: [CHANGELOG.md](CHANGELOG.md).
+Current version: **0.3.4**, released on 2026-11-12 from tag `0.3.4`. The **0.2.6** baseline is listed in Obsidian's community directory; the 0.3.4 community-directory update is the remaining distribution step. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md) · Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
@@ -152,7 +153,7 @@ All data is stored in the plugin's `data.json` under `plugin.settings`. Panel-dr
 - Word-level regex alternation has the boundary caveat described above.
 - The inline panel sits at the bottom of the editor content column; in a narrow split pane it switches to a compact stacked layout. Below 260px panel width the four action buttons stack one per row. Very narrow windows cap it at 70vh and scroll internally, so the status row can be below the fold.
 - On mobile the panel is presented as a dialog rather than embedded; the modal does not draw custom highlights, but the position indicator and native selection work.
-- Real iOS/Android devices and Windows/Linux were not re-tested for 0.3.3; mobile emulation was used.
+- Real iOS/Android devices and Windows/Linux were not re-tested for 0.3.4; mobile emulation was used.
 - Third-party themes tested: Catppuccin and Minimal. Other themes may define unusual highlight/selection variables.
 - Accessibility was audited through the Chromium accessibility tree; a full screen-reader session on macOS/Windows is still outstanding.
 
