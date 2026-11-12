@@ -65,7 +65,7 @@ export const zh: Strings = {
 	tooltipMultiline: "^ 和 $ 匹配每行首尾（m 标志）",
 	tooltipUnicode: "启用 u 标志，支持 Unicode 码点和 \\p{...} 转义（仅正则模式）",
 	tooltipWrap:
-		"到达边界后从另一端继续；关闭后只处理光标到当前方向边界的内容",
+		"到达边界后从另一端继续；关闭后：当前文件从光标到文档边界，选中内容处理整个选区",
 	tooltipProcessEscapes: "解析替换文本中的 \\n、\\r、\\t 和 \\\\。",
 	tooltipFind: "查找下一个（Enter）",
 	tooltipReplaceFind: "替换当前匹配并查找下一个",

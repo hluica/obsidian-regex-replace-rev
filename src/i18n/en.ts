@@ -71,7 +71,7 @@ export const en: Strings = {
 	tooltipUnicode:
 		"Use the u flag for Unicode code points and \\p{...} escapes (regex only)",
 	tooltipWrap:
-		"Continue from the other end at a boundary; when off, process only from the cursor to the boundary in the current direction",
+		"Continue from the other end at a boundary; when off, Current file searches from the cursor to the document edge, while Selection processes the whole selection",
 	tooltipProcessEscapes:
 		"Interpret \\n, \\r, \\t and \\\\ in the replacement text.",
 	tooltipFind: "Find the next match (Enter)",
