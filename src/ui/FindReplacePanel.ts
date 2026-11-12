@@ -1007,7 +1007,11 @@ export class FindReplacePanel {
 			!this.suppressRegionUpdate
 		) {
 			this.captureRegionAnchor(editor);
-			if (this.matches.length > 0) {
+			// Refresh even when the previous region had zero matches: moving
+			// the cursor back into a match must repopulate the count and
+			// highlights. The old `matches.length > 0` guard left an empty
+			// region stuck until the query changed.
+			if (this.findText.length > 0) {
 				this.scheduleRefresh();
 			}
 			return;
