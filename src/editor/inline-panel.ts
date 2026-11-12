@@ -18,6 +18,20 @@ export const setInlinePanelOpen = StateEffect.define<boolean>();
 export const setInlineMatchHighlights =
 	StateEffect.define<PanelHighlight | null>();
 
+/**
+ * Obsidian installs createDiv/createSpan on each Window, but the public
+ * typings only declare the global and HTMLElement forms. Use the document's
+ * own window so nodes in popout editors are created in the right document.
+ */
+interface DomHelperWindow extends Window {
+	createDiv(): HTMLDivElement;
+	createSpan(): HTMLSpanElement;
+}
+
+function helperWindow(doc: Document): DomHelperWindow {
+	return doc.win as DomHelperWindow;
+}
+
 const inactiveMark = Decoration.mark({ class: "rr-match-highlight" });
 const activeMark = Decoration.mark({
 	class: "rr-match-highlight rr-match-highlight-active",
@@ -36,7 +50,7 @@ class ZeroWidthMarker extends WidgetType {
 	}
 
 	toDOM(view: EditorView): HTMLElement {
-		const marker = view.dom.ownerDocument.createElement("span");
+		const marker = helperWindow(view.dom.ownerDocument).createSpan();
 		marker.className = this.active
 			? "rr-zero-width rr-zero-width-active"
 			: "rr-zero-width";
@@ -58,7 +72,7 @@ class LineBreakMarker extends WidgetType {
 	}
 
 	toDOM(view: EditorView): HTMLElement {
-		const marker = view.dom.ownerDocument.createElement("span");
+		const marker = helperWindow(view.dom.ownerDocument).createSpan();
 		marker.className = this.active
 			? "rr-line-break rr-line-break-active"
 			: "rr-line-break";
@@ -203,8 +217,7 @@ class InlineFindReplacePanel implements Panel {
 
 	constructor(view: EditorView, plugin: PanelPlugin) {
 		this.view = view;
-		const doc = view.dom.ownerDocument;
-		this.dom = doc.createElement("div");
+		this.dom = helperWindow(view.dom.ownerDocument).createDiv();
 		this.dom.className = "rr-inline-panel";
 		const frame = this.dom.createDiv({ cls: "rr-inline-frame" });
 		const container = frame.createDiv({ cls: "rr-inline-container" });
