@@ -1,10 +1,10 @@
-# Community Readiness Audit — v0.3.3
+# Community Readiness Audit — v0.3.4
 
 - **Plugin:** Refined Regex Replace and More (`regex-replace-rev`)
-- **Version:** 0.3.3 (released 2026-11-11; 0.3.0/0.3.1/0.3.2 were internal)
-- **Audit date:** 2026-11-11
+- **Version:** 0.3.4 (released 2026-11-12; 0.3.0/0.3.1/0.3.2 were internal)
+- **Audit date:** 2026-11-12
 - **Repository:** `git@github.com:hluica/obsidian-regex-replace-rev.git`
-- **Overall:** 0.3.3 is released from tag `0.3.3`; 0.2.6 is listed in the Obsidian community directory and the 0.3.3 directory update is pending.
+- **Overall:** 0.3.4 is released from tag `0.3.4`; 0.2.6 is listed in the Obsidian community directory and the 0.3.4 directory update is pending.
 
 Official references used:
 
@@ -17,10 +17,10 @@ Official references used:
 
 | Area | Status | Notes |
 |---|---|---|
-| Source code | **Pass with documented limitations** | TS strict, ESLint clean, 61 tests, no disallowed APIs found |
+| Source code | **Pass with documented limitations** | TS strict, ESLint clean, 78 tests, no disallowed APIs found |
 | Compiled artifacts | **Pass locally; release packaging pending** | `main.js`, `styles.css`, `manifest.json`, `versions.json` present; `main.js` intentionally gitignored and must be a release asset |
 | Auxiliary docs | **Pass** | README EN/ZH, LICENSE, CHANGELOG (0.2.6 baseline), current screenshots, PLAN/UI-SPEC/IMPLEMENTATION |
-| Community listing | **0.2.6 listed; 0.3.3 update pending** | 0.3.3 is released; update the directory entry |
+| Community listing | **0.2.6 listed; 0.3.4 update pending** | 0.3.4 is released; update the directory entry |
 
 ## 2. Source code
 
@@ -30,11 +30,11 @@ Official references used:
 |---|---|---|
 | `id` is lowercase/hyphenated and matches folder | PASS | `regex-replace-rev` |
 | `name`/`description` do not include “Obsidian” | PASS | manifest |
-| `version` matches `versions.json` and package | PASS | `0.3.3` |
+| `version` matches `versions.json` and package | PASS | `0.3.4` |
 | `minAppVersion` matches APIs used | PASS | `1.13.0` (declarative settings, `ConfirmationModal`) |
 | `isDesktopOnly` accurate | PASS | `false`; mobile modal fallback exists |
 | `author` present | PASS | `hanluica` |
-| `versions.json` has current entry | PASS | `0.3.3: 1.13.0` |
+| `versions.json` has current entry | PASS | `0.3.4: 1.13.0` |
 
 ### 2.2 Developer-policy checks
 
@@ -43,28 +43,28 @@ Official references used:
 | No network requests/telemetry/ads | PASS | no `fetch`, `XMLHttpRequest`, telemetry, ads |
 | No Node/Electron APIs in plugin | PASS | source imports only `obsidian` + CM6; bundle externals unchanged |
 | No remote code/eval/obfuscation | PASS | no `eval`, `new Function`, remote loading |
-| No `innerHTML`/dynamic `<style>` | PASS | grep clean; widget DOM uses `createElement` on the owner document |
+| No `innerHTML`/dynamic `<style>` | PASS | grep clean; widgets and panel use the owning window’s `createDiv`/`createSpan` helpers |
 | No `!important`/`:has()` | PASS | CSS scan clean |
 | No regex lookbehind | PASS | no `(?<`; docs avoid it |
 | No global `app` usage | PASS | plugin uses `this.app`; no `window.app`/`globalThis.app` |
-| No direct global `document` for panel UI | PASS | panel DOM created on owning element/document; menus use `button.ownerDocument` |
+| No direct global `document` for panel UI | PASS | panel DOM created on the owning window; menus use `button.ownerDocument`; `prefer-create-el` warning fixed |
 | No default hotkeys/ribbon | PASS | no `addRibbonIcon`, no default hotkey |
 | Uses public Obsidian/CM6 APIs | PASS | `registerEditorExtension`, `editorInfoField`, `MarkdownView`, `ToggleComponent`, `Menu`, `ConfirmationModal`, CM6 `keymap`/`Decoration` |
 | Lifecycle cleanup | PASS | editor extension registered; ResizeObserver disconnected; timers cleared; modal/menu closed; no leaf detachment |
 | No view/editor references in plugin singleton | PASS | panel is bound to its editor view; no `MarkdownView` references retained |
 | Accessibility baseline | PARTIAL | labelled region/heading, named controls, grouped options, history menu state, live status, focus-visible, 44px targets; Chromium AX tree audited; full VoiceOver/Narrator outstanding |
 | Mobile support | PASS (emulation) | mobile modal; real devices not tested |
-| Multi-window | PASS | two Obsidian windows tested in 0.2.6; 0.3.3 changes are per-editor |
+| Multi-window | PASS | two Obsidian windows tested in 0.2.6; 0.3.4 DOM helpers and per-editor panels preserve popout document ownership |
 
 The only `window.*` use is `window.setTimeout`/`clearTimeout` for the 180ms refresh debounce and highlight coalescing; timers are cleared on destroy.
 
 ### 2.3 Quality checks
 
 ```text
-npm test          # 6 files, 61 tests passed
+npm test          # 7 files, 78 tests passed
 npx tsc -noEmit   # passed
 npx eslint .      # 0 errors / 0 warnings
-npm run build     # passed, main.js ≈48 KB
+npm run build     # passed, main.js ≈53 KB
 dev:errors        # no errors
 ```
 
@@ -72,22 +72,22 @@ dev:errors        # no errors
 
 | Artifact | Status | Details |
 |---|---|---|
-| `main.js` | Present, local only | ≈48 KB, production bundle, no source map, external `obsidian`/CM6 modules |
+| `main.js` | Present, local only | ≈53 KB, production bundle, no source map, external `obsidian`/CM6 modules |
 | `styles.css` | Present | static CSS; highlight/zero-width/line-break/status rules added |
-| `manifest.json` | Present | version 0.3.3 |
+| `manifest.json` | Present | version 0.3.4 |
 | `versions.json` | Present | current entry |
 | `main.js` tracked by git? | No | intentionally gitignored; attach to GitHub release |
 | `node_modules` in release? | No | ignored; not shipped |
 
-**Release packaging remaining:** attach the rebuilt `main.js`, `manifest.json`, and `styles.css` to the GitHub release for tag `0.3.3` if not already uploaded, and update the community directory entry. Verify from a clean vault.
+**Release packaging remaining:** attach the rebuilt `main.js`, `manifest.json`, and `styles.css` to the GitHub release for tag `0.3.4` if not already uploaded, and update the community directory entry. Verify from a clean vault.
 
 ## 4. Auxiliary documentation
 
 | Document | Status | Notes |
 |---|---|---|
-| `README.md` / `README.zh-CN.md` | Current | 0.3.3 features, installation, usage, syntax, accessibility, limitations |
+| `README.md` / `README.zh-CN.md` | Current | 0.3.4 features, installation, usage, syntax, accessibility, limitations |
 | `LICENSE` | Current | MIT, non-template |
-| `CHANGELOG.md` | Added | starts at 0.2.6 baseline; 0.3.0–0.3.3 entries |
+| `CHANGELOG.md` | Added | starts at 0.2.6 baseline; 0.3.0–0.3.4 entries |
 | `docs/screenshots/panel-inline.png` | Current | Chinese/light; all-match highlight + position |
 | `docs/screenshots/panel-zero-width.png` | Current | translucent gray / accent zero-width dots |
 | `docs/screenshots/panel-newline.png` | Added | newline-only `\n` markers |
@@ -96,16 +96,16 @@ dev:errors        # no errors
 | `docs/screenshots/panel-dark.png` | Added | dark theme all-match/active contrast |
 | `docs/screenshots/theme-catppuccin.png` | Added | Catppuccin active/inactive contrast |
 | `docs/screenshots/theme-minimal.png` | Added | Minimal active/inactive contrast |
-| `PLAN.md` | Current | 0.3.3 plan/status |
-| `UI-SPEC.md` | Current | 0.3.3 Unicode/accessibility/theme spec |
-| `IMPLEMENTATION.md` | Current | 0.3.3 implementation/verification record |
+| `PLAN.md` | Current | 0.3.4 plan/status |
+| `UI-SPEC.md` | Current | 0.3.4 wrap-off bounds and 0.3.3 UI layer |
+| `IMPLEMENTATION.md` | Current | 0.3.4 implementation/verification record |
 | `COMMUNITY-READINESS.md` | Current | this audit |
 | GitHub release workflow | Missing | optional; release assets can be manual |
 
 ## 5. Submission / release next steps
 
-1. Attach the rebuilt release assets (`main.js`, `manifest.json`, `styles.css`) to tag `0.3.3` if the hosting release still needs them.
-2. Update the existing community-directory entry to 0.3.3.
+1. Attach the rebuilt release assets (`main.js`, `manifest.json`, `styles.css`) to tag `0.3.4` if the hosting release still needs them.
+2. Update the existing community-directory entry to 0.3.4.
 3. Verify from a clean vault.
 4. Run a full VoiceOver/Narrator session and real iOS/Android/Windows/Linux checks after release.
 5. Optional: add a release workflow/attestation; add a `npm run deploy` script for the dev vault.
@@ -126,3 +126,4 @@ dev:errors        # no errors
 - Popout window: independent panel, F3/Escape verified; normal `workspace:close-window` leaves the main panel open with no errors.
 - Dark theme: zero dots and `↵` markers use theme variables; active states remain distinct.
 - Mobile modal: 44px controls, position `2 / 164`, no errors.
+- 0.3.4: current-file wrap-off regions respond to cursor direction; selection scope stays at the full captured selection from its top/bottom; zero-match regions recover when the cursor moves back into a match; selection boundary messages are distinct; Replace and find continues past the replacement; main and popout panel/marker nodes have the correct `ownerDocument`; `prefer-create-el` warning resolved.

@@ -47,6 +47,8 @@ export const en: Strings = {
 	wrappedEnd: "Wrapped to the end",
 	reachedEnd: "Reached the end of the document",
 	reachedStart: "Reached the start of the document",
+	selectionReachedEnd: "Reached the end of the selection",
+	selectionReachedStart: "Reached the start of the selection",
 	replacedOne: "Replaced 1 occurrence; undo is available",
 	replacedMany: (count) =>
 		`Replaced ${count} occurrences; undo is available`,
@@ -70,7 +72,8 @@ export const en: Strings = {
 	tooltipMultiline: "^ and $ match line boundaries (m flag)",
 	tooltipUnicode:
 		"Use the u flag for Unicode code points and \\p{...} escapes (regex only)",
-	tooltipWrap: "Continue from the other end of the document",
+	tooltipWrap:
+		"Continue from the other end at a boundary; when off, Current file searches from the cursor to the document edge, while Selection processes the whole selection",
 	tooltipProcessEscapes:
 		"Interpret \\n, \\r, \\t and \\\\ in the replacement text.",
 	tooltipFind: "Find the next match (Enter)",

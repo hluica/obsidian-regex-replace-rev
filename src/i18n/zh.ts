@@ -45,6 +45,8 @@ export const zh: Strings = {
 	wrappedEnd: "已循环到末尾",
 	reachedEnd: "已到达文档末尾",
 	reachedStart: "已到达文档开头",
+	selectionReachedEnd: "已到达选中区域末尾",
+	selectionReachedStart: "已到达选中区域开头",
 	replacedOne: "已替换 1 处，可撤销",
 	replacedMany: (count) => `已替换 ${count} 处，可撤销`,
 	tooManyMatches: (limit) => `结果超过 ${limit} 条，请缩小查找范围`,
@@ -64,7 +66,8 @@ export const zh: Strings = {
 		"通配符模式下让 * 和 ? 匹配换行符；正则模式下让 . 匹配换行符（s 标志）。",
 	tooltipMultiline: "^ 和 $ 匹配每行首尾（m 标志）",
 	tooltipUnicode: "启用 u 标志，支持 Unicode 码点和 \\p{...} 转义（仅正则模式）",
-	tooltipWrap: "到达文档另一端后继续查找",
+	tooltipWrap:
+		"到达边界后从另一端继续；关闭后：当前文件从光标到文档边界，选中内容处理整个选区",
 	tooltipProcessEscapes: "解析替换文本中的 \\n、\\r、\\t 和 \\\\。",
 	tooltipFind: "查找下一个（Enter）",
 	tooltipReplaceFind: "替换当前匹配并查找下一个",

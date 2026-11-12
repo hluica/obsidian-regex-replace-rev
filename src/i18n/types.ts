@@ -42,6 +42,8 @@ export interface Strings {
 	wrappedEnd: string;
 	reachedEnd: string;
 	reachedStart: string;
+	selectionReachedEnd: string;
+	selectionReachedStart: string;
 	replacedOne: string;
 	replacedMany: (count: number) => string;
 	tooManyMatches: (limit: number) => string;

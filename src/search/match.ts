@@ -2,6 +2,7 @@ import type {
 	CompiledPattern,
 	FindMatchResult,
 	MatchRange,
+	ScanRange,
 	ScanResult,
 	SearchOptions,
 } from "./types";
@@ -48,15 +49,27 @@ function toMatch(exec: RegExpExecArray): MatchRange {
 /**
  * Scan all matches. `limit` is a safety valve for the UI count; use
  * Number.POSITIVE_INFINITY for replacements.
+ *
+ * `range.from`/`range.to` bound the scan without slicing the text, so regex
+ * anchors, word boundaries, and lookarounds still see their real context.
+ * `range.to` is exclusive; the default includes end-of-input zero-width
+ * matches.
  */
 export function scanMatches(
 	text: string,
 	compiled: CompiledPattern,
 	options: SearchOptions,
 	limit = Number.POSITIVE_INFINITY,
+	range: ScanRange = {},
 ): ScanResult {
+	const from = Math.max(0, Math.min(range.from ?? 0, text.length));
+	const to = range.to ?? text.length + 1;
+	if (to <= from) {
+		return { matches: [], truncated: false };
+	}
+
 	const regex = compiled.regex;
-	regex.lastIndex = 0;
+	regex.lastIndex = from;
 	const matches: MatchRange[] = [];
 	let truncated = false;
 
@@ -67,7 +80,13 @@ export function scanMatches(
 		}
 
 		const start = exec.index;
+		if (start >= to) {
+			break;
+		}
 		const end = start + (exec[0] ?? "").length;
+		if (end > to) {
+			break;
+		}
 		if (!options.wholeWord || isWholeWord(text, start, end)) {
 			matches.push(toMatch(exec));
 			if (matches.length >= limit) {
@@ -126,17 +145,4 @@ export function findMatchFrom<T extends MatchRange>(
 	return last === undefined
 		? null
 		: { match: last, index: lastIndex, wrapped: true };
-}
-
-export function findMatchAtSelection<T extends MatchRange>(
-	matches: T[],
-	start: number,
-	end: number,
-): T | null {
-	for (const match of matches) {
-		if (match.start === start && match.end === end) {
-			return match;
-		}
-	}
-	return null;
 }

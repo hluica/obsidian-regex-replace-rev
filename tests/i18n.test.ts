@@ -46,3 +46,16 @@ describe("stringsFor", () => {
 		}
 	});
 });
+
+describe("boundary messages", () => {
+	it("names the selection boundary separately from the document boundary", () => {
+		expect(stringsFor("zh").selectionReachedEnd).toBe("已到达选中区域末尾");
+		expect(stringsFor("zh").selectionReachedStart).toBe("已到达选中区域开头");
+		expect(stringsFor("en").selectionReachedEnd).toBe(
+			"Reached the end of the selection",
+		);
+		expect(stringsFor("en").selectionReachedStart).toBe(
+			"Reached the start of the selection",
+		);
+	});
+});

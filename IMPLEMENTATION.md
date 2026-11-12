@@ -1,8 +1,17 @@
-# Implementation Record — v0.3.3 (Unicode, accessibility, themes)
+# Implementation Record — v0.3.4 (wrap-off bounds, selection, DOM helpers)
 
-Status: **released from tag `0.3.3` on 2026-11-11**. E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI). The 0.2.6 baseline is listed in the community directory; the 0.3.3 community-directory update is the remaining distribution step. 0.3.0/0.3.1/0.3.2 were internal only. See [CHANGELOG.md](CHANGELOG.md) and [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
+Status: **released from tag `0.3.4` on 2026-11-12**. E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI). The 0.2.6 baseline is listed in the community directory; the 0.3.4 community-directory update is the remaining distribution step. 0.3.0/0.3.1/0.3.2 were internal only. See [CHANGELOG.md](CHANGELOG.md) and [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
 
-v0.3.3 keeps the 0.3.2 marker/selection layer and adds a regex-only Unicode (u) option, accessibility landmarks/grouping, a Chromium AX-tree audit, and third-party theme adaptation for Catppuccin and Minimal.
+v0.3.4 keeps the 0.3.3 Unicode/accessibility/theme layer and changes wrap-off behavior to a directional, scope-aware region. It also fixes zero-match region refresh, distinguishes document and selection boundary messages, continues Replace and find from the replacement, and replaces `document.createElement` with the owning window’s DOM helpers.
+
+## 0.3.4 implementation notes
+
+- `src/search/region.ts` models a scoped text region plus absolute scan bounds. `scanMatches()` accepts `from`/`to` bounds instead of scanning a sliced string, so `^`, `\b`, and lookbehind keep document context.
+- Current file + wrap off: scan `[cursor/selection edge, document edge]` in the current direction. Selection + wrap off: scan the whole captured selection; forward starts at its top, backward at its bottom, ignoring the cursor.
+- The same region feeds count, highlights, Find, Replace, Replace and find, and Replace all. Replace and find passes the replacement edge as the next scan hint so it does not restart at the selection boundary.
+- `handleSelectionChange()` now refreshes whenever a query is present, even if the previous region had zero matches, so moving back into a match repopulates count/highlights.
+- Boundary messages use `selectionReachedEnd`/`selectionReachedStart` for selection scope and the existing document strings otherwise.
+- Inline panel and widget elements use `doc.win.createDiv()`/`createSpan()` through a small typed helper (`DomHelperWindow`), preserving the correct document in popout windows and satisfying `prefer-create-el`.
 
 ## Screenshots (real Obsidian window, Chinese/light and dark)
 
@@ -156,15 +165,15 @@ Mobile / fallback dialog:
 ### Static
 
 ```bash
-npm test          # 6 files, 61 tests passed
+npm test          # 7 files, 78 tests passed
 npx tsc -noEmit   # passed
 npx eslint .      # 0 errors, 0 warnings
-npm run build     # main.js produced (v0.3.3, ~48 KB)
+npm run build     # main.js produced (v0.3.4, ~53 KB)
 ```
 
 ### Obsidian end-to-end (dev vault)
 
-- Plugin `0.3.3` loads and reloads with no `dev:errors`; manifest version 0.3.3.
+- Plugin `0.3.4` loads and reloads with no `dev:errors`; manifest version 0.3.4.
 - Desktop panel opens in `.cm-panels-bottom`; status shows `164 个匹配  — / 164` before Find.
 - All-match highlighting: 164 matches, 17 visible `.rr-match-highlight` nodes in the viewport; Find adds one `.rr-match-highlight-active` and shows `3 / 164` plus “已定位第 3 / 164 个匹配”.
 - Selecting a body match with the editor API updates the position to `11 / 164` and adds the active class. Moving the caret off matches returns `— / 164` and removes the active class.
@@ -196,13 +205,26 @@ npm run build     # main.js produced (v0.3.3, ~48 KB)
 - Mobile emulation: `.modal.rr-modal` opens single-column, 44px controls, 7 regex options; Find updates `2 / 164`; scope and history icons render at 20px after the tablet-padding fix; no errors.
 - Scratch notes were deleted after testing; no content changes were left in the dev vault.
 
+### 0.3.4 end-to-end additions
+
+- Current file + wrap off, forward: cursor at the second paragraph showed 3 matches; moving below the last match showed no matches; moving back to the second paragraph restored 3 matches and 3 highlights.
+- Current file + wrap off, backward: cursor at document end showed 4 matches; moving above the first match showed no matches; moving back to the fourth paragraph restored 4 matches and 4 highlights.
+- Selection + wrap off: cursor in the middle still showed all 3 selection matches; Find down jumped to the first match at the selection top, then advanced normally. Backward jumped to the last match at the selection bottom.
+- Cursor outside the captured selection did not change the selection count; Find still started at the selection boundary.
+- Replace once with the cursor inside the selection but not on a match replaced the top match. Replace all changed only the captured selection.
+- Replace and find after replacing a middle match continued to the next match instead of restarting at the selection top (forward and backward).
+- Boundary messages: “已到达选中区域末尾/开头” for selection, and the existing document messages for Current file.
+- Regex `^` started mid-line with wrap off reported 2 line starts, not a false match at the cursor; lookbehind at the scan start still matched.
+- Inline panel and zero-width markers were verified in the main window and a popout window; both `ownerDocument` values were correct. The popout panel was closed, then the plugin reloaded to clear browser resize warnings.
+- 78 unit tests across 7 files; TypeScript, ESLint, and production build pass.
+
 ### Known limitations
 
 - Highlight rendering is capped at 5,000 ranges / 1,000 zero-width dots / 1,000 line-break markers; the count and position still report the full scanned total.
 - Replace-all is blocked above 100,000 matches rather than offering a chunked or background replacement.
 - The mobile modal has no custom decorations; it relies on the native selection, count, and position.
 - CM6 decorations in YAML frontmatter/properties are not independently verified; the editor's property widgets may not show marks that exist in the raw document.
-- Real iOS/Android and Windows/Linux are not re-tested for 0.3.3; third-party themes tested are Catppuccin and Minimal.
+- Real iOS/Android and Windows/Linux are not re-tested for 0.3.4; third-party themes tested are Catppuccin and Minimal.
 - Accessibility used the Chromium AX tree; a full VoiceOver/Narrator session is still outstanding.
 - At 124px panel width the compact panel is taller than 70vh and the status row requires internal scrolling; this is the documented narrow-window tradeoff.
 - Programmatic popout teardown with `leaf.detach()` still emits browser ResizeObserver warnings in some runs; normal `workspace:close-window` was clean.
@@ -230,6 +252,6 @@ For another vault, copy the same three files into `<vault>/.obsidian/plugins/reg
 - `src/ui/host.ts` — shared host contracts
 - `src/settings.ts` — settings/state model, declarative settings tab
 - `src/i18n/` — en/zh strings
-- `src/search/` — pure engine; `src/search/limits.ts` guard rails
+- `src/search/` — pure engine; `src/search/region.ts` directional bounds; `src/search/limits.ts` guard rails
 - `styles.css` — inline separator, highlights, zero-width dots, line-break markers, compact/mobile styling
-- `tests/` — 61 unit tests across 6 files
+- `tests/` — 78 unit tests across 7 files
