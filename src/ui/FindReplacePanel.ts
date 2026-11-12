@@ -14,11 +14,16 @@ import { currentStrings, type Strings } from "../i18n";
 import { collectLineBreakPositions } from "../editor/highlights";
 import type { SearchUiState } from "../settings";
 import {
-	findMatchAtSelection,
 	findMatchFrom,
 	scanMatches,
 } from "../search/match";
 import { compilePattern } from "../search/pattern";
+import {
+	fullRegion,
+	limitToDirection,
+	type DirectionalRegion,
+	type TextRegion,
+} from "../search/region";
 import { expandReplacement, processEscapes } from "../search/replace";
 import type {
 	CompiledPattern,
@@ -86,6 +91,8 @@ export class FindReplacePanel {
 	private replaceText: string;
 	private documentKey: string;
 	private scopeRange: ScopeRange | null = null;
+	private regionAnchor: number | null = null;
+	private suppressRegionUpdate = false;
 	private matches: PanelMatch[] = [];
 	private lineBreaks: number[] = [];
 	private timer: number | null = null;
@@ -143,6 +150,7 @@ export class FindReplacePanel {
 				this.setMessage(this.strings.selectionEmpty, true);
 			}
 		}
+		this.captureRegionAnchor();
 		this.refresh();
 		if (this.host.variant === "inline") {
 			this.updateCompact();
@@ -399,7 +407,9 @@ export class FindReplacePanel {
 					...this.state,
 					direction: value as SearchDirection,
 				};
+				this.captureRegionAnchor();
 				this.clearMessage();
+				this.refresh();
 			},
 		);
 		grid.createSpan({ cls: "rr-spacer" });
@@ -552,6 +562,9 @@ export class FindReplacePanel {
 		setTooltip(optionEl, tooltip);
 		toggle.onChange((value) => {
 			this.state = { ...this.state, [key]: value };
+			if (key === "wrap") {
+				this.captureRegionAnchor();
+			}
 			this.activeIndex = null;
 			this.clearHighlight();
 			this.clearMessage();
@@ -683,13 +696,26 @@ export class FindReplacePanel {
 		if (scoped === null) {
 			return null;
 		}
+		const region = this.getSearchRegion(editor, scoped);
 
-		const scan = scanMatches(scoped.text, result.compiled, options, limit);
-		const matches: PanelMatch[] = scan.matches.map((match) => ({
-			...match,
-			absoluteStart: match.start + scoped.offsetBase,
-			absoluteEnd: match.end + scoped.offsetBase,
-		}));
+		const scan =
+			region.text.length === 0
+				? { matches: [], truncated: false }
+				: scanMatches(scoped.text, result.compiled, options, limit, {
+						from: region.scanFrom - scoped.offsetBase,
+						to: region.scanTo - scoped.offsetBase,
+					});
+		const matches: PanelMatch[] = scan.matches.map((match) => {
+			const absoluteStart = match.start + scoped.offsetBase;
+			const absoluteEnd = match.end + scoped.offsetBase;
+			return {
+				...match,
+				start: absoluteStart - region.offsetBase,
+				end: absoluteEnd - region.offsetBase,
+				absoluteStart,
+				absoluteEnd,
+			};
+		});
 
 		this.matches = matches;
 		this.lineBreaks = collectLineBreakPositions(matches);
@@ -697,8 +723,8 @@ export class FindReplacePanel {
 		return {
 			editor,
 			compiled: result.compiled,
-			searchText: scoped.text,
-			offsetBase: scoped.offsetBase,
+			searchText: region.text,
+			offsetBase: region.offsetBase,
 			matches,
 			truncated: scan.truncated,
 		};
@@ -722,6 +748,7 @@ export class FindReplacePanel {
 		}
 		this.documentKey = key;
 		this.scopeRange = null;
+		this.regionAnchor = null;
 		this.activeIndex = null;
 		if (this.state.scope === "selection") {
 			this.state = { ...this.state, scope: "file" };
@@ -772,6 +799,38 @@ export class FindReplacePanel {
 		}
 	}
 
+	/**
+	 * With wrap off, scanning is bounded to the one-way span from the
+	 * cursor/selection to the edge of the active scope. This keeps the live
+	 * count, highlights, navigation and Replace all inside that region.
+	 */
+	private getSearchRegion(
+		editor: Editor,
+		scoped: TextRegion,
+	): DirectionalRegion {
+		if (this.state.wrap) {
+			return fullRegion(scoped);
+		}
+		if (this.regionAnchor === null) {
+			this.captureRegionAnchor(editor);
+		}
+		return limitToDirection(
+			scoped,
+			this.regionAnchor ?? scoped.offsetBase,
+			this.state.direction,
+		);
+	}
+
+	private captureRegionAnchor(editor = this.host.getEditor()): void {
+		if (this.state.wrap || editor === null) {
+			this.regionAnchor = null;
+			return;
+		}
+		const info = this.getSelectionInfo(editor);
+		this.regionAnchor =
+			this.state.direction === "forward" ? info.from : info.to;
+	}
+
 	private useCurrentSelection(): void {
 		if (this.host.getEditor() === null) {
 			this.setMessage(this.strings.noEditor, true);
@@ -786,6 +845,7 @@ export class FindReplacePanel {
 		}
 		this.state = { ...this.state, scope: "selection" };
 		this.scopeSelect.setValue("selection");
+		this.captureRegionAnchor();
 		this.clearMessage();
 		this.setMessage(this.strings.selectionRefreshed);
 		this.refresh();
@@ -806,6 +866,7 @@ export class FindReplacePanel {
 			this.scopeRange = null;
 			this.clearMessage();
 		}
+		this.captureRegionAnchor();
 		this.refresh();
 	}
 
@@ -836,6 +897,7 @@ export class FindReplacePanel {
 
 	private resetScopeToFile(): void {
 		this.scopeRange = null;
+		this.regionAnchor = null;
 		this.state = { ...this.state, scope: "file" };
 		if (this.scopeSelect !== undefined) {
 			this.scopeSelect.setValue("file");
@@ -924,7 +986,17 @@ export class FindReplacePanel {
 
 	handleSelectionChange(): void {
 		const editor = this.host.getEditor();
-		if (editor === null || this.matches.length === 0) {
+		if (editor === null) {
+			return;
+		}
+		if (!this.state.wrap && !this.suppressRegionUpdate) {
+			this.captureRegionAnchor(editor);
+			if (this.matches.length > 0) {
+				this.scheduleRefresh();
+			}
+			return;
+		}
+		if (this.matches.length === 0) {
 			return;
 		}
 		const info = this.getSelectionInfo(editor);
@@ -1053,7 +1125,12 @@ export class FindReplacePanel {
 		return {
 			from,
 			to,
-			current: findMatchAtSelection(this.matches, from, to),
+			current:
+				this.matches.find(
+					(match) =>
+						match.absoluteStart === from &&
+						match.absoluteEnd === to,
+				) ?? null,
 		};
 	}
 
@@ -1169,7 +1246,12 @@ export class FindReplacePanel {
 		const from = editor.offsetToPos(match.absoluteStart);
 		const to = editor.offsetToPos(match.absoluteEnd);
 		this.activeIndex = index;
-		editor.setSelection(from, to);
+		this.suppressRegionUpdate = true;
+		try {
+			editor.setSelection(from, to);
+		} finally {
+			this.suppressRegionUpdate = false;
+		}
 		editor.scrollIntoView({ from, to }, true);
 		this.syncHighlights(index);
 	}
@@ -1236,10 +1318,19 @@ export class FindReplacePanel {
 				match.absoluteStart + replacement.length,
 			);
 			this.suppressEditorChangeUntil = Date.now() + 200;
-			context.editor.transaction({
-				changes: [{ from, to, text: replacement }],
-				selection: { from: caret, to: caret },
-			});
+			this.suppressRegionUpdate = true;
+			try {
+				context.editor.transaction({
+					changes: [{ from, to, text: replacement }],
+					selection: { from: caret, to: caret },
+				});
+			} finally {
+				this.suppressRegionUpdate = false;
+			}
+			this.updateRegionAfterReplace(
+				match.absoluteEnd,
+				replacement.length - (match.absoluteEnd - match.absoluteStart),
+			);
 			this.updateScopeAfterReplace(
 				match.absoluteStart,
 				match.absoluteEnd,
@@ -1334,10 +1425,16 @@ export class FindReplacePanel {
 
 			const caret = context.editor.offsetToPos(lastCaret);
 			this.suppressEditorChangeUntil = Date.now() + 200;
-			context.editor.transaction({
-				changes,
-				selection: { from: caret, to: caret },
-			});
+			this.suppressRegionUpdate = true;
+			try {
+				context.editor.transaction({
+					changes,
+					selection: { from: caret, to: caret },
+				});
+			} finally {
+				this.suppressRegionUpdate = false;
+			}
+			this.updateRegionAfterReplaceAll(delta);
 			this.updateScopeAfterReplaceAll(delta);
 			this.recordReplacement();
 			this.persist();
@@ -1375,6 +1472,32 @@ export class FindReplacePanel {
 			return;
 		}
 		this.scopeRange = { ...scope, end: nextEnd };
+	}
+
+	private updateRegionAfterReplace(end: number, delta: number): void {
+		const anchor = this.regionAnchor;
+		if (anchor === null || delta === 0) {
+			return;
+		}
+		const beforeAnchor =
+			this.state.direction === "forward"
+				? end < anchor
+				: end <= anchor;
+		if (beforeAnchor) {
+			this.regionAnchor = Math.max(0, anchor + delta);
+		}
+	}
+
+	private updateRegionAfterReplaceAll(delta: number): void {
+		const anchor = this.regionAnchor;
+		if (
+			anchor === null ||
+			delta === 0 ||
+			this.state.direction !== "backward"
+		) {
+			return;
+		}
+		this.regionAnchor = Math.max(0, anchor + delta);
 	}
 
 	private updateScopeAfterReplaceAll(delta: number): void {

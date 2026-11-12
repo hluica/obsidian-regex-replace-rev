@@ -38,6 +38,16 @@ export interface ScanResult {
 	truncated: boolean;
 }
 
+export interface ScanRange {
+	/** Inclusive offset where scanning starts. */
+	from?: number;
+	/**
+	 * Exclusive offset where scanning stops. Defaults to text.length + 1 so
+	 * end-of-input zero-width matches are still found.
+	 */
+	to?: number;
+}
+
 export interface FindMatchResult<T extends MatchRange = MatchRange> {
 	match: T;
 	index: number;

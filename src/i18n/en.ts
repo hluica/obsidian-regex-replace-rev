@@ -70,7 +70,8 @@ export const en: Strings = {
 	tooltipMultiline: "^ and $ match line boundaries (m flag)",
 	tooltipUnicode:
 		"Use the u flag for Unicode code points and \\p{...} escapes (regex only)",
-	tooltipWrap: "Continue from the other end of the document",
+	tooltipWrap:
+		"Continue from the other end at a boundary; when off, process only from the cursor to the boundary in the current direction",
 	tooltipProcessEscapes:
 		"Interpret \\n, \\r, \\t and \\\\ in the replacement text.",
 	tooltipFind: "Find the next match (Enter)",
