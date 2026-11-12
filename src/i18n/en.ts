@@ -47,6 +47,8 @@ export const en: Strings = {
 	wrappedEnd: "Wrapped to the end",
 	reachedEnd: "Reached the end of the document",
 	reachedStart: "Reached the start of the document",
+	selectionReachedEnd: "Reached the end of the selection",
+	selectionReachedStart: "Reached the start of the selection",
 	replacedOne: "Replaced 1 occurrence; undo is available",
 	replacedMany: (count) =>
 		`Replaced ${count} occurrences; undo is available`,

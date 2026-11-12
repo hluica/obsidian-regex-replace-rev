@@ -45,6 +45,8 @@ export const zh: Strings = {
 	wrappedEnd: "已循环到末尾",
 	reachedEnd: "已到达文档末尾",
 	reachedStart: "已到达文档开头",
+	selectionReachedEnd: "已到达选中区域末尾",
+	selectionReachedStart: "已到达选中区域开头",
 	replacedOne: "已替换 1 处，可撤销",
 	replacedMany: (count) => `已替换 ${count} 处，可撤销`,
 	tooManyMatches: (limit) => `结果超过 ${limit} 条，请缩小查找范围`,

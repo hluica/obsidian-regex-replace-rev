@@ -1163,6 +1163,18 @@ export class FindReplacePanel {
 			: context.offsetBase + context.searchText.length;
 	}
 
+	private reachedBoundaryMessage(direction: SearchDirection): string {
+		const selection = this.state.scope === "selection";
+		if (direction === "forward") {
+			return selection
+				? this.strings.selectionReachedEnd
+				: this.strings.reachedEnd;
+		}
+		return selection
+			? this.strings.selectionReachedStart
+			: this.strings.reachedStart;
+	}
+
 	private findTargetMatch(context: SearchContext): PanelMatch | null {
 		if (context.matches.length === 0) {
 			return null;
@@ -1246,11 +1258,7 @@ export class FindReplacePanel {
 			this.state.wrap,
 		);
 		if (result === null) {
-			this.setMessage(
-				direction === "forward"
-					? this.strings.reachedEnd
-					: this.strings.reachedStart,
-			);
+			this.setMessage(this.reachedBoundaryMessage(direction));
 			return;
 		}
 
@@ -1306,9 +1314,7 @@ export class FindReplacePanel {
 		const target = this.findTargetMatch(context);
 		if (target === null) {
 			this.setMessage(
-				this.state.direction === "forward"
-					? this.strings.reachedEnd
-					: this.strings.reachedStart,
+				this.reachedBoundaryMessage(this.state.direction),
 			);
 			return;
 		}
@@ -1337,9 +1343,7 @@ export class FindReplacePanel {
 		const target = this.findTargetMatch(context);
 		if (target === null) {
 			this.setMessage(
-				this.state.direction === "forward"
-					? this.strings.reachedEnd
-					: this.strings.reachedStart,
+				this.reachedBoundaryMessage(this.state.direction),
 			);
 			return;
 		}
