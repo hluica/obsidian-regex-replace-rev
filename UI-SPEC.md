@@ -1,13 +1,13 @@
-# UI Specification — v0.3.4
+# UI Specification — v0.3.5
 
-- **Status:** released from tag `0.3.4` on 2026-11-12; E2E-verified in Obsidian 1.15.0, macOS, Chinese/light and dark UI
+- **Status:** released from tag `0.3.5` on 2026-11-15; E2E-verified in Obsidian 1.15.1, macOS, Chinese/light and dark UI
 - **Implementation record:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **Plan/status:** [PLAN.md](PLAN.md)
 - **Community audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
-- **Screenshots:** [inline panel](docs/screenshots/panel-inline.png) · [dark theme](docs/screenshots/panel-dark.png) · [Catppuccin](docs/screenshots/theme-catppuccin.png) · [Minimal](docs/screenshots/theme-minimal.png) · [zero-width dots](docs/screenshots/panel-zero-width.png) · [newline markers](docs/screenshots/panel-newline.png) · [mixed `。\n`](docs/screenshots/panel-newline-combo.png) · [modal fallback](docs/screenshots/modal-fallback.png)
+- **Screenshots:** [inline panel](docs/screenshots/panel-inline.png) · [dark theme](docs/screenshots/panel-dark.png) · [Catppuccin](docs/screenshots/theme-catppuccin.png) · [Minimal](docs/screenshots/theme-minimal.png) · [zero-width dots](docs/screenshots/panel-zero-width.png) · [newline markers](docs/screenshots/panel-newline.png) · [mixed `。\n`](docs/screenshots/panel-newline-combo.png) · [modal fallback](docs/screenshots/modal-fallback.png) · [Live Preview reveal + clear button](docs/screenshots/live-preview-reveal.png)
 
-This specification describes the current inline design, the match-marker layer, the selection-refresh control, the 0.3.3 Unicode/accessibility layer, and the 0.3.4 wrap-off region behavior.
+This specification describes the current inline design, the match-marker layer, the selection-refresh control, the 0.3.3 Unicode/accessibility layer, the 0.3.4 wrap-off region behavior, and the 0.3.5 clear controls and Live Preview reveal.
 
 ## 1. Principles
 
@@ -269,7 +269,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - Compact class updates are coalesced with `requestAnimationFrame` and skipped when the width is unchanged, preventing ResizeObserver loops during viewport/popout resizes.
 - Only Obsidian CSS variables; no `.theme-dark` branches, no `!important`, no `:has`.
 - Multi-window: command targets `editor` identity; panels are closed only within the same `ownerDocument`; one panel per window.
-- Chinese/light and dark verified for 0.3.4; Catppuccin and Minimal tested in light mode; English strings use the same layout and were verified in 0.2.6.
+- Chinese/light and dark verified for 0.3.5 on the default theme; Catppuccin and Minimal were tested for 0.3.4; English strings use the same layout and were verified in 0.2.6.
 - Mobile modal verified in emulation; real devices not re-tested.
 
 ## 11. Differences from the native find UI

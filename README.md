@@ -10,6 +10,8 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 
 ![Modal fallback](docs/screenshots/modal-fallback.png)
 
+![Live Preview reveal: raw callout marker highlighted, with a clear button in the find field](docs/screenshots/live-preview-reveal.png)
+
 ## Features
 
 - **Three match modes**: exact text, wildcard (`*`, `?`), and JavaScript regular expressions.
@@ -39,7 +41,7 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 
 ## Status
 
-Current version: **0.3.4**, released on 2026-11-12 from tag `0.3.4`. The **0.2.6** baseline is listed in Obsidian's community directory; the 0.3.4 community-directory update is the remaining distribution step. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md) · Changes: [CHANGELOG.md](CHANGELOG.md).
+Current version: **0.3.5**, released on 2026-11-15 from tag `0.3.5`. The **0.2.6** baseline is listed in Obsidian's community directory; the 0.3.5 community-directory update is the remaining distribution step. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md) · Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
@@ -155,7 +157,7 @@ All data is stored in the plugin's `data.json` under `plugin.settings`. Panel-dr
 - Word-level regex alternation has the boundary caveat described above.
 - The inline panel sits at the bottom of the editor content column; in a narrow split pane it switches to a compact stacked layout. Below 260px panel width the four action buttons stack one per row. Very narrow windows cap it at 70vh and scroll internally, so the status row can be below the fold.
 - On mobile the panel is presented as a dialog rather than embedded; the modal does not draw custom highlights, but the position indicator and native selection work.
-- Real iOS/Android devices and Windows/Linux were not re-tested for 0.3.4; mobile emulation was used.
+- Real iOS/Android devices and Windows/Linux were not re-tested for 0.3.5; mobile emulation was used.
 - Third-party themes tested: Catppuccin and Minimal. Other themes may define unusual highlight/selection variables.
 - Accessibility was audited through the Chromium accessibility tree; a full screen-reader session on macOS/Windows is still outstanding.
 

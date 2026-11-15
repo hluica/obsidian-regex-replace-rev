@@ -3,7 +3,10 @@
 This changelog starts at **0.2.6**, the baseline community release. Earlier
 versions are intentionally not reconstructed.
 
-## Unreleased
+## 0.3.5 — 2026-11-15 (released)
+
+0.3.5 was released from tag `0.3.5`; the community-directory update is the
+remaining distribution step.
 
 ### Added
 

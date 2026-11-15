@@ -1,8 +1,15 @@
-# Implementation Record — v0.3.4 (wrap-off bounds, selection, DOM helpers)
+# Implementation Record — v0.3.5 (quick clear, Live Preview reveal)
 
-Status: **released from tag `0.3.4` on 2026-11-12**. E2E-verified in the local dev vault (Obsidian 1.15.0, macOS, Chinese/light and dark UI). The 0.2.6 baseline is listed in the community directory; the 0.3.4 community-directory update is the remaining distribution step. 0.3.0/0.3.1/0.3.2 were internal only. See [CHANGELOG.md](CHANGELOG.md) and [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
+Status: **released from tag `0.3.5` on 2026-11-15**. E2E-verified in the local dev vault (Obsidian 1.15.1, macOS, Chinese/light and dark UI). The 0.2.6 baseline is listed in the community directory; the 0.3.5 community-directory update is the remaining distribution step. 0.3.0/0.3.1/0.3.2 were internal only. See [CHANGELOG.md](CHANGELOG.md) and [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md).
 
-v0.3.4 keeps the 0.3.3 Unicode/accessibility/theme layer and changes wrap-off behavior to a directional, scope-aware region. It also fixes zero-match region refresh, distinguishes document and selection boundary messages, continues Replace and find from the replacement, and replaces `document.createElement` with the owning window’s DOM helpers.
+v0.3.5 keeps the 0.3.4 wrap-off/selection layer and adds quick clear buttons plus the Live Preview reveal for rendered Markdown. The 0.3.4 notes below remain the reference for matching, scope, and replacement behavior.
+
+## 0.3.5 implementation notes
+
+- Quick clear buttons live in the shared panel (`.rr-clear`), are hidden while empty, and reset only their own field; clearing Find also clears matches, count, message, and highlights and returns focus to the input.
+- Live Preview reveal lives in `src/editor/live-preview.ts`: match ranges go through `editor.addHighlights(..., "obsidian-search-match-highlight", false, true)`, so Live Preview shows raw Markdown for highlighted blocks while the plugin's marks draw the highlight. It is removed on close/source mode, restored after Obsidian's editor-click clear, and cleaned up on unload.
+- `src/editor/inline-panel.ts` observes `editorLivePreviewField` for mode switches and detects highlight removal from the editor state without dispatching during updates.
+- No changes to match modes, scanning, scope, replacement, or persistence.
 
 ## 0.3.4 implementation notes
 
@@ -220,7 +227,7 @@ npm run build     # main.js produced (v0.3.4, ~53 KB)
 - Inline panel and zero-width markers were verified in the main window and a popout window; both `ownerDocument` values were correct. The popout panel was closed, then the plugin reloaded to clear browser resize warnings.
 - 78 unit tests across 7 files; TypeScript, ESLint, and production build pass.
 
-### Unreleased change (quick clear + Live Preview reveal)
+### 0.3.5 verification
 
 - 81 unit tests across 8 files; TypeScript, ESLint, and production build pass.
 - Dev vault (Obsidian 1.15.1, Live Preview): `~~` and `**bold**` are shown as raw delimiters with the highlight; `note` inside `> [!note]` reveals the callout header; Find keeps the reveal after its click clears Obsidian's highlight sets; clicking in the editor restores it within one tick without a loop; switching to source mode keeps the custom mark without the search layer; closing the panel and switching notes restore rendering.

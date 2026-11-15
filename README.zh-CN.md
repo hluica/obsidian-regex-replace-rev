@@ -10,6 +10,8 @@
 
 ![模态回退](docs/screenshots/modal-fallback.png)
 
+![实时预览显示原文：Callout 标记以原文显示并高亮，查找框带清空按钮](docs/screenshots/live-preview-reveal.png)
+
 ## 功能
 
 - **三种匹配模式**：完全匹配、通配符（`*`、`?`）、JavaScript 正则表达式。
@@ -39,7 +41,7 @@
 
 ## 状态
 
-当前版本 **0.3.4**，已于 2026-11-12 从 `0.3.4` tag 发布。上一个基线版本 **0.2.6** 已列入 Obsidian 社区插件目录；0.3.4 的社区目录更新是剩余的分发步骤。发布审计见 [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)，变更见 [CHANGELOG.md](CHANGELOG.md)。
+当前版本 **0.3.5**，已于 2026-11-15 从 `0.3.5` tag 发布。上一个基线版本 **0.2.6** 已列入 Obsidian 社区插件目录；0.3.5 的社区目录更新是剩余的分发步骤。发布审计见 [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)，变更见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 安装
 
@@ -155,7 +157,7 @@ Mod 在 macOS 上是 Cmd，其它平台是 Ctrl。按钮均可 Tab 聚焦、Ente
 - 正则交替分支的整词匹配有上述边界限制。
 - 内嵌面板位于编辑器内容区域底端；在很窄的分栏中会自动切换为紧凑堆叠布局；面板宽度小于 260px 时四个动作按钮改为单列。极窄窗口以 70vh 封顶并内部滚动，状态行可能需要滚动到面板底部才能看到。
 - 移动端使用对话框而不是内嵌面板；模态框不绘制自定义高亮，但序号和原生选区可用。
-- 0.3.4 未重新测试真实 iOS/Android 与 Windows/Linux，移动端使用模拟模式验证。
+- 0.3.5 未重新测试真实 iOS/Android 与 Windows/Linux，移动端使用模拟模式验证。
 - 第三方主题仅测试 Catppuccin 与 Minimal；其它主题的 highlight/selection 变量可能不同。
 - 无障碍通过 Chromium 无障碍树审计；macOS/Windows 的完整屏幕阅读器会话仍待完成。
 

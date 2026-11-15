@@ -1,7 +1,7 @@
 # Refined Regex Replace and More — Plan and Status
 
-- **Version:** 0.3.4 (released from tag `0.3.4`)
-- **Status:** implemented and verification-complete; released 2026-11-12 from tag `0.3.4`; 0.3.4 community-directory update pending; 0.2.6 baseline is in the community directory
+- **Version:** 0.3.5 (released from tag `0.3.5`)
+- **Status:** implemented and verification-complete; released 2026-11-15 from tag `0.3.5`; 0.3.5 community-directory update pending; 0.2.6 baseline is in the community directory
 - **Current implementation:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **UI specification:** [UI-SPEC.md](UI-SPEC.md)
 - **Community readiness audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
@@ -24,7 +24,7 @@ Build a find/replace panel for the **current Markdown note** with:
 - independent panels in multiple Obsidian windows;
 - bounded result sets and a confirmation step for large replace-all operations.
 
-Out of scope for v0.3.4: vault-wide replace, diff preview, preserve case, multiline literal input, `y`/`d`/`v` flags, default hotkeys, and real-device validation.
+Out of scope for v0.3.5: vault-wide replace, diff preview, preserve case, multiline literal input, `y`/`d`/`v` flags, default hotkeys, and real-device validation.
 
 ## 2. Current architecture
 
@@ -126,19 +126,19 @@ Main files:
 
 | Area | Status |
 |---|---|
-| TypeScript strict / ESLint / tests / build | 78 tests pass; `tsc` and ESLint clean; production build passes (≈53 KB) |
+| TypeScript strict / ESLint / tests / build | 81 tests pass; `tsc` and ESLint clean; production build passes (≈55 KB) |
 | Dark/light theme | Light and dark verified in Obsidian 1.15 for 0.3.3; active match uses an accent tint + 2px outline |
 | Third-party themes | Catppuccin (enabled) and Minimal tested; active/inactive highlights, toggles, scope button, dots, and `↵` markers visible |
 | English/Chinese UI | Verified; new strings in both languages |
 | Accessibility | Labelled region/heading, named controls, grouped options, history menu state, live status, focus-visible, 44px mobile targets; Chromium AX tree audited; full VoiceOver/Narrator session outstanding |
-| Multi-window | Two Obsidian windows tested in 0.2.6; v0.3.3 popout panel/F3/Escape and normal close verified; v0.3.4 window DOM helpers preserve popout document ownership |
+| Multi-window | Two Obsidian windows tested in 0.2.6; v0.3.3 popout panel/F3/Escape and normal close verified; v0.3.4 window DOM helpers preserve popout document ownership; v0.3.5 highlight sets live in each editor state |
 | Mobile | Obsidian mobile emulation tested; real iOS/Android not tested |
-| Windows/Linux | not re-tested for 0.3.4 |
+| Windows/Linux | not re-tested for 0.3.5 |
 | Performance | 1 MB / 10,000+ matches and 1 MB / 10,500 lines: count refresh ≈185–189 ms including 180 ms debounce; dotAll and zero-width caps hold; engine scan itself milliseconds |
 | Bounded actions | 100,000 match cap; 5,000 replace-all confirmation; 150,000-match note tested |
-| Community directory | 0.2.6 baseline listed; 0.3.4 released, directory update pending |
+| Community directory | 0.2.6 baseline listed; 0.3.5 released, directory update pending |
 
-## 5. Acceptance status (v0.3.4)
+## 5. Acceptance status (v0.3.5)
 
 - [x] Three modes × four actions
 - [x] Exact 4 / wildcard 5 / regex 7 options
@@ -172,6 +172,9 @@ Main files:
 - [x] **Scope-aware wrap-off bounds and zero-match recovery**
 - [x] **Selection-specific boundary messages**
 - [x] **Window DOM helpers preserve popout document ownership**
+- [x] **Quick clear buttons in the find and replace fields**
+- [x] **Live Preview reveal for rendered Markdown with the highlight on the source**
+- [x] **Search-layer cleanup on close/source mode, restore after editor clicks, unload cleanup**
 - [x] Multi-window independent panels
 - [x] Mobile modal fallback
 - [x] Settings tab (4 items)
@@ -179,13 +182,14 @@ Main files:
 - [x] Dark-theme 0.3.3 visual audit and screenshot
 - [x] 0.3.3 public release (merge/tag)
 - [x] 0.3.4 public release (merge/tag)
-- [ ] 0.3.4 community-directory update
+- [x] 0.3.5 public release (tag)
+- [ ] Community-directory update to 0.3.5 (replaces the pending 0.3.4 update)
 
 ## 6. Next steps
 
-1. **Directory:** update the community directory entry to 0.3.4 and verify from a clean vault.
+1. **Directory:** update the community directory entry to 0.3.5 and verify from a clean vault.
 2. **Post-release:** real iOS/Android/Windows/Linux checks and a full VoiceOver/Narrator session.
-3. **Next:** keep 0.3.1/0.3.2 as internal history; 0.3.4 is the released version.
+3. **Next:** keep 0.3.1/0.3.2 as internal history; 0.3.5 is the released version.
 4. Keep the 0.2.6 baseline changelog; do not reconstruct older versions.
 
 ## 7. Development
