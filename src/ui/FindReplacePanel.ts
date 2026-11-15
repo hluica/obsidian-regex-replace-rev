@@ -110,6 +110,8 @@ export class FindReplacePanel {
 
 	private findInput!: TextComponent;
 	private replaceInput!: TextComponent;
+	private findClear!: HTMLButtonElement;
+	private replaceClear!: HTMLButtonElement;
 	private modeSelect!: DropdownComponent;
 	private scopeSelect!: DropdownComponent;
 	private directionSelect!: DropdownComponent;
@@ -253,11 +255,20 @@ export class FindReplacePanel {
 		this.findInput.onChange((value) => {
 			this.findText = value;
 			this.activeIndex = null;
+			this.syncClearButtons();
 			this.clearHighlight();
 			this.clearMessage();
 			this.scheduleRefresh();
 		});
 		this.attachKeydown(this.findInput.inputEl, "find");
+
+		this.findClear = this.createClearButton(
+			findField,
+			this.strings.clearFind,
+			() => {
+				this.clearFindText();
+			},
+		);
 
 		const findHistory = findField.createEl("button", {
 			cls: "rr-history",
@@ -310,8 +321,17 @@ export class FindReplacePanel {
 		this.replaceInput.setPlaceholder(this.strings.placeholderReplace);
 		this.replaceInput.onChange((value) => {
 			this.replaceText = value;
+			this.syncClearButtons();
 		});
 		this.attachKeydown(this.replaceInput.inputEl, "replace");
+
+		this.replaceClear = this.createClearButton(
+			replaceField,
+			this.strings.clearReplace,
+			() => {
+				this.clearReplaceText();
+			},
+		);
 
 		const replaceHistory = replaceField.createEl("button", {
 			cls: "rr-history",
@@ -529,6 +549,29 @@ export class FindReplacePanel {
 		return button;
 	}
 
+	private createClearButton(
+		container: HTMLElement,
+		label: string,
+		onClear: () => void,
+	): HTMLButtonElement {
+		const button = container.createEl("button", {
+			cls: "rr-clear",
+			attr: {
+				type: "button",
+				"aria-label": label,
+				"data-tooltip-position": "bottom",
+			},
+		});
+		setIcon(button, "x");
+		setTooltip(button, label);
+		button.hidden = true;
+		button.addEventListener("click", (event) => {
+			event.preventDefault();
+			onClear();
+		});
+		return button;
+	}
+
 	private createSelect(
 		container: HTMLElement,
 		className: string,
@@ -615,6 +658,30 @@ export class FindReplacePanel {
 		}
 		this.syncPlaceholder();
 		this.syncOptionVisibility();
+		this.syncClearButtons();
+	}
+
+	private syncClearButtons(): void {
+		this.findClear.hidden = this.findText.length === 0;
+		this.replaceClear.hidden = this.replaceText.length === 0;
+	}
+
+	private clearFindText(): void {
+		this.findText = "";
+		this.findInput.setValue("");
+		this.activeIndex = null;
+		this.syncClearButtons();
+		this.clearHighlight();
+		this.clearMessage();
+		this.refresh();
+		this.findInput.inputEl.focus();
+	}
+
+	private clearReplaceText(): void {
+		this.replaceText = "";
+		this.replaceInput.setValue("");
+		this.syncClearButtons();
+		this.replaceInput.inputEl.focus();
 	}
 
 	private syncPlaceholder(): void {
@@ -994,6 +1061,15 @@ export class FindReplacePanel {
 			lineBreaks: this.lineBreaks,
 		});
 		this.updatePosition();
+	}
+
+	/**
+	 * Re-apply the current match decorations without rescanning. Used when
+	 * the editor switches between Live Preview and source mode, where the
+	 * visible highlighting rules change.
+	 */
+	refreshHighlights(): void {
+		this.syncHighlights();
 	}
 
 	handleSelectionChange(): void {
@@ -1657,6 +1733,7 @@ export class FindReplacePanel {
 			this.replaceText = value;
 			this.replaceInput.setValue(value);
 		}
+		this.syncClearButtons();
 		this.persist();
 	}
 

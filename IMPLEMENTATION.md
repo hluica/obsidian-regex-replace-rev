@@ -56,6 +56,8 @@ Mobile / fallback dialog:
 - `src/editor/highlights.ts` has two pure planners: `buildHighlightPlan()` clamps, sorts, de-duplicates, prioritizes the active range, and applies the 5,000 mark / 1,000 zero-width caps; `buildLineBreakPlan()` de-duplicates line-break positions, marks the active range, and caps at 1,000 markers while preserving the active break.
 - The existing `setTimeout(0)` coalescing remains; highlight requests from a CodeMirror update or panel mount are dispatched after the current update completes.
 - `closeInlinePanel` clears highlights and closes the panel in one transaction.
+- **Live Preview reveal** — `src/editor/live-preview.ts` mirrors the visible match ranges through Obsidian's own highlight layer: `editor.addHighlights(ranges, "obsidian-search-match-highlight", false, true)`. Live Preview treats that class as a search match and shows the raw Markdown of highlighted blocks, so matches on `> [!note]`, `**`, `~~`, links, and headings are drawn on the source text instead of disappearing behind a rendered widget. Source mode is left alone (raw text is already visible). The set is removed on close and when the panel sees the editor switch to source mode (via `editorLivePreviewField`), and re-added after Obsidian's editor click handler clears every highlight set. The `addHighlights`/`removeHighlights` methods are undocumented but are the same ones the native in-document find uses, so they are declared as optional members in a module augmentation and feature-detected.
+- **Quick clear** — each `.rr-field` contains a `.rr-clear` button (hidden while empty) before the history button; `syncClearButtons()` follows typing, history selection, and restore. Clearing the find field also clears matches, count, message, and highlights and returns focus to the input.
 
 ### Editor-focus navigation
 
@@ -218,9 +220,18 @@ npm run build     # main.js produced (v0.3.4, ~53 KB)
 - Inline panel and zero-width markers were verified in the main window and a popout window; both `ownerDocument` values were correct. The popout panel was closed, then the plugin reloaded to clear browser resize warnings.
 - 78 unit tests across 7 files; TypeScript, ESLint, and production build pass.
 
+### Unreleased change (quick clear + Live Preview reveal)
+
+- 81 unit tests across 8 files; TypeScript, ESLint, and production build pass.
+- Dev vault (Obsidian 1.15.1, Live Preview): `~~` and `**bold**` are shown as raw delimiters with the highlight; `note` inside `> [!note]` reveals the callout header; Find keeps the reveal after its click clears Obsidian's highlight sets; clicking in the editor restores it within one tick without a loop; switching to source mode keeps the custom mark without the search layer; closing the panel and switching notes restore rendering.
+- Clear buttons: the find and replace fields show `×` only while non-empty (desktop 26px, mobile 44px); clearing find resets the count, message, and highlights and returns focus to the input; clearing replace keeps focus in the replace field.
+- Modal fallback and mobile emulation render both clear buttons next to the history buttons.
+
 ### Known limitations
 
 - Highlight rendering is capped at 5,000 ranges / 1,000 zero-width dots / 1,000 line-break markers; the count and position still report the full scanned total.
+- Live Preview reveal needs a non-empty range, so a zero-width match inside a rendered block keeps its dot but cannot force the raw source to show.
+- The reveal shares Obsidian's `obsidian-search-match-highlight` layer and re-asserts its own set while the panel has matches, so using the native in-document find at the same time may show the panel's highlights instead of the native one.
 - Replace-all is blocked above 100,000 matches rather than offering a chunked or background replacement.
 - The mobile modal has no custom decorations; it relies on the native selection, count, and position.
 - CM6 decorations in YAML frontmatter/properties are not independently verified; the editor's property widgets may not show marks that exist in the raw document.
@@ -247,6 +258,7 @@ For another vault, copy the same three files into `<vault>/.obsidian/plugins/reg
 - `src/main.ts` — plugin lifecycle, command, editor/window targeting, host selection
 - `src/editor/inline-panel.ts` — CM6 panel extension, all-match decoration field, zero-width widget, keymap
 - `src/editor/highlights.ts` — pure highlight/line-break planning and cached line-break collection (clamp/sort/dedupe/caps)
+- `src/editor/live-preview.ts` — Live Preview reveal through Obsidian's search-highlight layer, plus offset-to-position conversion
 - `src/ui/FindReplacePanel.ts` — shared UI/behavior, position, scope, history, confirmation
 - `src/ui/FindReplaceModal.ts` — mobile/fallback dialog
 - `src/ui/host.ts` — shared host contracts
@@ -254,4 +266,4 @@ For another vault, copy the same three files into `<vault>/.obsidian/plugins/reg
 - `src/i18n/` — en/zh strings
 - `src/search/` — pure engine; `src/search/region.ts` directional bounds; `src/search/limits.ts` guard rails
 - `styles.css` — inline separator, highlights, zero-width dots, line-break markers, compact/mobile styling
-- `tests/` — 78 unit tests across 7 files
+- `tests/` — 81 unit tests across 8 files

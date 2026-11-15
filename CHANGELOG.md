@@ -3,6 +3,37 @@
 This changelog starts at **0.2.6**, the baseline community release. Earlier
 versions are intentionally not reconstructed.
 
+## Unreleased
+
+### Added
+
+- **Quick clear buttons** for the find and replace fields. A clear (×) button
+  appears while a field has text, sits next to the history button, empties the
+  field, and keeps focus in it. Clearing Find also resets the count, message,
+  and highlights.
+- **Live Preview reveal for rendered Markdown.** When Live Preview has
+  rendered a matched construct — callout markers such as `> [!note]`,
+  `**`/`*`/`~~` delimiters, links, or heading markers — the matched block is
+  shown as raw source and the match highlight is drawn on that source. The
+  reveal is removed on close and when the editor switches to source mode, and
+  is restored if Obsidian's editor click handler clears every highlight set.
+
+### Fixed
+
+- Matches on rendered Markdown no longer lose their highlight in Live
+  Preview, where the syntax markers were replaced by rendering widgets and
+  the mark decoration had no visible text to style.
+
+### Verification
+
+- 81 unit tests across 8 files; TypeScript, ESLint, and production build pass.
+- Verified in the dev vault (Obsidian 1.15.1, Live Preview): `~~` and
+  `**bold**` reveal their raw delimiters with the highlight; `note` in
+  `> [!note]` reveals the callout header; Find keeps the reveal after its
+  click clears Obsidian's highlight sets; source mode keeps the custom
+  highlight without the search layer; closing the panel restores rendering;
+  the modal fallback and mobile emulation show the clear buttons.
+
 ## 0.3.4 — 2026-11-12 (released)
 
 0.3.4 was released from tag `0.3.4`; the community-directory update is the

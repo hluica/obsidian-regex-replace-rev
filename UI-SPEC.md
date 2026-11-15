@@ -53,6 +53,7 @@ This specification describes the current inline design, the match-marker layer, 
 - Mode row spans columns 2–3; status row spans columns 1–3.
 - Labels left-aligned; the status count starts at the same left edge as `Find:`/`Replace:`/`Mode:`; the position follows the count; the status message is right-aligned.
 - Inputs/selects 30px tall; action buttons 122×28px in a 252px 2×2 column.
+- Each input field reserves 58px of trailing space (94px on mobile) for its 26px clear button and 26px history button (44px each on mobile). The clear button sits inboard of the history button and is hidden while the field is empty.
 - Mode selects: three fixed 160px controls, not matched to the input width. The scope control adds a 26px scan selection-refresh button; the mode row remains width-fit at desktop and stacks at compact/narrow widths.
 - Options: native toggles; 28px column gap desktop, 16px compact/mobile; row height auto.
 - Bottom clearance: 28px keeps the status message above Obsidian's status bar.
@@ -63,6 +64,7 @@ This specification describes the current inline design, the match-marker layer, 
 | Input/select height | 30 | 30 | 44 |
 | Action buttons | 122×28 | full-width 2×2, 28 | full-width 2×2, 44 |
 | Mode selects | 160×3 | 100% stacked | 100% stacked |
+| Field clear/history buttons | 26px | 26px | 44px |
 | Scope refresh | 26px | 28px | 44px |
 | Option gap | 28px | 16px | 16px |
 | Options | 4/5/6 by mode | wraps | wraps, 44px targets |
@@ -103,8 +105,8 @@ align-items: center;
 
 | Row | Column 1 | Column 2 | Column 3 |
 |---|---|---|---|
-| 1 | Find: | input + history | Find / Replace and find |
-| 2 | Replace: | input + history | Replace / Replace all |
+| 1 | Find: | input + clear + history | Find / Replace and find |
+| 2 | Replace: | input + clear + history | Replace / Replace all |
 | 3 | Mode: | three fixed selects (span 2–3) | same |
 | 4 | — | options (span 2–3) | — |
 | 5 | — | count + position + message (span 1–3) | same |
@@ -125,12 +127,14 @@ Labels are left-aligned. In compact/mobile single-column mode the mode row, opti
           label.rr-label[for=rr-find-*]
           .rr-field
             input.rr-input
+            button.rr-clear[hidden]
             button.rr-history
           .rr-actions
             button.rr-btn
           label.rr-label[for=rr-replace-*]
           .rr-field
             input.rr-input
+            button.rr-clear[hidden]
             button.rr-history
           .rr-actions
             button.rr-btn
@@ -162,6 +166,10 @@ Editor decorations, owned by the CM6 field:
 .rr-line-break
 .rr-line-break.rr-line-break-active
 ```
+
+In Live Preview the same ranges also go to Obsidian's search-highlight layer
+(`.obsidian-search-match-highlight`, owned by Obsidian, not by this plugin) so
+rendered Markdown is shown as source; see §7.
 
 Modal uses `.modal.rr-modal`, `.modal-content.rr-content`, `.rr-panel.rr-panel--modal`; the native Modal title replaces the inline header. All DOM is created on the owning element/document; no global `document` for panel UI. The history menu uses `button.ownerDocument`.
 
@@ -218,6 +226,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - **Zero-width matches** use a 6px translucent-gray filled circular dot (`.rr-zero-width`) for inactive matches and a filled accent dot with a `--background-primary` halo (`.rr-zero-width-active`) for the active match. Multiple zero-width matches at one offset are collapsed to a single dot, with the active state winning. Dots are rendered just above the insertion point by a zero-layout-width pseudo-element, so they neither shift text nor resemble a blockquote border; `pointer-events: none` keeps the caret usable.
 - **Newline matches** (`\n`, `。\n`, dotAll spans) use a small `↵` pill (`.rr-line-break`, active `.rr-line-break-active`) at each covered line end; it is absolutely positioned and adds no line width. A newline-only match has no text mark, but its marker is visible; a mixed match shows the character mark plus the marker.
 - At most 5,000 ranges, 1,000 zero-width dots, and 1,000 line-break markers are rendered; the active range is always preserved. The count/position still reflect the scan total up to 10,000/100,000.
+- **Live Preview reveal**: Live Preview normally replaces rendered Markdown with widgets, which hides the source of a match (callout markers, `**`, `~~`, links, heading markers). While the panel has matches, their ranges are also registered on Obsidian's search-highlight layer (`.obsidian-search-match-highlight`), which makes Obsidian show the raw Markdown of those blocks; the plugin's highlight is then drawn on the source text. The set is removed on close, on empty/error states, and when the editor switches to source mode; if Obsidian's editor click handler clears every highlight set, the panel restores it.
 - Highlights are cleared on close, empty/error states, and document switch.
 - Highlight effects are coalesced into a `setTimeout(0)` task; no dispatch occurs while CodeMirror is updating.
 
@@ -227,6 +236,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - Enter in find: find in current direction. Shift+Enter: reverse once. F3/Shift+F3: next/previous.
 - Enter in replace: replace and find. Shift+Enter: replace once. Mod+Enter: replace all.
 - While the panel is open, F3 / Shift+F3 / Escape also work with editor focus (CM6 keymap).
+- The clear (×) button appears in a field only while it has text. It empties the field and keeps focus there; clearing the find field also clears matches, the count, and highlights, and shows the empty-find message.
 - History buttons open a native `Menu` with recent values and Clear; Enter/Space accessible.
 - Escape or header ✕ closes, clears highlights, and focuses the editor.
 - Find selects the match and dispatches all-match + active decorations; the highlight remains visible while the find input keeps focus.
@@ -239,7 +249,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 ## 9. Accessibility
 
 - Inputs have visible `<label for>`; mode/scope/direction selects have `aria-label` and tooltips.
-- History buttons/close have textual ARIA labels and tooltips.
+- Clear and history buttons/close have textual ARIA labels and tooltips.
 - Status message uses `aria-live=polite`; errors are textual.
 - Buttons use real `<button>` elements and `disabled`; focus-visible outlines are defined.
 - Native toggles are keyboard-focusable and Space-tested; label row click tested.
@@ -248,7 +258,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - History buttons expose `aria-haspopup="menu"` and `aria-expanded`; the status message is `role=status` with `aria-live=polite`.
 - The Chromium accessibility tree was audited (the same tree Chromium maps to Windows UIA); a full VoiceOver/Narrator session is outstanding.
 - Mobile targets ≥44px.
-- Tab flow: find → find history → Find → Replace and find → replace → replace history → Replace → Replace all → mode → scope → Use current selection → direction → visible toggles (including Unicode). After the last toggle, Tab leaves the panel for the workspace (the inline host does not trap focus).
+- Tab flow: find → find clear (when visible) → find history → Find → Replace and find → replace → replace clear (when visible) → replace history → Replace → Replace all → mode → scope → Use current selection → direction → visible toggles (including Unicode). After the last toggle, Tab leaves the panel for the workspace (the inline host does not trap focus).
 - Full VoiceOver/Narrator session is not recorded; the Chromium AX tree audit is recorded in IMPLEMENTATION.md.
 
 ## 10. Responsive, themes, multi-window

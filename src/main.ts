@@ -51,6 +51,9 @@ export default class RegexReplacePlugin
 		this.unloading = true;
 		this.activeModal?.close();
 		this.activeModal = null;
+		// Panels own Obsidian highlight sets in the editor state; close them
+		// so disabling the plugin does not leave stale Live Preview reveals.
+		this.closeAllInlinePanels();
 		this.flushSettingsSave();
 	}
 

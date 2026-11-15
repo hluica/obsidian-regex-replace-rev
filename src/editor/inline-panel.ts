@@ -1,4 +1,10 @@
-import { Prec, StateEffect, StateField, type Range } from "@codemirror/state";
+import {
+	Prec,
+	StateEffect,
+	StateField,
+	type EditorState,
+	type Range,
+} from "@codemirror/state";
 import {
 	Decoration,
 	EditorView,
@@ -9,10 +15,24 @@ import {
 	type Panel,
 	type ViewUpdate,
 } from "@codemirror/view";
-import { editorInfoField, MarkdownView } from "obsidian";
+import {
+	editorInfoField,
+	editorLivePreviewField,
+	MarkdownView,
+	type Editor,
+} from "obsidian";
 import { buildHighlightPlan, buildLineBreakPlan } from "./highlights";
+import {
+	clearLivePreviewHighlights,
+	LIVE_PREVIEW_HIGHLIGHT_CLASS,
+	syncLivePreviewHighlights,
+} from "./live-preview";
 import { FindReplacePanel } from "../ui/FindReplacePanel";
-import type { PanelHighlight, PanelPlugin } from "../ui/host";
+import type {
+	PanelHighlight,
+	PanelHighlightRange,
+	PanelPlugin,
+} from "../ui/host";
 
 export const setInlinePanelOpen = StateEffect.define<boolean>();
 export const setInlineMatchHighlights =
@@ -152,12 +172,51 @@ const matchHighlightField = StateField.define<DecorationSet>({
 });
 
 export function closeInlinePanel(view: EditorView): void {
+	const editor = view.state.field(editorInfoField, false)?.editor ?? null;
+	clearLivePreviewHighlights(editor);
 	view.dispatch({
 		effects: [
 			setInlineMatchHighlights.of(null),
 			setInlinePanelOpen.of(false),
 		],
 	});
+}
+
+function isLivePreview(view: EditorView): boolean {
+	return view.state.field(editorLivePreviewField, false) === true;
+}
+
+/**
+ * Obsidian clears every highlight set when the editor view is clicked. Our
+ * panel lives inside that view, so its own buttons would wipe the Live
+ * Preview reveal. Detect that from the editor state and add the set back.
+ */
+function hasLivePreviewHighlight(
+	state: EditorState,
+	range: PanelHighlightRange,
+): boolean {
+	for (const set of state.facet(EditorView.decorations)) {
+		if (typeof set === "function") {
+			continue;
+		}
+		let found = false;
+		set.between(range.from, range.to, (_from, _to, value) => {
+			const spec = value.spec as unknown;
+			const specClass =
+				spec !== null && typeof spec === "object"
+					? (Reflect.get(spec, "class") as unknown)
+					: undefined;
+			if (specClass === LIVE_PREVIEW_HIGHLIGHT_CLASS) {
+				found = true;
+				return false;
+			}
+			return undefined;
+		});
+		if (found) {
+			return true;
+		}
+	}
+	return false;
 }
 
 interface PanelController {
@@ -209,10 +268,14 @@ class InlineFindReplacePanel implements Panel {
 	readonly top = false;
 	private readonly view: EditorView;
 	private readonly panel: FindReplacePanel;
+	private readonly getEditor: () => Editor | null;
 	private readonly closePanel: () => void;
 	private highlightTimer: number | null = null;
 	private pendingHighlight: PanelHighlight | null = null;
 	private hasPendingHighlight = false;
+	private appliedHighlight: PanelHighlight | null = null;
+	private restoreTimer: number | null = null;
+	private restoreAttempts = 0;
 	private destroyed = false;
 
 	constructor(view: EditorView, plugin: PanelPlugin) {
@@ -222,7 +285,7 @@ class InlineFindReplacePanel implements Panel {
 		const frame = this.dom.createDiv({ cls: "rr-inline-frame" });
 		const container = frame.createDiv({ cls: "rr-inline-container" });
 
-		const getEditor = () => {
+		this.getEditor = () => {
 			const info = view.state.field(editorInfoField, false);
 			return info?.editor ?? null;
 		};
@@ -230,7 +293,7 @@ class InlineFindReplacePanel implements Panel {
 		this.closePanel = () => {
 			this.cancelPendingHighlight();
 			closeInlinePanel(view);
-			getEditor()?.focus();
+			this.getEditor()?.focus();
 		};
 
 		const getDocumentKey = () => {
@@ -243,7 +306,7 @@ class InlineFindReplacePanel implements Panel {
 			plugin,
 			containerEl: container,
 			variant: "inline",
-			getEditor,
+			getEditor: () => this.getEditor(),
 			getDocumentKey,
 			requestClose: this.closePanel,
 			highlightMatches: (request) => {
@@ -278,14 +341,42 @@ class InlineFindReplacePanel implements Panel {
 		} else if (update.selectionSet) {
 			this.panel.handleSelectionChange();
 		}
+		const wasLivePreview = update.startState.field(
+			editorLivePreviewField,
+			false,
+		);
+		const isLivePreview = update.state.field(editorLivePreviewField, false);
+		if (wasLivePreview !== isLivePreview) {
+			this.panel.refreshHighlights();
+		}
+		if (!update.docChanged) {
+			this.ensureLivePreviewHighlights(update);
+		}
 	}
 
 	destroy(): void {
 		this.destroyed = true;
 		this.cancelPendingHighlight();
 		panelControllers.delete(this.view);
+		this.clearLivePreviewHighlightsSoon();
 		this.panel.destroy();
 		this.dom.remove();
+	}
+
+	/**
+	 * Obsidian's highlight set lives in the editor state, not in this panel.
+	 * Remove it once the panel is gone; dispatching from destroy() itself
+	 * would happen during a CodeMirror update.
+	 */
+	private clearLivePreviewHighlightsSoon(): void {
+		const editor = this.getEditor();
+		const view = this.view;
+		window.setTimeout(() => {
+			if (!view.dom.isConnected) {
+				return;
+			}
+			clearLivePreviewHighlights(editor);
+		}, 0);
 	}
 
 	/**
@@ -295,7 +386,13 @@ class InlineFindReplacePanel implements Panel {
 	 * progress", so coalesce the latest request into a task after the current
 	 * update completes.
 	 */
-	private queueHighlight(value: PanelHighlight | null): void {
+	private queueHighlight(
+		value: PanelHighlight | null,
+		restoring = false,
+	): void {
+		if (!restoring) {
+			this.restoreAttempts = 0;
+		}
 		this.pendingHighlight = value;
 		this.hasPendingHighlight = true;
 		if (this.highlightTimer !== null) {
@@ -312,6 +409,17 @@ class InlineFindReplacePanel implements Panel {
 			if (!this.view.dom.isConnected) {
 				return;
 			}
+			this.appliedHighlight = pending;
+			// Live Preview replaces rendered Markdown with widgets, hiding the
+			// raw source of a match such as a callout marker or an emphasis
+			// delimiter. Registering the ranges on Obsidian's search-highlight
+			// layer makes the editor reveal the original text, so the match
+			// highlight below is drawn on the source instead of being hidden.
+			syncLivePreviewHighlights(
+				this.getEditor(),
+				pending === null ? [] : pending.ranges,
+				isLivePreview(this.view),
+			);
 			this.view.dispatch({
 				effects: setInlineMatchHighlights.of(pending),
 			});
@@ -323,8 +431,62 @@ class InlineFindReplacePanel implements Panel {
 			window.clearTimeout(this.highlightTimer);
 			this.highlightTimer = null;
 		}
+		this.cancelRestore();
 		this.hasPendingHighlight = false;
 		this.pendingHighlight = null;
+	}
+
+	private cancelRestore(): void {
+		if (this.restoreTimer !== null) {
+			window.clearTimeout(this.restoreTimer);
+			this.restoreTimer = null;
+		}
+	}
+
+	/**
+	 * Re-add the Live Preview reveal after Obsidian's editor click handler
+	 * clears every highlight set. A small delay lets Obsidian's own
+	 * setTimeout(0) clear run first. Only a transaction that removed an
+	 * existing set schedules a restore, so stale ranges from before the next
+	 * refresh are not re-added.
+	 */
+	private ensureLivePreviewHighlights(update: ViewUpdate): void {
+		const applied = this.appliedHighlight;
+		if (this.destroyed || applied === null || !isLivePreview(this.view)) {
+			return;
+		}
+		const range = applied.ranges.find((item) => item.to > item.from);
+		if (range === undefined) {
+			return;
+		}
+		// Our own sync removes and then adds the set in two transactions; the
+		// add cancels the restore that the remove scheduled.
+		if (hasLivePreviewHighlight(update.state, range)) {
+			this.restoreAttempts = 0;
+			this.cancelRestore();
+			return;
+		}
+		if (this.restoreTimer !== null) {
+			return;
+		}
+		if (!hasLivePreviewHighlight(update.startState, range)) {
+			return;
+		}
+		if (this.restoreAttempts >= 5) {
+			return;
+		}
+		this.restoreTimer = window.setTimeout(() => {
+			this.restoreTimer = null;
+			if (
+				this.destroyed ||
+				this.hasPendingHighlight ||
+				this.appliedHighlight !== applied
+			) {
+				return;
+			}
+			this.restoreAttempts += 1;
+			this.queueHighlight(applied, true);
+		}, 20);
 	}
 }
 

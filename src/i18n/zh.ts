@@ -28,6 +28,8 @@ export const zh: Strings = {
 	placeholderWildcard: "例如：第*章",
 	placeholderRegex: "例如：(\\w+)\\s*=\\s*(\\d+)",
 	placeholderReplace: "输入替换文本；可用 $1 引用捕获组",
+	clearFind: "清空查找内容",
+	clearReplace: "清空替换内容",
 	historySearch: "查找历史",
 	historyReplace: "替换历史",
 	historyEmpty: "暂无历史记录",

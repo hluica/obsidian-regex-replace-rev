@@ -18,6 +18,7 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 - **Inline desktop panel**: embedded at the bottom of the note display area, separated by a single high-contrast 1px line, with a title and close button. It takes layout space instead of covering the note, so the editor stays visible and interactive.
 - **Multi-window**: each Obsidian window has its own panel; the command targets the editor of the window it is invoked in and closing one window’s panel does not close the others.
 - **All-match highlighting**: every match in the active search region is highlighted; the current match has a stronger outline, so the result set is visible while you type or step through it.
+- **Live Preview reveal**: in Live Preview, a match that lands on rendered Markdown — callout markers such as `> [!note]`, emphasis and strikethrough delimiters, links, or heading markers — switches that text back to its raw source so the highlight is attached to what the pattern actually matches, instead of disappearing behind the rendered widget.
 - **Current position**: a persistent `3 / 164` indicator follows Find, selection changes, replacements, and panel reopen.
 - **Zero-width matches**: `^`, `\b`, and lookahead matches get a small translucent gray dot above the caret position; the active match gets a filled accent dot with a halo. The dots add no layout width.
 - **Newline matches**: matches containing a line break (`\n`, `。\n`, or dotAll matches crossing lines) show a small `↵` pill at the affected line end, so an otherwise invisible newline is visible and the active break is highlighted.
@@ -30,6 +31,7 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 - **Scope and direction**: current file or captured selection; **Use current selection** refreshes the captured range without reopening the panel; down or up.
 - **Wrap-off bounds**: Current file searches from the cursor to the document edge; Selection always searches the whole captured selection from its top (down) or bottom (up), independent of the cursor.
 - **Match count and status**: live count, invalid-regex errors, wrap/boundary feedback with separate document and selection messages, replacement results.
+- **Quick clear**: each field shows a clear (×) button while it contains text; clearing the find field also resets the matches, count, and highlight.
 - **History**: last 20 search and replacement terms, with a clear action.
 - **Undo-safe**: every replacement is a single `editor.transaction`; one undo restores it.
 - **Unicode-aware whole word**: works for Latin and CJK text, without regex lookbehind.

@@ -28,6 +28,8 @@ export const en: Strings = {
 	placeholderWildcard: "e.g. Chapter *",
 	placeholderRegex: "e.g. (\\w+)\\s*=\\s*(\\d+)",
 	placeholderReplace: "Replacement text; use $1 for groups",
+	clearFind: "Clear find field",
+	clearReplace: "Clear replace field",
 	historySearch: "Search history",
 	historyReplace: "Replace history",
 	historyEmpty: "No history yet",

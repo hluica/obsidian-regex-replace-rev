@@ -26,6 +26,8 @@ export interface Strings {
 	placeholderWildcard: string;
 	placeholderRegex: string;
 	placeholderReplace: string;
+	clearFind: string;
+	clearReplace: string;
 	historySearch: string;
 	historyReplace: string;
 	historyEmpty: string;
