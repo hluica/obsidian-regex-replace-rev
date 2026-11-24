@@ -14,6 +14,12 @@ export interface DirectionalRegion extends TextRegion {
 	scanTo: number;
 }
 
+/** A match range expressed in absolute document offsets. */
+export interface AbsoluteMatchRange {
+	absoluteStart: number;
+	absoluteEnd: number;
+}
+
 export function fullRegion(region: TextRegion): DirectionalRegion {
 	return {
 		...region,
@@ -57,4 +63,22 @@ export function limitToDirection(
 		scanFrom: start,
 		scanTo: clamped,
 	};
+}
+
+/**
+ * Keep only the matches a direction-bounded action may still process.
+ * Forward keeps matches that start at or after the anchor; backward keeps
+ * matches that end at or before it. A selected active match is included by
+ * anchoring at its leading edge when moving forward or its trailing edge
+ * when moving backward.
+ */
+export function matchesFromAnchor<T extends AbsoluteMatchRange>(
+	matches: readonly T[],
+	anchor: number,
+	direction: SearchDirection,
+): T[] {
+	if (direction === "forward") {
+		return matches.filter((match) => match.absoluteStart >= anchor);
+	}
+	return matches.filter((match) => match.absoluteEnd <= anchor);
 }

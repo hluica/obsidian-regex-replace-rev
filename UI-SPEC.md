@@ -1,13 +1,13 @@
-# UI Specification — v0.3.5
+# UI Specification — v0.3.6
 
-- **Status:** released from tag `0.3.5` on 2026-11-15; E2E-verified in Obsidian 1.15.1, macOS, Chinese/light and dark UI
+- **Status:** released from tag `0.3.6` on 2026-11-24; E2E-verified in Obsidian 1.15.1, macOS, Chinese/light and dark UI
 - **Implementation record:** [IMPLEMENTATION.md](IMPLEMENTATION.md)
 - **Plan/status:** [PLAN.md](PLAN.md)
 - **Community audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
 - **Screenshots:** [inline panel](docs/screenshots/panel-inline.png) · [compact panel](docs/screenshots/panel-compact.png) · [dark theme](docs/screenshots/panel-dark.png) · [Catppuccin](docs/screenshots/theme-catppuccin.png) · [Minimal](docs/screenshots/theme-minimal.png) · [zero-width dots](docs/screenshots/panel-zero-width.png) · [newline markers](docs/screenshots/panel-newline.png) · [mixed `。\n`](docs/screenshots/panel-newline-combo.png) · [modal fallback](docs/screenshots/modal-fallback.png) · [Live Preview reveal + clear button](docs/screenshots/live-preview-reveal.png)
 
-This specification describes the current inline design, the match-marker layer, the selection-refresh control, the 0.3.3 Unicode/accessibility layer, the 0.3.4 wrap-off region behavior, the 0.3.5 clear controls and Live Preview reveal, and the unreleased opt-in compact density.
+This specification describes the current inline design, the match-marker layer, the selection-refresh control, the 0.3.3 Unicode/accessibility layer, the 0.3.4 wrap-off region behavior, the 0.3.5 clear controls and Live Preview reveal, the 0.3.6 opt-in compact density, and the 0.3.6 Replace-all bounds.
 
 ## 1. Principles
 
@@ -71,7 +71,7 @@ This specification describes the current inline design, the match-marker layer, 
 | Options | 4/5/6 by mode | wraps | wraps, 44px targets |
 | Panel height | content | content; 70vh cap | modal content |
 
-### 3.1.1 Compact density (opt-in, unreleased)
+### 3.1.1 Compact density (opt-in, 0.3.6)
 
 - Setting **Use the compact panel layout** (`compactPanel`, default off) applies to the desktop inline panel only. The mobile dialog keeps its 44px controls; the desktop modal fallback keeps the standard layout.
 - It adds `.rr-panel.rr-dense` and `.rr-inline-panel--dense`, and is read when the panel is constructed, so it takes effect the next time the panel opens.
@@ -89,6 +89,14 @@ This specification describes the current inline design, the match-marker layer, 
 - Replace and find continues from the replacement edge; it does not restart at the selection boundary.
 - Zero-match regions still refresh when the cursor moves back into a match.
 - Boundary messages are “已到达文档末尾/开头” for Current file and “已到达选中区域末尾/开头” for Selection.
+
+### 3.2.1 Replace-all bounds (0.3.6)
+
+- Replace all is a remaining-work action, not a whole-scope reset. With **Current file**, it starts at the cursor or the selected active match and processes matches in the current direction to the document edge. It never wraps, so matches already passed over by Find or Replace are left untouched.
+- A selected active match is included: forward anchors at its start, backward at its end. A plain cursor anchors at the caret.
+- With **Selection**, Replace all still replaces the whole captured selection; the cursor only affects Find/Replace navigation inside it.
+- If no match remains in the direction, the panel reports the document or selection boundary. The count and highlights keep showing any matches that were left behind.
+- The confirmation title/body and the action tooltip describe the action as replacing the remaining matches.
 
 ### 3.3 Status row (0.3.4)
 
@@ -228,7 +236,7 @@ Labels (Chinese / English):
 | Document changed | recomputed | — / new N | per result | Target changed; scope reset |
 | No editor | — | — | disabled | No active editor (modal fallback) |
 | Too many for action | `10000+` | `— / 10000+` | find/replace once enabled; replace-all shows error | Results limited to 100000; narrow the pattern |
-| Replace-all confirmation | current | current | modal | Replace N matches? This is one undoable action. |
+| Replace-all confirmation | current | current | modal | Replace N remaining matches? This is one undoable action. |
 
 The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="true"` on the message. Errors use text and `--text-error`, not color alone.
 
@@ -247,7 +255,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 
 - Opening focuses the find field and selects its text.
 - Enter in find: find in current direction. Shift+Enter: reverse once. F3/Shift+F3: next/previous.
-- Enter in replace: replace and find. Shift+Enter: replace once. Mod+Enter: replace all.
+- Enter in replace: replace and find. Shift+Enter: replace once. Mod+Enter: replace the remaining matches from the current position in the current direction.
 - While the panel is open, F3 / Shift+F3 / Escape also work with editor focus (CM6 keymap).
 - The clear (×) button appears in a field only while it has text. It empties the field and keeps focus there; clearing the find field also clears matches, the count, and highlights, and shows the empty-find message.
 - History buttons open a native `Menu` with recent values and Clear; Enter/Space accessible.
@@ -257,7 +265,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - History buttons use the `history` icon with the existing ARIA labels/tooltips.
 - Toggle labels and switches are both clickable; native toggle Space toggles.
 - Re-running the command in the same window focuses the existing panel; opening a panel in another window leaves this one open.
-- Replace all above 5,000 matches opens `ConfirmationModal`; Cancel has initial focus; confirming executes one transaction.
+- Replace all above 5,000 remaining matches opens `ConfirmationModal`; Cancel has initial focus; confirming executes one transaction.
 
 ## 9. Accessibility
 
@@ -284,7 +292,7 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - Compact class updates are coalesced with `requestAnimationFrame` and skipped when the width is unchanged, preventing ResizeObserver loops during viewport/popout resizes.
 - Only Obsidian CSS variables; no `.theme-dark` branches, no `!important`, no `:has`.
 - Multi-window: command targets `editor` identity; panels are closed only within the same `ownerDocument`; one panel per window.
-- Chinese/light and dark verified for 0.3.5 on the default theme; Catppuccin and Minimal were tested for 0.3.4; English strings use the same layout and were verified in 0.2.6.
+- Chinese/light and dark verified for 0.3.6 on the default theme; Catppuccin and Minimal were tested for 0.3.4; English strings use the same layout and were verified in 0.2.6.
 - Mobile modal verified in emulation; real devices not re-tested.
 
 ## 11. Differences from the native find UI

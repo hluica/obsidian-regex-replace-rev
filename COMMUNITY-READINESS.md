@@ -1,10 +1,10 @@
-# Community Readiness Audit — v0.3.5
+# Community Readiness Audit — v0.3.6
 
 - **Plugin:** Refined Regex Replace and More (`regex-replace-rev`)
-- **Version:** 0.3.5 (released 2026-11-15; 0.3.0/0.3.1/0.3.2 were internal)
-- **Audit date:** 2026-11-15
+- **Version:** 0.3.6 (released 2026-11-24; 0.3.0/0.3.1/0.3.2 were internal)
+- **Audit date:** 2026-11-24
 - **Repository:** `git@github.com:hluica/obsidian-regex-replace-rev.git`
-- **Overall:** 0.3.5 is released from tag `0.3.5`; 0.2.6 is listed in the Obsidian community directory and the 0.3.5 directory update is pending.
+- **Overall:** 0.3.6 is released from tag `0.3.6`; 0.2.6 is listed in the Obsidian community directory and the 0.3.6 directory update is pending.
 
 Official references used:
 
@@ -17,10 +17,10 @@ Official references used:
 
 | Area | Status | Notes |
 |---|---|---|
-| Source code | **Pass with documented limitations** | TS strict, ESLint clean, 81 tests, no disallowed APIs found |
+| Source code | **Pass with documented limitations** | TS strict, ESLint clean, 90 tests, no disallowed APIs found |
 | Compiled artifacts | **Pass locally; release packaging pending** | `main.js`, `styles.css`, `manifest.json`, `versions.json` present; `main.js` intentionally gitignored and must be a release asset |
-| Auxiliary docs | **Pass** | README EN/ZH, LICENSE, CHANGELOG (0.2.6–0.3.5), current screenshots, PLAN/UI-SPEC/IMPLEMENTATION |
-| Community listing | **0.2.6 listed; 0.3.5 update pending** | 0.3.5 is released; update the directory entry |
+| Auxiliary docs | **Pass** | README EN/ZH, LICENSE, CHANGELOG (0.2.6–0.3.6), current screenshots, PLAN/UI-SPEC/IMPLEMENTATION |
+| Community listing | **0.2.6 listed; 0.3.6 update pending** | 0.3.6 is released; update the directory entry |
 
 ## 2. Source code
 
@@ -30,11 +30,11 @@ Official references used:
 |---|---|---|
 | `id` is lowercase/hyphenated and matches folder | PASS | `regex-replace-rev` |
 | `name`/`description` do not include “Obsidian” | PASS | manifest |
-| `version` matches `versions.json` and package | PASS | `0.3.5` |
+| `version` matches `versions.json` and package | PASS | `0.3.6` |
 | `minAppVersion` matches APIs used | PASS | `1.13.0` (declarative settings, `ConfirmationModal`) |
 | `isDesktopOnly` accurate | PASS | `false`; mobile modal fallback exists |
 | `author` present | PASS | `hanluica` |
-| `versions.json` has current entry | PASS | `0.3.5: 1.13.0` |
+| `versions.json` has current entry | PASS | `0.3.6: 1.13.0` |
 
 ### 2.2 Developer-policy checks
 
@@ -61,10 +61,10 @@ The only `window.*` use is `window.setTimeout`/`clearTimeout` for the 180ms refr
 ### 2.3 Quality checks
 
 ```text
-npm test          # 8 files, 81 tests passed
+npm test          # 9 files, 90 tests passed
 npx tsc -noEmit   # passed
 npx eslint .      # 0 errors / 0 warnings
-npm run build     # passed, main.js ≈55 KB
+npm run build     # passed, main.js ≈57 KB
 dev:errors        # no errors
 ```
 
@@ -72,23 +72,24 @@ dev:errors        # no errors
 
 | Artifact | Status | Details |
 |---|---|---|
-| `main.js` | Present, local only | ≈55 KB, production bundle, no source map, external `obsidian`/CM6 modules |
+| `main.js` | Present, local only | ≈57 KB, production bundle, no source map, external `obsidian`/CM6 modules |
 | `styles.css` | Present | static CSS; highlight/zero-width/line-break/status rules added |
-| `manifest.json` | Present | version 0.3.5 |
+| `manifest.json` | Present | version 0.3.6 |
 | `versions.json` | Present | current entry |
 | `main.js` tracked by git? | No | intentionally gitignored; attach to GitHub release |
 | `node_modules` in release? | No | ignored; not shipped |
 
-**Release packaging remaining:** attach the rebuilt `main.js`, `manifest.json`, and `styles.css` to the GitHub release for tag `0.3.5`, and update the community directory entry. Verify from a clean vault.
+**Release packaging remaining:** attach the rebuilt `main.js`, `manifest.json`, and `styles.css` to the GitHub release for tag `0.3.6`, and update the community directory entry. Verify from a clean vault.
 
 ## 4. Auxiliary documentation
 
 | Document | Status | Notes |
 |---|---|---|
-| `README.md` / `README.zh-CN.md` | Current | 0.3.5 features, installation, usage, syntax, accessibility, limitations |
+| `README.md` / `README.zh-CN.md` | Current | 0.3.6 features, installation, usage, syntax, accessibility, limitations |
 | `LICENSE` | Current | MIT, non-template |
-| `CHANGELOG.md` | Added | starts at 0.2.6 baseline; 0.3.0–0.3.5 entries |
+| `CHANGELOG.md` | Added | starts at 0.2.6 baseline; 0.3.0–0.3.6 entries |
 | `docs/screenshots/panel-inline.png` | Current | Chinese/light; all-match highlight + position |
+| `docs/screenshots/panel-compact.png` | Added | 0.3.6 compact density; no visible title row, close on the status line |
 | `docs/screenshots/panel-zero-width.png` | Current | translucent gray / accent zero-width dots |
 | `docs/screenshots/panel-newline.png` | Added | newline-only `\n` markers |
 | `docs/screenshots/panel-newline-combo.png` | Added | mixed `。\n` marker |
@@ -97,16 +98,16 @@ dev:errors        # no errors
 | `docs/screenshots/theme-catppuccin.png` | Added | Catppuccin active/inactive contrast |
 | `docs/screenshots/theme-minimal.png` | Added | Minimal active/inactive contrast |
 | `docs/screenshots/live-preview-reveal.png` | Added | Live Preview callout marker shown as source with the highlight; clear button visible |
-| `PLAN.md` | Current | 0.3.5 plan/status |
-| `UI-SPEC.md` | Current | 0.3.5 clear controls and Live Preview reveal, 0.3.4 wrap-off bounds, 0.3.3 UI layer |
-| `IMPLEMENTATION.md` | Current | 0.3.5 implementation/verification record |
+| `PLAN.md` | Historical | 0.3.5 plan/status |
+| `UI-SPEC.md` | Current | 0.3.6 compact density and Replace-all bounds, 0.3.5 clear controls and Live Preview reveal, 0.3.4 wrap-off bounds, 0.3.3 UI layer |
+| `IMPLEMENTATION.md` | Historical | 0.3.5 implementation/verification record |
 | `COMMUNITY-READINESS.md` | Current | this audit |
 | GitHub release workflow | Missing | optional; release assets can be manual |
 
 ## 5. Submission / release next steps
 
-1. Attach the rebuilt release assets (`main.js`, `manifest.json`, `styles.css`) to tag `0.3.5`.
-2. Update the existing community-directory entry to 0.3.5.
+1. Attach the rebuilt release assets (`main.js`, `manifest.json`, `styles.css`) to tag `0.3.6`.
+2. Update the existing community-directory entry to 0.3.6.
 3. Verify from a clean vault.
 4. Run a full VoiceOver/Narrator session and real iOS/Android/Windows/Linux checks after release.
 5. Optional: add a release workflow/attestation; add a `npm run deploy` script for the dev vault.
@@ -129,3 +130,4 @@ dev:errors        # no errors
 - Mobile modal: 44px controls, position `2 / 164`, no errors.
 - 0.3.4: current-file wrap-off regions respond to cursor direction; selection scope stays at the full captured selection from its top/bottom; zero-match regions recover when the cursor moves back into a match; selection boundary messages are distinct; Replace and find continues past the replacement; main and popout panel/marker nodes have the correct `ownerDocument`; `prefer-create-el` warning resolved.
 - 0.3.5: clear buttons appear only while their field has text and reset count/message/highlights on Find; `~~`, `**bold**`, and a matched `> [!note]` header are shown as raw source with the highlight; Find keeps the reveal after Obsidian's editor click clears highlight sets; source mode keeps the custom mark without the search layer; closing the panel restores rendering; mobile emulation shows 44px clear targets.
+- 0.3.6: opt-in compact density measured 220px including the frame for the seven-option regex panel, down from 289px; the status-line close button works. Replace all from the third of four matches changed only the fourth; backward direction changed only the first; Selection scope changed all four; no remaining match reported the boundary without edits.

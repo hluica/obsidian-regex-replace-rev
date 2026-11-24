@@ -21,6 +21,7 @@ import { compilePattern } from "../search/pattern";
 import {
 	fullRegion,
 	limitToDirection,
+	matchesFromAnchor,
 	type DirectionalRegion,
 	type TextRegion,
 } from "../search/region";
@@ -1299,6 +1300,30 @@ export class FindReplacePanel {
 		return result?.match ?? null;
 	}
 
+	/**
+	 * Replace all is a remaining-work action, not a whole-scope reset: it
+	 * continues from the cursor (or the selected active match) in the current
+	 * direction, so matches behind the cursor are left untouched. Selection
+	 * scope is an explicit range, so it still replaces the whole captured
+	 * selection.
+	 */
+	private replaceAllMatches(context: SearchContext): PanelMatch[] {
+		if (this.state.scope === "selection") {
+			return context.matches;
+		}
+		const info = this.getSelectionInfo(context.editor);
+		const direction = this.state.direction;
+		const anchor =
+			info.current !== null
+				? direction === "forward"
+					? info.current.absoluteStart
+					: info.current.absoluteEnd
+				: direction === "forward"
+					? info.to
+					: info.from;
+		return matchesFromAnchor(context.matches, anchor, direction);
+	}
+
 	findNext(): void {
 		this.runFind(false);
 	}
@@ -1507,12 +1532,17 @@ export class FindReplacePanel {
 		if (context === null) {
 			return;
 		}
+		const matches = this.replaceAllMatches(context);
 		this.updateUi(context);
 		if (context.matches.length === 0) {
 			this.activeIndex = null;
 			this.clearHighlight();
 			this.updatePosition();
 			this.setMessage(this.strings.noMatches);
+			return;
+		}
+		if (matches.length === 0) {
+			this.setMessage(this.reachedBoundaryMessage(this.state.direction));
 			return;
 		}
 		if (context.truncated) {
@@ -1524,12 +1554,12 @@ export class FindReplacePanel {
 		}
 		if (
 			!skipConfirmation &&
-			shouldConfirmReplaceAll(context.matches.length)
+			shouldConfirmReplaceAll(matches.length)
 		) {
-			this.confirmReplaceAll(context.matches.length);
+			this.confirmReplaceAll(matches.length);
 			return;
 		}
-		this.performReplaceAll(context);
+		this.performReplaceAll(context, matches);
 	}
 
 	private confirmReplaceAll(count: number): void {
@@ -1556,7 +1586,10 @@ export class FindReplacePanel {
 		modal.open();
 	}
 
-	private performReplaceAll(context: SearchContext): void {
+	private performReplaceAll(
+		context: SearchContext,
+		matches: PanelMatch[],
+	): void {
 		this.activeIndex = null;
 		try {
 			const prepared = this.state.processEscapes
@@ -1566,7 +1599,7 @@ export class FindReplacePanel {
 			let delta = 0;
 			let lastCaret = 0;
 
-			for (const match of context.matches) {
+			for (const match of matches) {
 				const replacement = expandReplacement(
 					prepared,
 					match,
@@ -1598,7 +1631,7 @@ export class FindReplacePanel {
 			this.recordReplacement();
 			this.persist();
 			this.refresh();
-			this.setMessage(this.strings.replacedMany(context.matches.length));
+			this.setMessage(this.strings.replacedMany(matches.length));
 		} catch {
 			this.setMessage(this.strings.failed, true);
 		}

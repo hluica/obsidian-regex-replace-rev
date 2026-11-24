@@ -56,9 +56,9 @@ export const en: Strings = {
 		`Replaced ${count} occurrences; undo is available`,
 	tooManyMatches: (limit) =>
 		`Results limited to ${limit}; narrow the pattern`,
-	confirmReplaceAllTitle: "Replace all matches?",
+	confirmReplaceAllTitle: "Replace remaining matches?",
 	confirmReplaceAllBody: (count) =>
-		`Replace ${count} matches? This is one undoable action.`,
+		`Replace ${count} remaining matches? This is one undoable action.`,
 	confirmCancel: "Cancel",
 	invalidRegex: (message) => `Invalid regular expression: ${message}`,
 	selectionEmpty: "No selection; using the current file",
@@ -81,7 +81,8 @@ export const en: Strings = {
 	tooltipFind: "Find the next match (Enter)",
 	tooltipReplaceFind: "Replace the current match and find the next",
 	tooltipReplace: "Replace the current match once",
-	tooltipReplaceAll: "Replace all matches (undoable)",
+	tooltipReplaceAll:
+		"Replace the remaining matches from the current position in the search direction (undoable)",
 	tooltipHistorySearch: "Search history",
 	tooltipHistoryReplace: "Replace history",
 	tooltipScope: "Search scope: current file or selection",

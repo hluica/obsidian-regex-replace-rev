@@ -3,7 +3,10 @@
 This changelog starts at **0.2.6**, the baseline community release. Earlier
 versions are intentionally not reconstructed.
 
-## Unreleased
+## 0.3.6 — 2026-11-24 (released)
+
+0.3.6 was released from tag `0.3.6`; the community-directory update is the
+remaining distribution step.
 
 ### Added
 
@@ -21,9 +24,19 @@ versions are intentionally not reconstructed.
 - Added a compact-panel screenshot and updated the README, Chinese README, and
   UI specification.
 
+### Changed
+
+- **Replace all now replaces only the remaining matches from the current
+  position.** With Current file scope it starts at the cursor or the selected
+  active match and moves in the selected direction to the document edge
+  without wrapping, so matches already passed over by Find or Replace remain
+  untouched. Selection scope still replaces the whole captured selection.
+  The confirmation copy and action tooltip now describe the remaining
+  matches.
+
 ### Verification
 
-- 85 unit tests across 9 files; TypeScript, ESLint, and the production build
+- 90 unit tests across 9 files; TypeScript, ESLint, and the production build
   pass.
 - Verified in the dev vault (Obsidian 1.15.1, Chinese/light): the seven-option
   regex panel measures 176px of panel content and 220px including the frame,
@@ -31,6 +44,12 @@ versions are intentionally not reconstructed.
   button sits in the status line, and the close action returns focus to the
   editor. The settings toggle persists. The desktop modal fallback and the
   mobile-emulated 44px dialog keep the standard layout.
+- Replace-all regression check with four `foo` matches: starting at the third
+  match, Replace once then Replace all changed only the fourth match; the two
+  earlier matches stayed and the count reported `2 个匹配`. Backward direction
+  from the same point changed only the first match. Selection scope changed
+  all four. Invoking Replace all again with no match left reported the
+  start/end boundary without editing the note.
 
 ## 0.3.5 — 2026-11-15 (released)
 

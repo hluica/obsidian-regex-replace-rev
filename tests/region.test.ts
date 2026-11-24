@@ -5,6 +5,7 @@ import { replaceAllText } from "../src/search/replace";
 import {
 	fullRegion,
 	limitToDirection,
+	matchesFromAnchor,
 	type TextRegion,
 } from "../src/search/region";
 import type { SearchOptions } from "../src/search/types";
@@ -94,6 +95,54 @@ describe("fullRegion", () => {
 		expect(fullRegion(scope)).toEqual(
 			region(scope.text, 100, 100, 117),
 		);
+	});
+});
+
+describe("matchesFromAnchor", () => {
+	const matches = [
+		{ absoluteStart: 0, absoluteEnd: 5 },
+		{ absoluteStart: 10, absoluteEnd: 15 },
+		{ absoluteStart: 20, absoluteEnd: 20 },
+		{ absoluteStart: 25, absoluteEnd: 30 },
+	];
+
+	it("keeps matches at or after a forward anchor", () => {
+		expect(
+			matchesFromAnchor(matches, 10, "forward").map(
+				(match) => match.absoluteStart,
+			),
+		).toEqual([10, 20, 25]);
+	});
+
+	it("keeps matches at or before a backward anchor", () => {
+		expect(
+			matchesFromAnchor(matches, 15, "backward").map(
+				(match) => match.absoluteStart,
+			),
+		).toEqual([0, 10]);
+	});
+
+	it("includes a zero-width match at the anchor in both directions", () => {
+		expect(
+			matchesFromAnchor(matches, 20, "forward").map(
+				(match) => match.absoluteStart,
+			),
+		).toEqual([20, 25]);
+		expect(
+			matchesFromAnchor(matches, 20, "backward").map(
+				(match) => match.absoluteStart,
+			),
+		).toEqual([0, 10, 20]);
+	});
+
+	it("excludes everything behind a forward anchor", () => {
+		expect(matchesFromAnchor(matches, 5, "forward")).toHaveLength(3);
+		expect(matchesFromAnchor(matches, 31, "forward")).toEqual([]);
+	});
+
+	it("excludes everything ahead of a backward anchor", () => {
+		expect(matchesFromAnchor(matches, 25, "backward")).toHaveLength(3);
+		expect(matchesFromAnchor(matches, -1, "backward")).toEqual([]);
 	});
 });
 

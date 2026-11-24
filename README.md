@@ -18,6 +18,7 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 
 - **Three match modes**: exact text, wildcard (`*`, `?`), and JavaScript regular expressions.
 - **Four actions**: Find, Replace (one occurrence), Replace and find, Replace all.
+- **Replace all continues from the current position**: it replaces only the remaining matches from the cursor or selected active match in the current direction, without wrapping, so matches already passed over are left untouched. Selection scope always replaces the whole captured selection.
 - **Mode-aware search options**: native Obsidian toggle switches for case sensitive, whole word, wrap around, **Match newlines**, and **Replace escapes**. Exact mode shows 4; wildcard adds Match newlines (5); regex adds Match newlines, Multiline anchors, and **Unicode (u)** (7). Match newlines uses the `s` flag: in wildcard mode `*`/`?` can cross lines; in regex mode `.` can cross lines. Multiline anchors (`m`) are regex-only. Toggle options use generous spacing (28px desktop, 16px compact/mobile) and wrap naturally; the panel height follows the rows.
 - **Inline desktop panel**: embedded at the bottom of the note display area, separated by a single high-contrast 1px line, with a title and close button. It takes layout space instead of covering the note, so the editor stays visible and interactive.
 - **Compact density (opt-in)**: a denser inline panel with 26px fields, 24px buttons, 6px row gaps, and the close button moved to the status line. Every action, selector, option, and the count/position/message stays visible; the default layout and the 44px mobile dialog are unchanged. Enable **Use the compact panel layout** in settings.
@@ -44,7 +45,7 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 
 ## Status
 
-Current version: **0.3.5**, released on 2026-11-15 from tag `0.3.5`. The **0.2.6** baseline is listed in Obsidian's community directory; the 0.3.5 community-directory update is the remaining distribution step. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md) · Changes: [CHANGELOG.md](CHANGELOG.md).
+Current version: **0.3.6**, released on 2026-11-24 from tag `0.3.6`. The **0.2.6** baseline is listed in Obsidian's community directory; the 0.3.6 community-directory update is the remaining distribution step. Release audit: [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md) · Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Installation
 
@@ -125,10 +126,18 @@ Known edge case: with a regex alternation such as `foo|foobar`, the engine may m
 
 Enable the **Replace escapes** toggle in the panel to convert `\n`, `\r`, `\t`, and `\\` in the replacement before `$` expansion. The toggle is saved with the rest of the panel state. This is useful because the input fields are single-line.
 
+### Replace all
+
+Replace all is a remaining-work action, not a whole-scope reset. It starts at the cursor, or at the selected active match, and replaces matches in the current direction to the edge of the scope. It does not wrap, so matches behind the cursor are not replaced again after you have stepped through them with Find or Replace. A selected active match is included. If no match remains in that direction, the panel reports the document or selection boundary.
+
+- To replace a whole file, place the cursor at the start with direction Down, or at the end with direction Up.
+- **Selection** scope replaces the whole captured selection; the cursor only affects Find/Replace navigation there.
+- **Current file** with wrap off already uses the cursor-to-edge region; Replace all applies the same directional rule regardless of the wrap toggle.
+
 ## Scope
 
-- **Current file** — the whole document.
-- **Selection** — the selection captured when the panel opens or when you switch the scope to Selection. The captured range is updated after replacements. It resets to Current file if the note content changes to another document.
+- **Current file** — the whole document. Find wraps when **Wrap around** is on; Replace all still processes only the remaining matches from the current position in the selected direction.
+- **Selection** — the selection captured when the panel opens or when you switch the scope to Selection. The captured range is updated after replacements. It resets to Current file if the note content changes to another document. Replace all replaces the whole captured selection.
 - Use the **Use current selection** (scan) button next to the scope selector to refresh or switch to a new selection without reopening the panel.
 
 ## Settings
@@ -157,12 +166,12 @@ All data is stored in the plugin's `data.json` under `plugin.settings`. Panel-dr
 - The input fields are single-line; use regex `\n` or the panel's **Replace escapes** toggle for line breaks.
 - All-match highlighting is capped at 5,000 rendered ranges, 1,000 zero-width dots, and 1,000 line-break markers; the count and position still report the full result up to the scan cap.
 - A newline-only match has no visible glyph of its own; it is shown by the `↵` marker rather than a text background.
-- Replace all asks for confirmation above 5,000 matches and is blocked above the 100,000-match action cap; this keeps the single undoable transaction bounded.
+- Replace all asks for confirmation above 5,000 remaining matches and is blocked above the 100,000-match action cap; this keeps the single undoable transaction bounded.
 - Word-level regex alternation has the boundary caveat described above.
 - The inline panel sits at the bottom of the editor content column; in a narrow split pane it switches to a compact stacked layout. Below 260px panel width the four action buttons stack one per row. Very narrow windows cap it at 70vh and scroll internally, so the status row can be below the fold.
 - Compact density is opt-in and applies to the desktop inline panel; the mobile dialog keeps its 44px controls.
 - On mobile the panel is presented as a dialog rather than embedded; the modal does not draw custom highlights, but the position indicator and native selection work.
-- Real iOS/Android devices and Windows/Linux were not re-tested for 0.3.5; mobile emulation was used.
+- Real iOS/Android devices and Windows/Linux were not re-tested for 0.3.6; mobile emulation was used.
 - Third-party themes tested: Catppuccin and Minimal. Other themes may define unusual highlight/selection variables.
 - Accessibility was audited through the Chromium accessibility tree; a full screen-reader session on macOS/Windows is still outstanding.
 
