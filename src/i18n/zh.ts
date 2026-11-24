@@ -85,6 +85,9 @@ export const zh: Strings = {
 	tooltipMode: "匹配模式：完全匹配、通配符或正则表达式",
 	tooltipTarget: "当前目标笔记",
 	settingsHeading: "行为",
+	settingsCompactPanel: "使用紧凑面板布局",
+	settingsCompactPanelDesc:
+		"更紧凑的内嵌面板：26px 输入框、24px 按钮和更小间距。面板下次打开时生效；移动端对话框保持原有尺寸。",
 	settingsRememberState: "记住上次查找与选项",
 	settingsRememberStateDesc:
 		"下次打开时恢复上次的查找文本、替换文本和选项。",

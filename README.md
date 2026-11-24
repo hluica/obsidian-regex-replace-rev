@@ -4,6 +4,8 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 
 ![Inline desktop panel, Chinese and light theme](docs/screenshots/panel-inline.png)
 
+![Opt-in compact panel, Chinese and light theme](docs/screenshots/panel-compact.png)
+
 ![Zero-width match markers](docs/screenshots/panel-zero-width.png)
 
 ![Newline match markers](docs/screenshots/panel-newline.png)
@@ -18,6 +20,7 @@ A find/replace panel for Obsidian with **exact**, **wildcard**, and **regular ex
 - **Four actions**: Find, Replace (one occurrence), Replace and find, Replace all.
 - **Mode-aware search options**: native Obsidian toggle switches for case sensitive, whole word, wrap around, **Match newlines**, and **Replace escapes**. Exact mode shows 4; wildcard adds Match newlines (5); regex adds Match newlines, Multiline anchors, and **Unicode (u)** (7). Match newlines uses the `s` flag: in wildcard mode `*`/`?` can cross lines; in regex mode `.` can cross lines. Multiline anchors (`m`) are regex-only. Toggle options use generous spacing (28px desktop, 16px compact/mobile) and wrap naturally; the panel height follows the rows.
 - **Inline desktop panel**: embedded at the bottom of the note display area, separated by a single high-contrast 1px line, with a title and close button. It takes layout space instead of covering the note, so the editor stays visible and interactive.
+- **Compact density (opt-in)**: a denser inline panel with 26px fields, 24px buttons, 6px row gaps, and the close button moved to the status line. Every action, selector, option, and the count/position/message stays visible; the default layout and the 44px mobile dialog are unchanged. Enable **Use the compact panel layout** in settings.
 - **Multi-window**: each Obsidian window has its own panel; the command targets the editor of the window it is invoked in and closing one window’s panel does not close the others.
 - **All-match highlighting**: every match in the active search region is highlighted; the current match has a stronger outline, so the result set is visible while you type or step through it.
 - **Live Preview reveal**: in Live Preview, a match that lands on rendered Markdown — callout markers such as `> [!note]`, emphasis and strikethrough delimiters, links, or heading markers — switches that text back to its raw source so the highlight is attached to what the pattern actually matches, instead of disappearing behind the rendered widget.
@@ -130,6 +133,7 @@ Enable the **Replace escapes** toggle in the panel to convert `\n`, `\r`, `\t`, 
 
 ## Settings
 
+- **Use the compact panel layout** — 26px fields, 24px buttons, tighter spacing, and no visible title row. Takes effect the next time the panel opens; the mobile dialog keeps its 44px controls.
 - **Remember the last search and options** — restore the last pattern, replacement, and options.
 - **Prefill the find field from the selection** — use a single-line selection when opening.
 - **Remember search history** — keep the last 20 terms; turning it off clears the history.
@@ -156,6 +160,7 @@ All data is stored in the plugin's `data.json` under `plugin.settings`. Panel-dr
 - Replace all asks for confirmation above 5,000 matches and is blocked above the 100,000-match action cap; this keeps the single undoable transaction bounded.
 - Word-level regex alternation has the boundary caveat described above.
 - The inline panel sits at the bottom of the editor content column; in a narrow split pane it switches to a compact stacked layout. Below 260px panel width the four action buttons stack one per row. Very narrow windows cap it at 70vh and scroll internally, so the status row can be below the fold.
+- Compact density is opt-in and applies to the desktop inline panel; the mobile dialog keeps its 44px controls.
 - On mobile the panel is presented as a dialog rather than embedded; the modal does not draw custom highlights, but the position indicator and native selection work.
 - Real iOS/Android devices and Windows/Linux were not re-tested for 0.3.5; mobile emulation was used.
 - Third-party themes tested: Catppuccin and Minimal. Other themes may define unusual highlight/selection variables.

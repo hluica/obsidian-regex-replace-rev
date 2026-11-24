@@ -333,6 +333,97 @@
 }
 
 /* ---------------------------------------------------------------------------
+ * Opt-in compact density (desktop inline panel)
+ * ------------------------------------------------------------------------ */
+
+.rr-panel.rr-dense {
+	--rr-btn-height: 24px;
+	--rr-gap: 6px;
+}
+
+.rr-inline-panel--dense .rr-inline-frame {
+	padding-block-start: var(--size-4-1);
+}
+
+.rr-panel.rr-dense .rr-label {
+	line-height: 26px;
+}
+
+.rr-panel.rr-dense .rr-input,
+.rr-panel.rr-dense .rr-select {
+	height: 26px;
+}
+
+.rr-panel.rr-dense .rr-input {
+	padding-inline-end: 52px;
+}
+
+.rr-panel.rr-dense .rr-history,
+.rr-panel.rr-dense .rr-clear {
+	top: 1px;
+	width: 24px;
+	height: 24px;
+}
+
+.rr-panel.rr-dense .rr-history {
+	inset-inline-end: 1px;
+}
+
+.rr-panel.rr-dense .rr-clear {
+	inset-inline-end: 26px;
+}
+
+.rr-panel.rr-dense .rr-actions {
+	gap: 6px;
+}
+
+.rr-panel.rr-dense .rr-btn {
+	height: 24px;
+}
+
+.rr-panel.rr-dense .rr-mode-row {
+	gap: 6px;
+}
+
+.rr-panel.rr-dense .rr-scope-refresh {
+	flex-basis: 26px;
+	width: 26px;
+	height: 26px;
+}
+
+.rr-panel.rr-dense .rr-options {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	column-gap: 16px;
+	row-gap: 6px;
+}
+
+.rr-panel.rr-dense .rr-option {
+	height: 22px;
+}
+
+.rr-panel.rr-dense .rr-status {
+	align-items: center;
+	min-height: 24px;
+}
+
+.rr-panel.rr-dense .rr-spacer {
+	display: none;
+}
+
+.rr-panel.rr-dense .rr-panel-header {
+	margin-bottom: 0;
+}
+
+.rr-panel.rr-dense.rr-compact .rr-options {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.rr-panel.rr-dense.rr-narrow .rr-options {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+/* ---------------------------------------------------------------------------
  * Inline CM6 panel (bottom of the note area)
  * ------------------------------------------------------------------------ */
 
@@ -470,6 +561,32 @@
 }
 
 .rr-panel .rr-panel-close:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
+
+.rr-panel .rr-status-close {
+	display: flex;
+	flex: 0 0 24px;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	color: var(--text-faint);
+	background: transparent;
+	border: 0;
+	border-radius: var(--radius-s);
+	box-shadow: none;
+	cursor: pointer;
+}
+
+.rr-panel .rr-status-close:hover {
+	color: var(--text-muted);
+	background: var(--background-modifier-hover);
+}
+
+.rr-panel .rr-status-close:focus-visible {
 	outline: 2px solid var(--interactive-accent);
 	outline-offset: 2px;
 }

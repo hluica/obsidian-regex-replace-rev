@@ -3,6 +3,35 @@
 This changelog starts at **0.2.6**, the baseline community release. Earlier
 versions are intentionally not reconstructed.
 
+## Unreleased
+
+### Added
+
+- **Opt-in compact panel density** for the desktop inline panel, requested in
+  issue #1. The new **Use the compact panel layout** setting renders 26px
+  fields and selects, 24px action buttons, 24px field and status close
+  buttons, and 6px gaps. The visible title row is removed and the close
+  button moves to the status line. All four actions, mode/scope/direction
+  selectors, selection refresh, history, count/position/message, and every
+  mode-dependent option stay visible. The default layout, the desktop modal
+  fallback, and the 44px mobile dialog are unchanged.
+- The compact header title stays in the accessibility tree as the panel's
+  `aria-labelledby` target; the status close button keeps the same accessible
+  name and tooltip.
+- Added a compact-panel screenshot and updated the README, Chinese README, and
+  UI specification.
+
+### Verification
+
+- 85 unit tests across 9 files; TypeScript, ESLint, and the production build
+  pass.
+- Verified in the dev vault (Obsidian 1.15.1, Chinese/light): the seven-option
+  regex panel measures 176px of panel content and 220px including the frame,
+  down from 241px and 289px (about 24% shorter). The title is gone, the close
+  button sits in the status line, and the close action returns focus to the
+  editor. The settings toggle persists. The desktop modal fallback and the
+  mobile-emulated 44px dialog keep the standard layout.
+
 ## 0.3.5 — 2026-11-15 (released)
 
 0.3.5 was released from tag `0.3.5`; the community-directory update is the

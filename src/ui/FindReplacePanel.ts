@@ -86,6 +86,7 @@ export class FindReplacePanel {
 	private readonly strings: Strings;
 	private readonly rootEl: HTMLElement;
 	private readonly panelId: number;
+	private readonly dense: boolean;
 	private state: SearchUiState;
 	private findText: string;
 	private replaceText: string;
@@ -136,9 +137,16 @@ export class FindReplacePanel {
 			? host.plugin.settings.lastReplace
 			: "";
 		this.documentKey = host.getDocumentKey();
+		// Density is an opt-in desktop inline preference. The mobile dialog
+		// keeps its 44px touch controls.
+		this.dense =
+			host.variant === "inline" && host.plugin.settings.compactPanel;
 		this.rootEl = host.containerEl.createDiv({
 			cls: `rr-panel rr-panel--${host.variant}`,
 		});
+		if (this.dense) {
+			this.rootEl.addClass("rr-dense");
+		}
 		this.rootEl.setAttr("role", "region");
 		if (this.host.labelledBy !== undefined) {
 			this.rootEl.setAttr("aria-labelledby", this.host.labelledBy);
@@ -220,19 +228,13 @@ export class FindReplacePanel {
 			const titleId = `rr-panel-title-${this.panelId}`;
 			title.id = titleId;
 			this.rootEl.setAttr("aria-labelledby", titleId);
-			const close = header.createEl("button", {
-				cls: "rr-panel-close",
-				attr: {
-					type: "button",
-					"aria-label": this.strings.close,
-					"data-tooltip-position": "left",
-				},
-			});
-			setIcon(close, "x");
-			setTooltip(close, this.strings.close);
-			close.addEventListener("click", () => {
-				this.host.requestClose();
-			});
+			if (this.dense) {
+				// The compact panel has no visible title row, but the heading
+				// stays in the accessibility tree as the region's name.
+				header.addClass("rr-visually-hidden");
+			} else {
+				this.createCloseButton(header, "rr-panel-close");
+			}
 		}
 
 		const grid = this.rootEl.createDiv({ cls: "rr-grid" });
@@ -498,6 +500,29 @@ export class FindReplacePanel {
 		this.messageEl.setAttr("role", "status");
 		this.messageEl.setAttr("aria-live", "polite");
 		this.messageEl.setAttr("aria-atomic", "true");
+		if (this.dense) {
+			this.createCloseButton(statusEl, "rr-status-close");
+		}
+	}
+
+	private createCloseButton(
+		container: HTMLElement,
+		className: string,
+	): HTMLButtonElement {
+		const close = container.createEl("button", {
+			cls: className,
+			attr: {
+				type: "button",
+				"aria-label": this.strings.close,
+				"data-tooltip-position": "left",
+			},
+		});
+		setIcon(close, "x");
+		setTooltip(close, this.strings.close);
+		close.addEventListener("click", () => {
+			this.host.requestClose();
+		});
+		return close;
 	}
 
 	private attachKeydown(

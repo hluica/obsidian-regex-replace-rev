@@ -28,6 +28,7 @@ export interface SearchHistory {
 export interface PluginSettings {
 	[key: string]: unknown;
 	defaultMode: MatchMode;
+	compactPanel: boolean;
 	rememberLastState: boolean;
 	prefillFromSelection: boolean;
 	rememberHistory: boolean;
@@ -57,6 +58,7 @@ const MAX_PATTERN_LENGTH = 2000;
 export function createDefaultSettings(): PluginSettings {
 	return {
 		defaultMode: "exact",
+		compactPanel: false,
 		rememberLastState: true,
 		prefillFromSelection: true,
 		rememberHistory: true,
@@ -160,6 +162,7 @@ export function normalizeSettings(raw: unknown): PluginSettings {
 
 	return {
 		defaultMode: readMode(raw.defaultMode, defaults.defaultMode),
+		compactPanel: readBoolean(raw.compactPanel, defaults.compactPanel),
 		rememberLastState: readBoolean(
 			raw.rememberLastState,
 			defaults.rememberLastState,
@@ -207,6 +210,15 @@ export class FindReplaceSettingTab extends PluginSettingTab {
 				type: "group",
 				heading: strings.settingsHeading,
 				items: [
+					{
+						name: strings.settingsCompactPanel,
+						desc: strings.settingsCompactPanelDesc,
+						control: {
+							type: "toggle",
+							key: "compactPanel",
+							defaultValue: settings.compactPanel,
+						},
+					},
 					{
 						name: strings.settingsRememberState,
 						desc: strings.settingsRememberStateDesc,

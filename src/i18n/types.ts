@@ -80,6 +80,8 @@ export interface Strings {
 	tooltipMode: string;
 	tooltipTarget: string;
 	settingsHeading: string;
+	settingsCompactPanel: string;
+	settingsCompactPanelDesc: string;
 	settingsRememberState: string;
 	settingsRememberStateDesc: string;
 	settingsPrefillSelection: string;

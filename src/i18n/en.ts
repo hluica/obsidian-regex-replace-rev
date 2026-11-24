@@ -93,6 +93,9 @@ export const en: Strings = {
 	tooltipMode: "Match mode: exact, wildcard, or regular expression",
 	tooltipTarget: "Current target note",
 	settingsHeading: "Behavior",
+	settingsCompactPanel: "Use the compact panel layout",
+	settingsCompactPanelDesc:
+		"A denser inline panel with 26 px fields, 24 px buttons, and tighter spacing. Takes effect the next time the panel opens; the mobile dialog keeps its larger controls.",
 	settingsRememberState: "Remember the last search and options",
 	settingsRememberStateDesc:
 		"Restore the last find text, replacement text, and options next time.",

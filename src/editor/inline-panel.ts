@@ -282,6 +282,9 @@ class InlineFindReplacePanel implements Panel {
 		this.view = view;
 		this.dom = helperWindow(view.dom.ownerDocument).createDiv();
 		this.dom.className = "rr-inline-panel";
+		if (plugin.settings.compactPanel) {
+			this.dom.addClass("rr-inline-panel--dense");
+		}
 		const frame = this.dom.createDiv({ cls: "rr-inline-frame" });
 		const container = frame.createDiv({ cls: "rr-inline-container" });
 

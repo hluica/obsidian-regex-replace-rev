@@ -5,9 +5,9 @@
 - **Plan/status:** [PLAN.md](PLAN.md)
 - **Community audit:** [COMMUNITY-READINESS.md](COMMUNITY-READINESS.md)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
-- **Screenshots:** [inline panel](docs/screenshots/panel-inline.png) · [dark theme](docs/screenshots/panel-dark.png) · [Catppuccin](docs/screenshots/theme-catppuccin.png) · [Minimal](docs/screenshots/theme-minimal.png) · [zero-width dots](docs/screenshots/panel-zero-width.png) · [newline markers](docs/screenshots/panel-newline.png) · [mixed `。\n`](docs/screenshots/panel-newline-combo.png) · [modal fallback](docs/screenshots/modal-fallback.png) · [Live Preview reveal + clear button](docs/screenshots/live-preview-reveal.png)
+- **Screenshots:** [inline panel](docs/screenshots/panel-inline.png) · [compact panel](docs/screenshots/panel-compact.png) · [dark theme](docs/screenshots/panel-dark.png) · [Catppuccin](docs/screenshots/theme-catppuccin.png) · [Minimal](docs/screenshots/theme-minimal.png) · [zero-width dots](docs/screenshots/panel-zero-width.png) · [newline markers](docs/screenshots/panel-newline.png) · [mixed `。\n`](docs/screenshots/panel-newline-combo.png) · [modal fallback](docs/screenshots/modal-fallback.png) · [Live Preview reveal + clear button](docs/screenshots/live-preview-reveal.png)
 
-This specification describes the current inline design, the match-marker layer, the selection-refresh control, the 0.3.3 Unicode/accessibility layer, the 0.3.4 wrap-off region behavior, and the 0.3.5 clear controls and Live Preview reveal.
+This specification describes the current inline design, the match-marker layer, the selection-refresh control, the 0.3.3 Unicode/accessibility layer, the 0.3.4 wrap-off region behavior, the 0.3.5 clear controls and Live Preview reveal, and the unreleased opt-in compact density.
 
 ## 1. Principles
 
@@ -31,6 +31,7 @@ This specification describes the current inline design, the match-marker layer, 
 - DOM: `.rr-inline-panel` → `.rr-inline-frame` → `.rr-inline-container` → `.rr-panel`.
 - The panel has a title/close header, the shared find/replace grid, and no target filename. It belongs to its editor view.
 - Width follows the editor content column. Under 620px content width, `rr-compact` switches to a single-column layout.
+- An optional compact density (`compactPanel`) adds `rr-dense` to the panel; it shrinks controls without removing any and leaves the default layout and the mobile dialog unchanged.
 - Very narrow windows cap the panel at `max-height: 70vh` with internal scrolling.
 - Opening again focuses the existing panel; ✕/Escape closes and returns focus to the editor.
 - Each Obsidian window has its own panel; the command finds the view by `editor` identity and only closes panels in the same `ownerDocument`.
@@ -70,6 +71,16 @@ This specification describes the current inline design, the match-marker layer, 
 | Options | 4/5/6 by mode | wraps | wraps, 44px targets |
 | Panel height | content | content; 70vh cap | modal content |
 
+### 3.1.1 Compact density (opt-in, unreleased)
+
+- Setting **Use the compact panel layout** (`compactPanel`, default off) applies to the desktop inline panel only. The mobile dialog keeps its 44px controls; the desktop modal fallback keeps the standard layout.
+- It adds `.rr-panel.rr-dense` and `.rr-inline-panel--dense`, and is read when the panel is constructed, so it takes effect the next time the panel opens.
+- Inputs and selects are 26px tall, action buttons 24px, the scope refresh 26px, and the field clear/history buttons 24px. Grid and row gaps are 6px; the inline frame top padding is 4px; option rows are 22px.
+- The options row becomes a 4-column grid with 16px column gaps and 6px row gaps; the two spacer rows are hidden. Under 620px it drops to 2 columns, and under 260px to 1 column.
+- The panel title row is visually hidden but remains the `aria-labelledby` target (the heading stays in the accessibility tree). No close button is rendered in the hidden header; a 24px close button appears after the status message and shares the same close action.
+- The 28px bottom clearance and the 70vh cap are unchanged.
+- Measured in the dev vault (regex, 7 options, Chinese/light, 648px panel width): the panel content drops from 241px to 176px, and the whole frame from 289px to 220px (about 24% shorter). The issue’s 1152px mock predicted 216px.
+
 ### 3.2 Wrap-off bounds (0.3.4)
 
 - **Current file + wrap off**: the active region runs from the cursor/selection edge to the document edge in the current direction. The count, highlights, Find, Replace, and Replace all use that region.
@@ -87,6 +98,7 @@ This specification describes the current inline design, the match-marker layer, 
     .rr-count        — 164 个匹配 / 164 matches / 10000+ 个匹配
     .rr-position     — 11 / 164 or — / 164
   .rr-message        — action/error message, right aligned
+  .rr-status-close   — compact density only: 24px close button
 ```
 
 - Count and position share the left edge with the labels.
@@ -119,7 +131,7 @@ Labels are left-aligned. In compact/mobile single-column mode the mode row, opti
 .rr-inline-panel
   .rr-inline-frame
     .rr-inline-container
-      .rr-panel.rr-panel--inline
+      .rr-panel.rr-panel--inline[.rr-dense]
         .rr-panel-header
           .rr-panel-title
           button.rr-panel-close
@@ -154,6 +166,7 @@ Labels are left-aligned. In compact/mobile single-column mode the mode row, opti
               .rr-count
               .rr-position
             .rr-message[role=status][aria-live=polite]
+            button.rr-status-close  ← compact density only
 ```
 
 Editor decorations, owned by the CM6 field:
@@ -257,13 +270,15 @@ The status container has `role="status"`, `aria-live="polite"`, `aria-atomic="tr
 - The panel is a region labelled by the visible title; the inline title is a level-2 heading; the options row is a group labelled by a visually hidden span. `aria-labelledby` is used instead of `aria-label` so Obsidian does not show extra background tooltips on hover.
 - History buttons expose `aria-haspopup="menu"` and `aria-expanded`; the status message is `role=status` with `aria-live=polite`.
 - The Chromium accessibility tree was audited (the same tree Chromium maps to Windows UIA); a full VoiceOver/Narrator session is outstanding.
-- Mobile targets ≥44px.
+- Mobile targets ≥44px; the opt-in desktop compact density uses 22-26px controls for pointer use and does not change the mobile dialog.
+- In compact density the title row is visually hidden but still names the region, and the close button moves from the header to the status row without changing its accessible label.
 - Tab flow: find → find clear (when visible) → find history → Find → Replace and find → replace → replace clear (when visible) → replace history → Replace → Replace all → mode → scope → Use current selection → direction → visible toggles (including Unicode). After the last toggle, Tab leaves the panel for the workspace (the inline host does not trap focus).
 - Full VoiceOver/Narrator session is not recorded; the Chromium AX tree audit is recorded in IMPLEMENTATION.md.
 
 ## 10. Responsive, themes, multi-window
 
 - `rr-compact` at panel content width <620px: single column, stacked actions/modes/options/status, no spacer.
+- `rr-dense` is independent of width: it tightens the desktop inline layout, hides the title row (keeping it accessible), moves close to the status line, and uses a 4-column options grid; `rr-compact` reduces that grid to 2 columns and `rr-narrow` to 1.
 - `rr-narrow` at panel content width <260px: action buttons become one per row and `.rr-status-left` may wrap; this prevents clipped English action labels in very narrow panes.
 - `max-height: 70vh` with internal scroll prevents the English regex panel from exceeding a 600px-wide window. At very small panel widths the status row may be below the internal scroll fold.
 - Compact class updates are coalesced with `requestAnimationFrame` and skipped when the width is unchanged, preventing ResizeObserver loops during viewport/popout resizes.
